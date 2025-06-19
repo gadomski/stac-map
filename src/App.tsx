@@ -1,23 +1,13 @@
 import { Box } from "@chakra-ui/react";
-import { type DuckDBConfig } from "@duckdb/duckdb-wasm";
-import { initializeDuckDb } from "duckdb-wasm-kit";
-import { useEffect } from "react";
 import "./App.css";
 import Map from "./components/map";
 import Overlay from "./components/overlay";
+import StacGeoparquetProvider from "./components/stac-geoparquet/provider";
+import { Toaster } from "./components/ui/toaster";
 
 function App() {
-  useEffect(() => {
-    const config: DuckDBConfig = {
-      query: {
-        castBigIntToDouble: true,
-      },
-    };
-    initializeDuckDb({ config });
-  }, []);
-
   return (
-    <>
+    <StacGeoparquetProvider>
       <Box
         style={{
           position: "absolute",
@@ -28,7 +18,8 @@ function App() {
         <Map></Map>
       </Box>
       <Overlay></Overlay>
-    </>
+      <Toaster></Toaster>
+    </StacGeoparquetProvider>
   );
 }
 
