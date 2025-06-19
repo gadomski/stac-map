@@ -13,7 +13,7 @@ function App() {
         castBigIntToDouble: true,
       },
     };
-    initializeDuckDb({ config, debug: true });
+    initializeDuckDb({ config });
   }, []);
 
   return (
