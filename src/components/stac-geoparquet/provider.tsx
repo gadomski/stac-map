@@ -1,6 +1,7 @@
 import { AsyncDuckDBConnection } from "@duckdb/duckdb-wasm";
 import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useReducer, useState, type ReactNode } from "react";
+import { toaster } from "../ui/toaster";
 import {
   StacGeoparquetContext,
   type StacGeoparquetAction,
@@ -30,7 +31,6 @@ export default function StacGeoparquetProvider({
   useEffect(() => {
     if (state.path) {
       if (connection) {
-        // TODO
         (async () => {
           const result = await connection.query(
             `SELECT COUNT(*) AS count FROM read_parquet('${state.path}', union_by_name=true);`
@@ -40,9 +40,18 @@ export default function StacGeoparquetProvider({
             type: "set-metadata",
             metadata: { count: rows[0].count },
           });
+          toaster.create({
+            type: "success",
+            title: "Loaded",
+            description: rows[0].count + " items from " + state.path,
+          });
         })();
       } else {
-        // TODO handle missing connection
+        toaster.create({
+          type: "error",
+          title: "No DuckDB connection",
+          description: "Could not load " + state.path,
+        });
       }
     } else {
       // TODO handle clearing data
