@@ -1,4 +1,6 @@
 import { AsyncDuckDBConnection } from "@duckdb/duckdb-wasm";
+import { io } from "@geoarrow/geoarrow-js";
+import { Binary, Data, makeData, makeVector, Table } from "apache-arrow";
 import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useReducer, useState, type ReactNode } from "react";
 import { toaster } from "../ui/toaster";
@@ -23,6 +25,7 @@ export default function StacGeoparquetProvider({
     if (db) {
       (async () => {
         const connection = await db.connect();
+        await connection.query("load spatial");
         setConnection(connection);
       })();
     }
@@ -36,14 +39,15 @@ export default function StacGeoparquetProvider({
             `SELECT COUNT(*) AS count FROM read_parquet('${state.path}', union_by_name=true);`
           );
           const rows = result.toArray().map((row) => row.toJSON());
+          const count = rows[0].count;
           dispatch({
             type: "set-metadata",
-            metadata: { count: rows[0].count },
+            metadata: { count },
           });
           toaster.create({
             type: "success",
             title: "Loaded",
-            description: rows[0].count + " items from " + state.path,
+            description: count + " items from " + state.path,
           });
         })();
       } else {
@@ -55,6 +59,44 @@ export default function StacGeoparquetProvider({
       }
     } else {
       // TODO handle clearing data
+    }
+  }, [state.path, connection, dispatch]);
+
+  // We separate this section to handle query updates
+  useEffect(() => {
+    if (state.path) {
+      if (connection) {
+        (async () => {
+          const result = await connection.query(
+            `SELECT st_aswkb(geometry) as geometry FROM read_parquet('${state.path}', union_by_name=true);`
+          );
+          const geometry: Uint8Array[] = result.getChildAt(0)?.toArray();
+          const wkb = new Uint8Array(geometry?.flatMap((array) => [...array]));
+          const valueOffsets = new Int32Array(geometry.length + 1);
+          for (let i = 0, len = geometry.length; i < len; i++) {
+            const current = valueOffsets[i];
+            valueOffsets[i + 1] = current + geometry[i].length;
+          }
+          const data: Data<Binary> = makeData({
+            type: new Binary(),
+            data: wkb,
+            valueOffsets,
+          });
+          const polygons = io.parseWkb(data, io.WKBType.Polygon, 2);
+          const table = new Table({
+            // @ts-expect-error: 2769
+            geometry: makeVector(polygons),
+          });
+          table.schema.fields[0].metadata.set(
+            "ARROW:extension:name",
+            "geoarrow.polygon"
+          );
+          dispatch({
+            type: "set-table",
+            table,
+          });
+        })();
+      }
     }
   }, [state.path, connection, dispatch]);
 
@@ -71,5 +113,7 @@ function reducer(state: StacGeoparquetState, action: StacGeoparquetAction) {
       return { ...state, path: action.path };
     case "set-metadata":
       return { ...state, metadata: action.metadata };
+    case "set-table":
+      return { ...state, table: action.table };
   }
 }
