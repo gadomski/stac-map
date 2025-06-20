@@ -13,11 +13,14 @@ function App() {
           position: "absolute",
           top: 0,
           left: 0,
+          zIndex: 0,
         }}
       >
         <Map></Map>
       </Box>
-      <Overlay></Overlay>
+      <Box style={{ zIndex: 1 }}>
+        <Overlay></Overlay>
+      </Box>
       <Toaster></Toaster>
     </StacGeoparquetProvider>
   );

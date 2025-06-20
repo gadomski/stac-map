@@ -8,7 +8,6 @@ import {
   SimpleGrid,
   Stack,
   Tabs,
-  Wrap,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import {
@@ -50,7 +49,7 @@ function Item({ item }: { item: StacItem }) {
         Assets
       </Heading>
 
-      <Wrap>
+      <SimpleGrid columns={2} gap={2}>
         {Object.entries(item.assets).map(([key, asset]) => {
           // TODO make this configurable
           const showImage =
@@ -75,7 +74,7 @@ function Item({ item }: { item: StacItem }) {
             </Card.Root>
           );
         })}
-      </Wrap>
+      </SimpleGrid>
     </Stack>
   );
 }
@@ -92,37 +91,43 @@ export default function Sidebar() {
     }
   }, [item]);
 
-  return (
-    <SimpleGrid columns={3} my={2}>
-      <Tabs.Root
-        bg={"bg.muted"}
-        px={4}
-        pt={2}
-        pb={4}
-        fontSize={"sm"}
-        rounded={"sm"}
-        value={value}
-        onValueChange={(e) => setValue(e.value)}
-        pointerEvents={"auto"}
-      >
-        <Tabs.List>
-          <Tabs.Trigger value="metadata">
-            {(metadata && <LuFolder></LuFolder>) || (
-              <LuFolderMinus></LuFolderMinus>
-            )}
-          </Tabs.Trigger>
-          <Tabs.Trigger value="item" disabled={item === undefined}>
-            <LuInfo></LuInfo>
-          </Tabs.Trigger>
-        </Tabs.List>
-        <Tabs.Content value="metadata">
-          {(metadata && <Metadata metadata={metadata}></Metadata>) ||
-            "No file loaded..."}
-        </Tabs.Content>
-        <Tabs.Content value="item">
-          {(item && <Item item={item}></Item>) || "No item selected..."}
-        </Tabs.Content>
-      </Tabs.Root>
-    </SimpleGrid>
-  );
+  if (metadata) {
+    return (
+      <SimpleGrid columns={3} my={2}>
+        <Tabs.Root
+          bg={"bg.muted"}
+          px={4}
+          pt={2}
+          pb={4}
+          fontSize={"sm"}
+          rounded={"sm"}
+          value={value}
+          onValueChange={(e) => setValue(e.value)}
+          pointerEvents={"auto"}
+          overflow={"scroll"}
+          maxH={"90vh"}
+        >
+          <Tabs.List>
+            <Tabs.Trigger value="metadata">
+              {(metadata && <LuFolder></LuFolder>) || (
+                <LuFolderMinus></LuFolderMinus>
+              )}
+            </Tabs.Trigger>
+            <Tabs.Trigger value="item" disabled={item === undefined}>
+              <LuInfo></LuInfo>
+            </Tabs.Trigger>
+          </Tabs.List>
+          <Tabs.Content value="metadata">
+            {(metadata && <Metadata metadata={metadata}></Metadata>) ||
+              "No file loaded..."}
+          </Tabs.Content>
+          <Tabs.Content value="item">
+            {(item && <Item item={item}></Item>) || "No item selected..."}
+          </Tabs.Content>
+        </Tabs.Root>
+      </SimpleGrid>
+    );
+  } else {
+    return <></>;
+  }
 }
