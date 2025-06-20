@@ -6,6 +6,7 @@ export type StacGeoparquetState = {
   path?: string;
   metadata?: StacGeoparquetMetadata;
   table?: Table;
+  id?: string;
 };
 
 type StacGeoparquetContextType = {
@@ -13,7 +14,7 @@ type StacGeoparquetContextType = {
   dispatch: Dispatch<StacGeoparquetAction>;
 };
 
-type StacGeoparquetMetadata = {
+export type StacGeoparquetMetadata = {
   count: number;
   bounds: LngLatBounds;
 };
@@ -21,7 +22,8 @@ type StacGeoparquetMetadata = {
 export type StacGeoparquetAction =
   | { type: "set-path"; path: string }
   | { type: "set-metadata"; metadata: StacGeoparquetMetadata }
-  | { type: "set-table"; table: Table };
+  | { type: "set-table"; table: Table }
+  | { type: "set-id"; id?: string };
 
 export const StacGeoparquetContext =
   createContext<StacGeoparquetContextType | null>(null);

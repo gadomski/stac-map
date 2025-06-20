@@ -38,7 +38,7 @@ export default function Header() {
   }, [fileUpload.acceptedFiles, db, dispatch]);
 
   return (
-    <HStack spaceX={2}>
+    <HStack spaceX={2} pointerEvents={"auto"}>
       <Input
         variant={"subtle"}
         placeholder={

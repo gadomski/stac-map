@@ -8,17 +8,21 @@ import {
   useControl,
   type MapRef,
 } from "react-map-gl/maplibre";
-import { useStacGeoparquet } from "./stac-geoparquet/hooks";
+import {
+  useStacGeoparquet,
+  useStacGeoparquetDispatch,
+} from "./stac-geoparquet/hooks";
 import { useColorModeValue } from "./ui/color-mode";
 
 function DeckGLOverlay(props: DeckProps) {
-  const control = useControl<MapboxOverlay>(() => new MapboxOverlay(props));
+  const control = useControl<MapboxOverlay>(() => new MapboxOverlay({}));
   control.setProps(props);
   return <></>;
 }
 
 export default function Map() {
   const state = useStacGeoparquet();
+  const dispatch = useStacGeoparquetDispatch();
   const [layers, setLayers] = useState<GeoArrowPolygonLayer[]>([]);
   const mapRef = useRef<MapRef>(null);
   const mapStyle = useColorModeValue(
@@ -36,6 +40,15 @@ export default function Map() {
         getFillColor: () => {
           return [207, 63, 2, 100];
         },
+        pickable: true,
+        autoHighlight: true,
+        highlightColor: [252, 192, 38],
+        onHover: (info) => {
+          if (state.table) {
+            const id = state.table.getChild("id")?.get(info.index);
+            dispatch({ type: "set-id", id });
+          }
+        },
       });
       setLayers([layer]);
     } else {
@@ -46,7 +59,7 @@ export default function Map() {
   useEffect(() => {
     if (state.metadata) {
       if (mapRef.current) {
-        mapRef.current.fitBounds(state.metadata.bounds, { padding: 20 });
+        mapRef.current.fitBounds(state.metadata.bounds, { padding: 100 });
       }
     }
   }, [state.metadata]);

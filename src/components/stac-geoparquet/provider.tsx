@@ -1,6 +1,13 @@
 import { AsyncDuckDBConnection } from "@duckdb/duckdb-wasm";
 import { io } from "@geoarrow/geoarrow-js";
-import { Binary, Data, makeData, makeVector, Table } from "apache-arrow";
+import {
+  Binary,
+  Data,
+  makeData,
+  makeVector,
+  Table,
+  vectorFromArray,
+} from "apache-arrow";
 import { useDuckDb } from "duckdb-wasm-kit";
 import { LngLatBounds } from "maplibre-gl";
 import { useEffect, useReducer, useState, type ReactNode } from "react";
@@ -75,7 +82,7 @@ export default function StacGeoparquetProvider({
       if (connection) {
         (async () => {
           const result = await connection.query(
-            `SELECT st_aswkb(geometry) as geometry FROM read_parquet('${state.path}', union_by_name=true);`
+            `SELECT st_aswkb(geometry) as geometry, id FROM read_parquet('${state.path}', union_by_name=true);`
           );
           const geometry: Uint8Array[] = result.getChildAt(0)?.toArray();
           const wkb = new Uint8Array(geometry?.flatMap((array) => [...array]));
@@ -93,6 +100,7 @@ export default function StacGeoparquetProvider({
           const table = new Table({
             // @ts-expect-error: 2769
             geometry: makeVector(polygons),
+            id: vectorFromArray(result.getChild("id")?.toArray()),
           });
           table.schema.fields[0].metadata.set(
             "ARROW:extension:name",
@@ -122,5 +130,7 @@ function reducer(state: StacGeoparquetState, action: StacGeoparquetAction) {
       return { ...state, metadata: action.metadata };
     case "set-table":
       return { ...state, table: action.table };
+    case "set-id":
+      return { ...state, id: action.id };
   }
 }
