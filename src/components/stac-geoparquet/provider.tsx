@@ -42,8 +42,6 @@ export default function StacGeoparquetProvider({
 
   useEffect(() => {
     if (state.path) {
-      dispatch({ type: "set-id" });
-      dispatch({ type: "set-item" });
       if (connection) {
         (async () => {
           let result;
@@ -129,9 +127,8 @@ export default function StacGeoparquetProvider({
     }
   }, [state.path, connection, dispatch]);
 
-  // TODO I don't like this depending on state.path.
   useEffect(() => {
-    if (state.id) {
+    if (state.id && state.path) {
       if (connection) {
         (async () => {
           // TODO refactor query so we don't repeat logic.
@@ -144,8 +141,6 @@ export default function StacGeoparquetProvider({
       } else {
         // TODO Handle missing connection
       }
-    } else {
-      dispatch({ type: "set-item" });
     }
   }, [state.id, state.path, connection, dispatch]);
 
@@ -159,13 +154,13 @@ export default function StacGeoparquetProvider({
 function reducer(state: StacGeoparquetState, action: StacGeoparquetAction) {
   switch (action.type) {
     case "set-path":
-      return { ...state, path: action.path };
+      return { ...state, path: action.path, id: undefined, item: undefined };
     case "set-metadata":
       return { ...state, metadata: action.metadata };
     case "set-table":
       return { ...state, table: action.table };
     case "set-id":
-      return { ...state, id: action.id };
+      return { ...state, id: action.id, item: undefined };
     case "set-item":
       return { ...state, item: action.item };
   }
