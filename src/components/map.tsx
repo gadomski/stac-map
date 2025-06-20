@@ -32,6 +32,11 @@ export default function Map() {
         new GeoArrowPolygonLayer({
           id: "geoarrow-polygons",
           data: state.table,
+          stroked: true,
+          filled: true,
+          getFillColor: () => {
+            return [207, 63, 2, 100];
+          },
         }),
       ]);
     } else {
