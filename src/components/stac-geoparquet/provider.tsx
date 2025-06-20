@@ -42,11 +42,24 @@ export default function StacGeoparquetProvider({
 
   useEffect(() => {
     if (state.path) {
+      dispatch({ type: "set-id" });
+      dispatch({ type: "set-item" });
       if (connection) {
         (async () => {
-          const result = await connection.query(
-            `SELECT COUNT(*) AS count, MIN(bbox.xmin) as xmin, MIN(bbox.ymin) as ymin, MAX(bbox.xmax) as xmax, MAX(bbox.ymax) as ymax FROM read_parquet('${state.path}', union_by_name=true);`
-          );
+          let result;
+          try {
+            result = await connection.query(
+              `SELECT COUNT(*) AS count, MIN(bbox.xmin) as xmin, MIN(bbox.ymin) as ymin, MAX(bbox.xmax) as xmax, MAX(bbox.ymax) as ymax FROM read_parquet('${state.path}', union_by_name=true);`
+            );
+          } catch (e) {
+            toaster.create({
+              type: "error",
+              title: "Error loading file",
+              // @ts-expect-error: Don't want to bother with error typing
+              description: e.toString(),
+            });
+            return;
+          }
           const row = result.toArray().map((row) => row.toJSON())[0];
           const count = row.count;
           const bounds = new LngLatBounds([
