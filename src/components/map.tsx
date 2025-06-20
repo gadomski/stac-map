@@ -28,21 +28,28 @@ export default function Map() {
 
   useEffect(() => {
     if (state.table) {
-      setLayers([
-        new GeoArrowPolygonLayer({
-          id: "geoarrow-polygons",
-          data: state.table,
-          stroked: true,
-          filled: true,
-          getFillColor: () => {
-            return [207, 63, 2, 100];
-          },
-        }),
-      ]);
+      const layer = new GeoArrowPolygonLayer({
+        id: "geoarrow-polygons",
+        data: state.table,
+        stroked: true,
+        filled: true,
+        getFillColor: () => {
+          return [207, 63, 2, 100];
+        },
+      });
+      setLayers([layer]);
     } else {
       setLayers([]);
     }
   }, [state.table]);
+
+  useEffect(() => {
+    if (state.metadata) {
+      if (mapRef.current) {
+        mapRef.current.fitBounds(state.metadata.bounds, { padding: 20 });
+      }
+    }
+  }, [state.metadata]);
 
   return (
     <MaplibreMap

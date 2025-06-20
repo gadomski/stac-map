@@ -1,4 +1,5 @@
 import type { Table } from "apache-arrow";
+import { LngLatBounds } from "maplibre-gl";
 import { createContext, type Dispatch } from "react";
 
 export type StacGeoparquetState = {
@@ -14,6 +15,7 @@ type StacGeoparquetContextType = {
 
 type StacGeoparquetMetadata = {
   count: number;
+  bounds: LngLatBounds;
 };
 
 export type StacGeoparquetAction =

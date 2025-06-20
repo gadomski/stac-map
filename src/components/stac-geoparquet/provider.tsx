@@ -2,6 +2,7 @@ import { AsyncDuckDBConnection } from "@duckdb/duckdb-wasm";
 import { io } from "@geoarrow/geoarrow-js";
 import { Binary, Data, makeData, makeVector, Table } from "apache-arrow";
 import { useDuckDb } from "duckdb-wasm-kit";
+import { LngLatBounds } from "maplibre-gl";
 import { useEffect, useReducer, useState, type ReactNode } from "react";
 import { toaster } from "../ui/toaster";
 import {
@@ -36,13 +37,19 @@ export default function StacGeoparquetProvider({
       if (connection) {
         (async () => {
           const result = await connection.query(
-            `SELECT COUNT(*) AS count FROM read_parquet('${state.path}', union_by_name=true);`
+            `SELECT COUNT(*) AS count, MIN(bbox.xmin) as xmin, MIN(bbox.ymin) as ymin, MAX(bbox.xmax) as xmax, MAX(bbox.ymax) as ymax FROM read_parquet('${state.path}', union_by_name=true);`
           );
-          const rows = result.toArray().map((row) => row.toJSON());
-          const count = rows[0].count;
+          const row = result.toArray().map((row) => row.toJSON())[0];
+          const count = row.count;
+          const bounds = new LngLatBounds([
+            row.xmin,
+            row.ymin,
+            row.xmax,
+            row.ymax,
+          ]);
           dispatch({
             type: "set-metadata",
-            metadata: { count },
+            metadata: { count, bounds },
           });
           toaster.create({
             type: "success",
