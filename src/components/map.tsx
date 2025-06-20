@@ -43,7 +43,7 @@ export default function Map() {
         pickable: true,
         autoHighlight: true,
         highlightColor: [252, 192, 38],
-        onHover: (info) => {
+        onClick: (info) => {
           if (state.table) {
             const id = state.table.getChild("id")?.get(info.index);
             dispatch({ type: "set-id", id });
@@ -54,7 +54,7 @@ export default function Map() {
     } else {
       setLayers([]);
     }
-  }, [state.table]);
+  }, [state.table, dispatch]);
 
   useEffect(() => {
     if (state.metadata) {

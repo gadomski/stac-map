@@ -11,6 +11,7 @@ import {
 import { useDuckDb } from "duckdb-wasm-kit";
 import { LngLatBounds } from "maplibre-gl";
 import { useEffect, useReducer, useState, type ReactNode } from "react";
+import * as stacWasm from "../../stac-wasm";
 import { toaster } from "../ui/toaster";
 import {
   StacGeoparquetContext,
@@ -115,6 +116,26 @@ export default function StacGeoparquetProvider({
     }
   }, [state.path, connection, dispatch]);
 
+  // TODO I don't like this depending on state.path.
+  useEffect(() => {
+    if (state.id) {
+      if (connection) {
+        (async () => {
+          // TODO refactor query so we don't repeat logic.
+          const result = await connection.query(
+            `SELECT * EXCLUDE geometry FROM read_parquet('${state.path}', union_by_name=true) where id = '${state.id}'`
+          );
+          const item = stacWasm.arrowToStacJson(result)[0];
+          dispatch({ type: "set-item", item });
+        })();
+      } else {
+        // TODO Handle missing connection
+      }
+    } else {
+      dispatch({ type: "set-item" });
+    }
+  }, [state.id, state.path, connection, dispatch]);
+
   return (
     <StacGeoparquetContext value={{ state, dispatch }}>
       {children}
@@ -132,5 +153,7 @@ function reducer(state: StacGeoparquetState, action: StacGeoparquetAction) {
       return { ...state, table: action.table };
     case "set-id":
       return { ...state, id: action.id };
+    case "set-item":
+      return { ...state, item: action.item };
   }
 }
