@@ -1,12 +1,13 @@
 import { SimpleGrid, Tabs } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { LuFolder, LuFolderMinus, LuInfo } from "react-icons/lu";
+import { LuFilter, LuFolder, LuInfo } from "react-icons/lu";
+import Filter from "./filter";
 import Item from "./item";
 import Metadata from "./metadata";
 import { useStacGeoparquet } from "./stac-geoparquet/hooks";
 
 export default function Sidebar() {
-  const { metadata, item } = useStacGeoparquet();
+  const { metadata, item, search } = useStacGeoparquet();
   const [value, setValue] = useState("metadata");
 
   useEffect(() => {
@@ -35,17 +36,23 @@ export default function Sidebar() {
         >
           <Tabs.List>
             <Tabs.Trigger value="metadata">
-              {(metadata && <LuFolder></LuFolder>) || (
-                <LuFolderMinus></LuFolderMinus>
-              )}
+              <LuFolder></LuFolder>
+            </Tabs.Trigger>
+            <Tabs.Trigger value="filter" disabled={search === undefined}>
+              <LuFilter></LuFilter>
             </Tabs.Trigger>
             <Tabs.Trigger value="item" disabled={item === undefined}>
               <LuInfo></LuInfo>
             </Tabs.Trigger>
           </Tabs.List>
           <Tabs.Content value="metadata">
-            {(metadata && <Metadata metadata={metadata}></Metadata>) ||
-              "No file loaded..."}
+            <Metadata metadata={metadata}></Metadata>
+          </Tabs.Content>
+          <Tabs.Content value="filter">
+            {(search && (
+              <Filter search={search} metadata={metadata}></Filter>
+            )) ||
+              "No search set..."}
           </Tabs.Content>
           <Tabs.Content value="item">
             {(item && <Item item={item}></Item>) || "No item selected..."}

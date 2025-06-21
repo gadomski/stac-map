@@ -6,7 +6,7 @@ import type { StacItem } from "stac-ts";
 export type StacGeoparquetState = {
   path?: string;
   metadata?: StacGeoparquetMetadata;
-  search: StacSearch;
+  search?: StacSearch;
   table?: Table;
   id?: string;
   item?: StacItem;
@@ -25,14 +25,15 @@ export type StacGeoparquetMetadata = {
 };
 
 export type StacSearch = {
-  bbox?: number[];
-  startDatetime?: Date;
-  endDatetime?: Date;
+  bbox: number[];
+  startDatetime: Date;
+  endDatetime: Date;
 };
 
 export type StacGeoparquetAction =
   | { type: "set-path"; path: string }
   | { type: "set-metadata"; metadata: StacGeoparquetMetadata }
+  | { type: "set-search"; search: StacSearch }
   | { type: "set-table"; table: Table }
   | { type: "set-id"; id: string }
   | { type: "set-item"; item: StacItem };

@@ -18,6 +18,7 @@ export default function Footer() {
       {loading && <Text>Loading DuckDB...</Text>}
       {error && <Text color={"red"}>DuckDB error: {error.toString()}</Text>}
       {state.path && !state.metadata && <Text>Loading {state.path}</Text>}
+      {state.metadata && !state.table && <Text>Filtering {state.path}</Text>}
     </HStack>
   );
 }

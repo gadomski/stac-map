@@ -28,7 +28,7 @@ export default function StacGeoparquetProvider({
 }: {
   children: ReactNode;
 }) {
-  const [state, dispatch] = useReducer(reducer, { search: {} });
+  const [state, dispatch] = useReducer(reducer, {});
   const { db } = useDuckDb();
   const [connection, setConnection] = useState<
     AsyncDuckDBConnection | undefined
@@ -97,13 +97,17 @@ export default function StacGeoparquetProvider({
     }
   }, [state.path, connection, dispatch]);
 
-  // We separate this section to handle query updates
+  // We separate this section to handle search updates
   useEffect(() => {
     if (state.path) {
       if (connection) {
+        let search = "";
+        if (state.search) {
+          search = `WHERE datetime >= TIMESTAMP '${state.search.startDatetime.toISOString()}' AND datetime <= TIMESTAMP '${state.search.endDatetime.toISOString()}'`;
+        }
         (async () => {
           const result = await connection.query(
-            `SELECT ${TABLE} FROM read_parquet('${state.path}', union_by_name=true);`
+            `SELECT ${TABLE} FROM read_parquet('${state.path}', union_by_name=true) ${search};`
           );
           const geometry: Uint8Array[] = result.getChildAt(0)?.toArray();
           const wkb = new Uint8Array(geometry?.flatMap((array) => [...array]));
@@ -134,7 +138,7 @@ export default function StacGeoparquetProvider({
         })();
       }
     }
-  }, [state.path, connection, dispatch]);
+  }, [state.path, state.search, connection, dispatch]);
 
   useEffect(() => {
     if (state.id && state.path) {
@@ -168,7 +172,7 @@ function reducer(state: StacGeoparquetState, action: StacGeoparquetAction) {
         path: action.path,
         id: undefined,
         item: undefined,
-        search: {},
+        search: undefined,
       };
     case "set-metadata":
       return {
@@ -179,6 +183,11 @@ function reducer(state: StacGeoparquetState, action: StacGeoparquetAction) {
           startDatetime: action.metadata.startDatetime,
           endDatetime: action.metadata.endDatetime,
         },
+      };
+    case "set-search":
+      return {
+        ...state,
+        search: action.search,
       };
     case "set-table":
       return { ...state, table: action.table };
