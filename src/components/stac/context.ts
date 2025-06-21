@@ -1,13 +1,14 @@
 import type { Table } from "apache-arrow";
 import { LngLatBounds } from "maplibre-gl";
 import { createContext, type Dispatch } from "react";
-import type { StacCatalog, StacCollection } from "stac-ts";
+import type { StacCatalog, StacCollection, StacLink } from "stac-ts";
 
 export type StacState = {
   path?: string;
   container?: StacContainer;
   table?: Table;
   search?: string;
+  id?: string;
 };
 
 type StacContextType = {
@@ -27,6 +28,7 @@ export type StacItemCollection = {
   bounds: LngLatBounds;
   startDatetime: Date;
   endDatetime: Date;
+  links?: StacLink[];
 };
 
 export type StacSearch = {
@@ -37,9 +39,7 @@ export type StacSearch = {
 
 export type StacAction =
   | { type: "set-path"; path: string }
-  | { type: "set-catalog"; catalog: StacCatalog }
-  | { type: "set-collection"; collection: StacCollection }
-  | { type: "set-item-collection"; itemCollection: StacItemCollection }
+  | { type: "set-container"; container: StacContainer }
   | { type: "set-table"; table: Table }
   | { type: "set-id"; id: string };
 
