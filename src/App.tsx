@@ -1,13 +1,13 @@
 import { Box } from "@chakra-ui/react";
-import "./App.css";
+import "./app.css";
 import Map from "./components/map";
 import Overlay from "./components/overlay";
-import StacGeoparquetProvider from "./components/stac-geoparquet/provider";
+import StacProvider from "./components/stac/provider";
 import { Toaster } from "./components/ui/toaster";
 
 function App() {
   return (
-    <StacGeoparquetProvider>
+    <StacProvider>
       <Box
         style={{
           position: "absolute",
@@ -22,7 +22,7 @@ function App() {
         <Overlay></Overlay>
       </Box>
       <Toaster></Toaster>
-    </StacGeoparquetProvider>
+    </StacProvider>
   );
 }
 

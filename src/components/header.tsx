@@ -12,11 +12,8 @@ import {
 } from "@chakra-ui/react";
 import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, type FormEvent } from "react";
-import { LuDownload, LuUpload } from "react-icons/lu";
-import {
-  useStacGeoparquet,
-  useStacGeoparquetDispatch,
-} from "./stac-geoparquet/hooks";
+import { LuUpload } from "react-icons/lu";
+import { useStac, useStacDispatch } from "./stac/hooks";
 import { ColorModeButton } from "./ui/color-mode";
 
 export default function Header() {
@@ -24,8 +21,8 @@ export default function Header() {
     maxFiles: 1,
   });
   const { db } = useDuckDb();
-  const { path, table } = useStacGeoparquet();
-  const dispatch = useStacGeoparquetDispatch();
+  const { path } = useStac();
+  const dispatch = useStacDispatch();
 
   useEffect(() => {
     // This should always be true since we set maxFiles to 1
@@ -58,13 +55,7 @@ export default function Header() {
   return (
     <HStack spaceX={2} pointerEvents={"auto"}>
       <Group attached w={"full"} as={"form"} onSubmit={onSubmit}>
-        <Input
-          variant={"subtle"}
-          placeholder={
-            path || "Provide the URL of a stac-geoparquet file or file glob"
-          }
-          flex={"1"}
-        ></Input>
+        <Input variant={"subtle"} placeholder={path || ""} flex={"1"}></Input>
         <Button
           variant={"outline"}
           bg={"bg.subtle"}
@@ -81,6 +72,9 @@ export default function Header() {
         <Portal>
           <Menu.Positioner>
             <Menu.Content>
+              <Menu.Item value="https://stac.eoapi.dev/">
+                eoAPI DevSeed STAC
+              </Menu.Item>
               <Menu.Item value="https://raw.githubusercontent.com/developmentseed/labs-375-stac-geoparquet-backend/refs/heads/main/data/naip.parquet">
                 Colorado NAIP
               </Menu.Item>
@@ -96,9 +90,6 @@ export default function Header() {
           </IconButton>
         </FileUpload.Trigger>
       </FileUpload.RootProvider>
-      <IconButton variant={"ghost"} disabled={table === undefined}>
-        <LuDownload></LuDownload>
-      </IconButton>
       <ColorModeButton></ColorModeButton>
     </HStack>
   );

@@ -1,66 +1,49 @@
 import { SimpleGrid, Tabs } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
-import { LuFilter, LuFolder, LuInfo } from "react-icons/lu";
-import Filter from "./filter";
-import Item from "./item";
-import Metadata from "./metadata";
-import { useStacGeoparquet } from "./stac-geoparquet/hooks";
+import { LuFolder, LuFolderPlus, LuFolderRoot, LuSearch } from "react-icons/lu";
+import Container from "./container";
+import Search from "./search";
+import type { StacContainer } from "./stac/context";
+import { useStac } from "./stac/hooks";
 
-export default function Sidebar() {
-  const { metadata, item, search } = useStacGeoparquet();
-  const [value, setValue] = useState("metadata");
-
-  useEffect(() => {
-    if (item) {
-      setValue("item");
-    } else {
-      setValue("metadata");
-    }
-  }, [item]);
-
-  if (metadata) {
-    return (
-      <SimpleGrid columns={{ base: 1, md: 3 }} my={2}>
-        <Tabs.Root
-          bg={"bg.muted"}
-          px={4}
-          pt={2}
-          pb={4}
-          fontSize={"sm"}
-          rounded={"sm"}
-          value={value}
-          onValueChange={(e) => setValue(e.value)}
-          pointerEvents={"auto"}
-          overflow={"scroll"}
-          maxH={{ base: "40vh", md: "90vh" }}
-        >
-          <Tabs.List>
-            <Tabs.Trigger value="metadata">
-              <LuFolder></LuFolder>
-            </Tabs.Trigger>
-            <Tabs.Trigger value="filter" disabled={search === undefined}>
-              <LuFilter></LuFilter>
-            </Tabs.Trigger>
-            <Tabs.Trigger value="item" disabled={item === undefined}>
-              <LuInfo></LuInfo>
-            </Tabs.Trigger>
-          </Tabs.List>
-          <Tabs.Content value="metadata">
-            <Metadata metadata={metadata}></Metadata>
-          </Tabs.Content>
-          <Tabs.Content value="filter">
-            {(search && (
-              <Filter search={search} metadata={metadata}></Filter>
-            )) ||
-              "No search set..."}
-          </Tabs.Content>
-          <Tabs.Content value="item">
-            {(item && <Item item={item}></Item>) || "No item selected..."}
-          </Tabs.Content>
-        </Tabs.Root>
-      </SimpleGrid>
-    );
-  } else {
-    return <></>;
+export default function Sidebar({ container }: { container: StacContainer }) {
+  const { search } = useStac();
+  let folderIcon;
+  switch (container.type) {
+    case "Catalog":
+      folderIcon = <LuFolder></LuFolder>;
+      break;
+    case "Collection":
+      folderIcon = <LuFolderPlus></LuFolderPlus>;
+      break;
+    case "FeatureCollection":
+      folderIcon = <LuFolderRoot></LuFolderRoot>;
   }
+  return (
+    <SimpleGrid columns={{ base: 1, md: 3 }} my={2}>
+      <Tabs.Root
+        bg={"bg.muted"}
+        pointerEvents={"auto"}
+        defaultValue={"container"}
+        rounded={"sm"}
+        pb={4}
+      >
+        <Tabs.List>
+          <Tabs.Trigger value="container">{folderIcon}</Tabs.Trigger>
+          {search && (
+            <Tabs.Trigger value="search">
+              <LuSearch></LuSearch>
+            </Tabs.Trigger>
+          )}
+        </Tabs.List>
+        <Tabs.Content value="container" px={4}>
+          <Container container={container}></Container>
+        </Tabs.Content>
+        {search && (
+          <Tabs.Content value="search" px={4}>
+            <Search search={search}></Search>
+          </Tabs.Content>
+        )}
+      </Tabs.Root>
+    </SimpleGrid>
+  );
 }

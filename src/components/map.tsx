@@ -8,10 +8,7 @@ import {
   useControl,
   type MapRef,
 } from "react-map-gl/maplibre";
-import {
-  useStacGeoparquet,
-  useStacGeoparquetDispatch,
-} from "./stac-geoparquet/hooks";
+import { useStac, useStacDispatch } from "./stac/hooks";
 import { useColorModeValue } from "./ui/color-mode";
 
 function DeckGLOverlay(props: DeckProps) {
@@ -21,9 +18,9 @@ function DeckGLOverlay(props: DeckProps) {
 }
 
 export default function Map() {
-  const state = useStacGeoparquet();
-  const dispatch = useStacGeoparquetDispatch();
   const [layers, setLayers] = useState<GeoArrowPolygonLayer[]>([]);
+  const { table } = useStac();
+  const dispatch = useStacDispatch();
   const mapRef = useRef<MapRef>(null);
   const mapStyle = useColorModeValue(
     "positron-gl-style",
@@ -31,10 +28,10 @@ export default function Map() {
   );
 
   useEffect(() => {
-    if (state.table) {
+    if (table) {
       const layer = new GeoArrowPolygonLayer({
         id: "geoarrow-polygons",
-        data: state.table,
+        data: table,
         stroked: true,
         filled: true,
         getFillColor: () => {
@@ -44,8 +41,8 @@ export default function Map() {
         autoHighlight: true,
         highlightColor: [252, 192, 38],
         onClick: (info) => {
-          if (state.table) {
-            const id = state.table.getChild("id")?.get(info.index);
+          if (table) {
+            const id = table.getChild("id")?.get(info.index);
             dispatch({ type: "set-id", id });
           }
         },
@@ -54,15 +51,7 @@ export default function Map() {
     } else {
       setLayers([]);
     }
-  }, [state.table, dispatch]);
-
-  useEffect(() => {
-    if (state.metadata) {
-      if (mapRef.current) {
-        mapRef.current.fitBounds(state.metadata.bounds, { padding: 100 });
-      }
-    }
-  }, [state.metadata]);
+  }, [table, dispatch]);
 
   return (
     <MaplibreMap
