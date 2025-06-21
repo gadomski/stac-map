@@ -28,7 +28,7 @@ export default function StacGeoparquetProvider({
 }: {
   children: ReactNode;
 }) {
-  const [state, dispatch] = useReducer(reducer, {});
+  const [state, dispatch] = useReducer(reducer, { search: {} });
   const { db } = useDuckDb();
   const [connection, setConnection] = useState<
     AsyncDuckDBConnection | undefined
@@ -163,9 +163,23 @@ export default function StacGeoparquetProvider({
 function reducer(state: StacGeoparquetState, action: StacGeoparquetAction) {
   switch (action.type) {
     case "set-path":
-      return { ...state, path: action.path, id: undefined, item: undefined };
+      return {
+        ...state,
+        path: action.path,
+        id: undefined,
+        item: undefined,
+        search: {},
+      };
     case "set-metadata":
-      return { ...state, metadata: action.metadata };
+      return {
+        ...state,
+        metadata: action.metadata,
+        search: {
+          bbox: action.metadata.bounds.toArray().flat(),
+          startDatetime: action.metadata.startDatetime,
+          endDatetime: action.metadata.endDatetime,
+        },
+      };
     case "set-table":
       return { ...state, table: action.table };
     case "set-id":
