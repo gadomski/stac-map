@@ -12,7 +12,7 @@ import {
 } from "@chakra-ui/react";
 import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, type FormEvent } from "react";
-import { LuUpload } from "react-icons/lu";
+import { LuDownload, LuUpload } from "react-icons/lu";
 import {
   useStacGeoparquet,
   useStacGeoparquetDispatch,
@@ -24,7 +24,7 @@ export default function Header() {
     maxFiles: 1,
   });
   const { db } = useDuckDb();
-  const { path } = useStacGeoparquet();
+  const { path, table } = useStacGeoparquet();
   const dispatch = useStacGeoparquetDispatch();
 
   useEffect(() => {
@@ -65,7 +65,12 @@ export default function Header() {
           }
           flex={"1"}
         ></Input>
-        <Button variant={"outline"} bg={"bg.subtle"} type={"submit"}>
+        <Button
+          variant={"outline"}
+          bg={"bg.subtle"}
+          type={"submit"}
+          hideBelow={"md"}
+        >
           Load
         </Button>
       </Group>
@@ -91,6 +96,9 @@ export default function Header() {
           </IconButton>
         </FileUpload.Trigger>
       </FileUpload.RootProvider>
+      <IconButton variant={"ghost"} disabled={table === undefined}>
+        <LuDownload></LuDownload>
+      </IconButton>
       <ColorModeButton></ColorModeButton>
     </HStack>
   );
