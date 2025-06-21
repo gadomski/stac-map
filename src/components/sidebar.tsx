@@ -61,7 +61,7 @@ function Item({ item }: { item: StacItem }) {
         Assets
       </Heading>
 
-      <SimpleGrid columns={2} gap={2}>
+      <SimpleGrid columns={{ base: 1, sm: 2, md: 1, lg: 2 }} gap={2}>
         {Object.entries(item.assets).map(([key, asset]) => {
           // TODO make this configurable
           const showImage =
@@ -105,7 +105,7 @@ export default function Sidebar() {
 
   if (metadata) {
     return (
-      <SimpleGrid columns={3} my={2}>
+      <SimpleGrid columns={{ base: 1, md: 3 }} my={2}>
         <Tabs.Root
           bg={"bg.muted"}
           px={4}
@@ -117,7 +117,7 @@ export default function Sidebar() {
           onValueChange={(e) => setValue(e.value)}
           pointerEvents={"auto"}
           overflow={"scroll"}
-          maxH={"90vh"}
+          maxH={{ base: "40vh", md: "90vh" }}
         >
           <Tabs.List>
             <Tabs.Trigger value="metadata">
