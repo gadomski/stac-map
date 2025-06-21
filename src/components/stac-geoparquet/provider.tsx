@@ -47,7 +47,7 @@ export default function StacGeoparquetProvider({
           let result;
           try {
             result = await connection.query(
-              `SELECT COUNT(*) AS count, MIN(bbox.xmin) as xmin, MIN(bbox.ymin) as ymin, MAX(bbox.xmax) as xmax, MAX(bbox.ymax) as ymax FROM read_parquet('${state.path}', union_by_name=true);`
+              `SELECT COUNT(*) AS count, MIN(bbox.xmin) as xmin, MIN(bbox.ymin) as ymin, MAX(bbox.xmax) as xmax, MAX(bbox.ymax) as ymax, MIN(datetime) as startDatetime, MAX(datetime) as endDatetime FROM read_parquet('${state.path}', union_by_name=true);`
             );
           } catch (e) {
             toaster.create({
@@ -68,7 +68,12 @@ export default function StacGeoparquetProvider({
           ]);
           dispatch({
             type: "set-metadata",
-            metadata: { count, bounds },
+            metadata: {
+              count,
+              bounds,
+              startDatetime: new Date(row.startDatetime),
+              endDatetime: new Date(row.endDatetime),
+            },
           });
           toaster.create({
             type: "success",

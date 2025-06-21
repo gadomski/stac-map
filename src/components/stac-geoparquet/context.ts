@@ -19,6 +19,8 @@ type StacGeoparquetContextType = {
 export type StacGeoparquetMetadata = {
   count: number;
   bounds: LngLatBounds;
+  startDatetime: Date;
+  endDatetime: Date;
 };
 
 export type StacGeoparquetAction =
