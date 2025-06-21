@@ -19,6 +19,10 @@ import {
   type StacGeoparquetState,
 } from "./context";
 
+const METADATA =
+  "COUNT(*) AS count, MIN(bbox.xmin) as xmin, MIN(bbox.ymin) as ymin, MAX(bbox.xmax) as xmax, MAX(bbox.ymax) as ymax, MIN(datetime) as startDatetime, MAX(datetime) as endDatetime";
+const TABLE = "ST_AsWKB(geometry) AS geometry, id";
+
 export default function StacGeoparquetProvider({
   children,
 }: {
@@ -47,7 +51,7 @@ export default function StacGeoparquetProvider({
           let result;
           try {
             result = await connection.query(
-              `SELECT COUNT(*) AS count, MIN(bbox.xmin) as xmin, MIN(bbox.ymin) as ymin, MAX(bbox.xmax) as xmax, MAX(bbox.ymax) as ymax, MIN(datetime) as startDatetime, MAX(datetime) as endDatetime FROM read_parquet('${state.path}', union_by_name=true);`
+              `SELECT ${METADATA} FROM read_parquet('${state.path}', union_by_name=true);`
             );
           } catch (e) {
             toaster.create({
@@ -99,7 +103,7 @@ export default function StacGeoparquetProvider({
       if (connection) {
         (async () => {
           const result = await connection.query(
-            `SELECT st_aswkb(geometry) as geometry, id FROM read_parquet('${state.path}', union_by_name=true);`
+            `SELECT ${TABLE} FROM read_parquet('${state.path}', union_by_name=true);`
           );
           const geometry: Uint8Array[] = result.getChildAt(0)?.toArray();
           const wkb = new Uint8Array(geometry?.flatMap((array) => [...array]));
@@ -138,7 +142,7 @@ export default function StacGeoparquetProvider({
         (async () => {
           // TODO refactor query so we don't repeat logic.
           const result = await connection.query(
-            `SELECT * EXCLUDE geometry FROM read_parquet('${state.path}', union_by_name=true) where id = '${state.id}'`
+            `SELECT * EXCLUDE geometry FROM read_parquet('${state.path}', union_by_name=true) WHERE id = '${state.id}'`
           );
           const item = stacWasm.arrowToStacJson(result)[0];
           dispatch({ type: "set-item", item });
