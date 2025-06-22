@@ -22,18 +22,25 @@ export function StacProvider({ children }: { children: ReactNode }) {
     (async () => {
       if (state.href) {
         if (state.href?.endsWith(".parquet")) {
-          dispatch({
-            type: "set-value",
-            value: {
-              type: "FeatureCollection",
-              id: state.href.split("/").pop(),
-              description: "A stac-geoparquet file",
-              features: [],
-            },
-          });
           if (db) {
             const connection = await db.connect();
             connection.query("LOAD spatial;");
+            const count = (
+              await queryDuckDb(state.href, connection, {
+                select: "COUNT(*) as count",
+              })
+            )
+              ?.toArray()[0]
+              .toJSON().count;
+            dispatch({
+              type: "set-value",
+              value: {
+                type: "FeatureCollection",
+                id: state.href.split("/").pop(),
+                description: `A stac-geoparquet file with ${count} items`,
+                features: [],
+              },
+            });
             const bbox = await getStacGeoparquetBbox(state.href, connection);
             if (bbox) {
               dispatch({ type: "set-bbox", bbox });
@@ -180,6 +187,7 @@ async function queryDuckDb(
   { select }: { select: string }
 ) {
   const query = `SELECT ${select} from read_parquet('${href}')`;
+  console.log(query);
   try {
     return await connection.query(query);
   } catch (error) {

@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   FileUpload,
   Heading,
   Icon,
@@ -8,33 +9,102 @@ import {
   Tabs,
   Text,
   useFileUpload,
+  Wrap,
 } from "@chakra-ui/react";
 import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState } from "react";
-import { LuFilter, LuInfo, LuSearch, LuUpload } from "react-icons/lu";
+import {
+  LuExternalLink,
+  LuFilter,
+  LuInfo,
+  LuSearch,
+  LuUpload,
+} from "react-icons/lu";
+import type { StacCatalog, StacCollection, StacItem } from "stac-ts";
 import { useStac, useStacDispatch } from "./stac/hooks";
-import type { StacValue } from "./stac/types";
+import type { StacItemCollection, StacValue } from "./stac/types";
+
+function Catalog({ catalog }: { catalog: StacCatalog }) {
+  return <Stack></Stack>;
+}
+
+function Collection({ collection }: { collection: StacCollection }) {
+  return <></>;
+}
+
+function Item({ item }: { item: StacItem }) {
+  return <></>;
+}
+
+function ItemCollection({
+  itemCollection,
+}: {
+  itemCollection: StacItemCollection;
+}) {
+  return <></>;
+}
+
+function StacBrowserButton({ href }: { href: string }) {
+  const stacBrowserHref = `https://radiantearth.github.io/stac-browser/#/external/${href.replace(
+    /^https?:\/\//i,
+    ""
+  )}`;
+  return (
+    <Button asChild colorPalette={"teal"}>
+      <a href={stacBrowserHref}>
+        Open in STAC Browser <LuExternalLink></LuExternalLink>
+      </a>
+    </Button>
+  );
+}
 
 function Value({ value }: { value: StacValue }) {
   // @ts-expect-error Items don't have a title.
   const title: string = value.title || value.id || "missing id";
+  const selfLink = value.links?.find((link) => link.rel == "self");
+  let detail;
+  switch (value.type) {
+    case "Catalog":
+      detail = <Catalog catalog={value}></Catalog>;
+      break;
+    case "Collection":
+      detail = <Collection collection={value}></Collection>;
+      break;
+    case "Feature":
+      detail = <Item item={value}></Item>;
+      break;
+    case "FeatureCollection":
+      detail = <ItemCollection itemCollection={value}></ItemCollection>;
+      break;
+  }
   return (
-    <Stack gap={0}>
-      <Heading fontSize={"xs"} fontWeight={"lighter"}>
-        {value.type}
-      </Heading>
-      <Heading>{title}</Heading>
-      {value.title !== undefined && typeof value.id === "string" && (
-        <Heading fontSize={"xs"} fontWeight={"lighter"}>
-          {value.id}
+    <>
+      <Stack mb={4} gap={0}>
+        <Heading fontSize={"xs"} fontWeight={"lighter"} my={0}>
+          {value.type}
+          {value.title !== undefined &&
+            typeof value.id === "string" &&
+            `: ${value.id}`}
         </Heading>
+        <Heading mb={2}>{title}</Heading>
+        {typeof value.description === "string" && (
+          <Text lineClamp={3} fontSize={"md"} fontWeight={"light"}>
+            {value.description}
+          </Text>
+        )}
+      </Stack>
+      {selfLink && (
+        <Wrap>
+          <Button asChild variant={"surface"}>
+            <a href={selfLink.href}>
+              Open <LuExternalLink></LuExternalLink>
+            </a>
+          </Button>
+          <StacBrowserButton href={selfLink.href}></StacBrowserButton>
+        </Wrap>
       )}
-      {typeof value.description === "string" && (
-        <Text lineClamp={3} fontSize={"md"} fontWeight={"light"}>
-          {value.description}
-        </Text>
-      )}
-    </Stack>
+      {detail}
+    </>
   );
 }
 
@@ -87,7 +157,7 @@ export default function Panel() {
         onValueChange={(e) => setTabValue(e.value)}
       >
         <Tabs.List>
-          <Tabs.Trigger value="value">
+          <Tabs.Trigger value="value" disabled={value === undefined}>
             <LuInfo></LuInfo>
           </Tabs.Trigger>
           <Tabs.Trigger value="search" disabled={true}>

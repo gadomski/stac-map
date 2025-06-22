@@ -1,7 +1,7 @@
 import { Table } from "apache-arrow";
 import type { Feature, FeatureCollection } from "geojson";
 import { type Dispatch } from "react";
-import type { StacCatalog, StacCollection, StacItem } from "stac-ts";
+import type { StacCatalog, StacCollection, StacItem, StacLink } from "stac-ts";
 
 export type StacValue =
   | StacCatalog
@@ -12,6 +12,8 @@ export type StacValue =
 export type StacItemCollection = {
   type: "FeatureCollection";
   features: StacItem[];
+  numberMatched?: number;
+  links?: StacLink[];
   [k: string]: unknown;
 };
 
