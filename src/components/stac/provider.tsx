@@ -1,14 +1,15 @@
 import { useEffect, useReducer, type ReactNode } from "react";
 import { StacContext, type StacAction, type StacState } from "./context";
-import { useStacFetch, useStacGeoparquet } from "./hooks";
+import { useStacGeoparquet, useStacJson } from "./hooks";
 
 export default function StacProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, {});
   const { itemCollection, table } = useStacGeoparquet(
-    state.path,
-    state.path?.endsWith(".parquet")
+    (state.path?.endsWith(".parquet") && state.path) || undefined
   );
-  const container = useStacFetch(state.path, !state.path?.endsWith(".parquet"));
+  const { container, searchEndpoint } = useStacJson(
+    (!state.path?.endsWith(".parquet") && state.path) || undefined
+  );
 
   useEffect(() => {
     if (itemCollection) {
@@ -23,6 +24,12 @@ export default function StacProvider({ children }: { children: ReactNode }) {
   }, [container]);
 
   useEffect(() => {
+    if (searchEndpoint) {
+      dispatch({ type: "set-search-endpoint", searchEndpoint });
+    }
+  }, [searchEndpoint]);
+
+  useEffect(() => {
     if (table) {
       dispatch({ type: "set-table", table });
     }
@@ -32,7 +39,6 @@ export default function StacProvider({ children }: { children: ReactNode }) {
 }
 
 function reducer(state: StacState, action: StacAction) {
-  console.log(action);
   switch (action.type) {
     case "set-path":
       return {
@@ -43,9 +49,13 @@ function reducer(state: StacState, action: StacAction) {
       return {
         ...state,
         container: action.container,
-        search: action.container.links?.find((link) => link.rel == "search")
-          ?.href,
         table: undefined,
+        searchEndpoint: undefined,
+      };
+    case "set-search-endpoint":
+      return {
+        ...state,
+        searchEndpoint: action.searchEndpoint,
       };
     case "set-table":
       return {
@@ -56,6 +66,11 @@ function reducer(state: StacState, action: StacAction) {
       return {
         ...state,
         id: action.id,
+      };
+    case "set-bounds":
+      return {
+        ...state,
+        bounds: action.bounds,
       };
   }
 }

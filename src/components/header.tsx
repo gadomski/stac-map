@@ -75,6 +75,9 @@ export default function Header() {
               <Menu.Item value="https://stac.eoapi.dev/">
                 eoAPI DevSeed STAC
               </Menu.Item>
+              <Menu.Item value="https://planetarycomputer.microsoft.com/api/stac/v1">
+                Microsoft Planetary Computer
+              </Menu.Item>
               <Menu.Item value="https://raw.githubusercontent.com/developmentseed/labs-375-stac-geoparquet-backend/refs/heads/main/data/naip.parquet">
                 Colorado NAIP
               </Menu.Item>

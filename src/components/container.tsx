@@ -1,5 +1,7 @@
-import { DataList, Stack } from "@chakra-ui/react";
+import { DataList, Link, List, Stack } from "@chakra-ui/react";
+import type { StacLink } from "stac-ts";
 import type { StacContainer, StacItemCollection } from "./stac/context";
+import { useStacDispatch } from "./stac/hooks";
 
 function ItemCollectionDataListItems({
   itemCollection,
@@ -28,7 +30,36 @@ function ItemCollectionDataListItems({
   );
 }
 
+function Children({ children }: { children: StacLink[] }) {
+  const dispatch = useStacDispatch();
+
+  return (
+    <>
+      <List.Root variant={"plain"} fontSize={"sm"}>
+        {children.map((child) => (
+          <List.Item key={child.href}>
+            <Link
+              onClick={() => {
+                dispatch({
+                  type: "set-path",
+                  path: child.href,
+                  title: child.title,
+                });
+              }}
+            >
+              {child.title || child.href}
+            </Link>
+          </List.Item>
+        ))}
+      </List.Root>
+    </>
+  );
+}
+
 export default function Container({ container }: { container: StacContainer }) {
+  const children = container.links?.filter((link) => link.rel == "child");
+  const parent = container.links?.find((link) => link.rel == "parent");
+  const dispatch = useStacDispatch();
   return (
     <Stack>
       <DataList.Root orientation={"horizontal"}>
@@ -42,6 +73,12 @@ export default function Container({ container }: { container: StacContainer }) {
           <DataList.ItemLabel>Type</DataList.ItemLabel>
           <DataList.ItemValue>{container.type}</DataList.ItemValue>
         </DataList.Item>
+        {container.stac_version && (
+          <DataList.Item>
+            <DataList.ItemLabel>STAC version</DataList.ItemLabel>
+            <DataList.ItemValue>{container.stac_version}</DataList.ItemValue>
+          </DataList.Item>
+        )}
         {container.title && (
           <DataList.Item>
             <DataList.ItemLabel>Title</DataList.ItemLabel>
@@ -58,6 +95,32 @@ export default function Container({ container }: { container: StacContainer }) {
           <ItemCollectionDataListItems
             itemCollection={container}
           ></ItemCollectionDataListItems>
+        )}
+        {parent && (
+          <DataList.Item>
+            <DataList.ItemLabel>Parent</DataList.ItemLabel>
+            <DataList.ItemValue>
+              <Link
+                onClick={() =>
+                  dispatch({
+                    type: "set-path",
+                    path: parent.href,
+                    title: parent.title,
+                  })
+                }
+              >
+                {parent.title || parent.href}
+              </Link>
+            </DataList.ItemValue>
+          </DataList.Item>
+        )}
+        {children && children.length > 0 && (
+          <DataList.Item>
+            <DataList.ItemLabel>Children</DataList.ItemLabel>
+            <DataList.ItemValue>
+              <Children children={children}></Children>
+            </DataList.ItemValue>
+          </DataList.Item>
         )}
       </DataList.Root>
     </Stack>

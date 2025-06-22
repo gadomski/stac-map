@@ -72,6 +72,11 @@ export default function Map() {
         width: "100vw",
       }}
       mapStyle={`https://basemaps.cartocdn.com/gl/${mapStyle}/style.json`}
+      onMoveEnd={() => {
+        if (mapRef.current) {
+          dispatch({ type: "set-bounds", bounds: mapRef.current.getBounds() });
+        }
+      }}
     >
       <DeckGLOverlay layers={layers}></DeckGLOverlay>
     </MaplibreMap>

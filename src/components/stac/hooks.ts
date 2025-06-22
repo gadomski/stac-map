@@ -15,6 +15,7 @@ import {
   type StacContainer,
   StacContext,
   type StacItemCollection,
+  type StacSearchEndpoint,
 } from "./context";
 
 export function useStac() {
@@ -54,7 +55,7 @@ function useDuckDbConnection() {
   return connection;
 }
 
-export function useStacGeoparquet(path?: string, isGeoparquet?: boolean) {
+export function useStacGeoparquet(path?: string) {
   const [itemCollection, setItemCollection] = useState<
     StacItemCollection | undefined
   >();
@@ -63,7 +64,7 @@ export function useStacGeoparquet(path?: string, isGeoparquet?: boolean) {
 
   useEffect(() => {
     (async () => {
-      if (path && isGeoparquet && connection) {
+      if (path && connection) {
         const metadataResult = await connection.query(
           `SELECT COUNT(*) AS count, MIN(bbox.xmin) as xmin, MIN(bbox.ymin) as ymin, MAX(bbox.xmax) as xmax, MAX(bbox.ymax) as ymax, MIN(datetime) as startDatetime, MAX(datetime) as endDatetime FROM read_parquet('${path}', union_by_name=true);`
         );
@@ -84,11 +85,11 @@ export function useStacGeoparquet(path?: string, isGeoparquet?: boolean) {
         });
       }
     })();
-  }, [path, isGeoparquet, connection]);
+  }, [path, connection]);
 
   useEffect(() => {
     (async () => {
-      if (path && isGeoparquet && connection) {
+      if (path && connection) {
         const result = await connection.query(
           `SELECT ST_AsWKB(geometry) as geometry, id FROM read_parquet('${path}')`
         );
@@ -117,17 +118,20 @@ export function useStacGeoparquet(path?: string, isGeoparquet?: boolean) {
         setTable(table);
       }
     })();
-  }, [path, isGeoparquet, connection]);
+  }, [path, connection]);
 
   return { itemCollection, table };
 }
 
-export function useStacFetch(path?: string, isJson?: boolean) {
+export function useStacJson(path?: string) {
   const [container, setContainer] = useState<StacContainer | undefined>();
+  const [searchEndpoint, setSearchEndpoint] = useState<
+    StacSearchEndpoint | undefined
+  >();
 
   useEffect(() => {
     (async () => {
-      if (path && isJson) {
+      if (path) {
         const response = await fetch(path);
         if (response.ok) {
           const data = await response.json();
@@ -138,11 +142,31 @@ export function useStacFetch(path?: string, isJson?: boolean) {
               break;
             default:
               setContainer(undefined);
+              break;
           }
         }
       }
     })();
-  }, [path, isJson]);
+  }, [path]);
 
-  return container;
+  useEffect(() => {
+    if (container) {
+      const searchLink = container.links?.find((link) => link.rel == "search");
+      const dataLink = container.links?.find((link) => link.rel == "data");
+      if (searchLink && dataLink) {
+        (async () => {
+          const response = await fetch(dataLink.href);
+          if (response.ok) {
+            const collections = (await response.json()).collections;
+            setSearchEndpoint({
+              href: searchLink.href,
+              collections: collections,
+            });
+          }
+        })();
+      }
+    }
+  }, [container]);
+
+  return { container, searchEndpoint };
 }

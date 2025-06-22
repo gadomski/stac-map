@@ -1,13 +1,14 @@
 import type { Table } from "apache-arrow";
 import { LngLatBounds } from "maplibre-gl";
 import { createContext, type Dispatch } from "react";
-import type { StacCatalog, StacCollection, StacLink } from "stac-ts";
+import type { StacCatalog, StacCollection, StacItem, StacLink } from "stac-ts";
 
 export type StacState = {
   path?: string;
   container?: StacContainer;
   table?: Table;
-  search?: string;
+  searchEndpoint?: StacSearchEndpoint;
+  bounds?: LngLatBounds;
   id?: string;
 };
 
@@ -21,6 +22,8 @@ export type StacContainer = StacCatalog | StacCollection | StacItemCollection;
 /// A customized item collection for easy use with stac-geoparquet
 export type StacItemCollection = {
   type: "FeatureCollection";
+  stac_version?: string;
+  features?: StacItem[];
   id?: string;
   title?: string;
   description?: string;
@@ -31,16 +34,25 @@ export type StacItemCollection = {
   links?: StacLink[];
 };
 
+export type StacSearchEndpoint = {
+  href: string;
+  collections: StacCollection[];
+};
+
 export type StacSearch = {
   bbox: number[];
-  startDatetime: Date;
-  endDatetime: Date;
+  collections: string[];
+  startDatetime?: Date;
+  endDatetime?: Date;
+  maxItems: number;
 };
 
 export type StacAction =
-  | { type: "set-path"; path: string }
+  | { type: "set-path"; path: string; title?: string }
   | { type: "set-container"; container: StacContainer }
+  | { type: "set-search-endpoint"; searchEndpoint: StacSearchEndpoint }
   | { type: "set-table"; table: Table }
-  | { type: "set-id"; id: string };
+  | { type: "set-id"; id: string }
+  | { type: "set-bounds"; bounds: LngLatBounds };
 
 export const StacContext = createContext<StacContextType | null>(null);
