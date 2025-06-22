@@ -7,7 +7,7 @@ import {
   Portal,
   type MenuSelectionDetails,
 } from "@chakra-ui/react";
-import type { Dispatch, SetStateAction } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import { getStac, type StacValue } from "./stac";
 import { ColorModeButton } from "./ui/color-mode";
 
@@ -16,15 +16,34 @@ export default function Header({
 }: {
   setValue: Dispatch<SetStateAction<StacValue | undefined>>;
 }) {
+  const [href, setHref] = useState<string>("");
+
   async function onSelectExample(details: MenuSelectionDetails) {
+    setHref(details.value);
+    setValue(undefined);
     const value = await getStac(details.value);
     setValue(value);
   }
 
   return (
     <HStack spaceX={2} pointerEvents={"auto"}>
-      <Group attached w={"full"} as={"form"}>
-        <Input variant={"subtle"} flex={"1"}></Input>
+      <Group
+        attached
+        w={"full"}
+        as={"form"}
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setValue(undefined);
+          const value = await getStac(href);
+          setValue(value);
+        }}
+      >
+        <Input
+          variant={"subtle"}
+          flex={"1"}
+          value={href}
+          onChange={(e) => setHref(e.currentTarget.value)}
+        ></Input>
         <Button
           variant={"outline"}
           bg={"bg.subtle"}
