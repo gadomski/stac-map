@@ -60,6 +60,12 @@ export default function Panel() {
     }
   }, [fileUpload.acceptedFiles, db, dispatch]);
 
+  useEffect(() => {
+    if (value) {
+      setTabValue("value");
+    }
+  }, [value]);
+
   return (
     <SimpleGrid columns={{ base: 1, md: 3 }} my={2}>
       <Tabs.Root
