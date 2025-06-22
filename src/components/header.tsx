@@ -16,6 +16,7 @@ export default function Header() {
   const dispatch = useStacDispatch();
 
   async function onSelectExample(details: MenuSelectionDetails) {
+    setHref(details.value);
     dispatch({ type: "set-href", href: details.value });
   }
 

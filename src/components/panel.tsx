@@ -11,7 +11,7 @@ import {
 } from "@chakra-ui/react";
 import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState } from "react";
-import { LuInfo, LuUpload } from "react-icons/lu";
+import { LuFilter, LuInfo, LuSearch, LuUpload } from "react-icons/lu";
 import { useStac, useStacDispatch } from "./stac/hooks";
 import type { StacValue } from "./stac/types";
 
@@ -49,14 +49,21 @@ export default function Panel() {
     // This should always be true since we set maxFiles to 1
     if (fileUpload.acceptedFiles.length == 1) {
       const file = fileUpload.acceptedFiles[0];
-      if (db) {
-        (async () => {
-          const buffer = await file.arrayBuffer();
-          // TODO do we need to clean up, eventually?
-          db.registerFileBuffer(file.name, new Uint8Array(buffer));
-          dispatch({ type: "set-href", href: file.name });
-        })();
-      }
+      (async () => {
+        if (file.name.endsWith(".parquet")) {
+          if (db) {
+            const buffer = await file.arrayBuffer();
+            // TODO do we need to clean up, eventually?
+            db.registerFileBuffer(file.name, new Uint8Array(buffer));
+            dispatch({ type: "set-href", href: file.name });
+          }
+        } else {
+          const text = await file.text();
+          const value = JSON.parse(text);
+          dispatch({ type: "set-href" });
+          dispatch({ type: "set-value", value });
+        }
+      })();
     }
   }, [fileUpload.acceptedFiles, db, dispatch]);
 
@@ -82,6 +89,12 @@ export default function Panel() {
         <Tabs.List>
           <Tabs.Trigger value="value">
             <LuInfo></LuInfo>
+          </Tabs.Trigger>
+          <Tabs.Trigger value="search" disabled={true}>
+            <LuSearch></LuSearch>
+          </Tabs.Trigger>
+          <Tabs.Trigger value="filter" disabled={true}>
+            <LuFilter></LuFilter>
           </Tabs.Trigger>
           <Tabs.Trigger value="upload">
             <LuUpload></LuUpload>

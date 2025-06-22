@@ -1,6 +1,7 @@
-import { type DeckProps } from "@deck.gl/core";
+import { Layer, type DeckProps } from "@deck.gl/core";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { GeoArrowPolygonLayer } from "@geoarrow/deck.gl-layers";
+import { GeoJsonLayer } from "deck.gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -18,8 +19,10 @@ function DeckGLOverlay(props: DeckProps) {
 }
 
 export default function Map() {
-  const { table, bbox } = useStac();
-  const [layers, setLayers] = useState<GeoArrowPolygonLayer[]>([]);
+  const { table, bbox, geojson } = useStac();
+  const [tableLayer, setTableLayer] = useState<GeoArrowPolygonLayer>();
+  const [geoJsonLayer, setGeoJsonLayer] = useState<Layer>();
+  const [layers, setLayers] = useState<Layer[]>([]);
   const mapRef = useRef<MapRef>(null);
   const mapStyle = useColorModeValue(
     "positron-gl-style",
@@ -40,9 +43,9 @@ export default function Map() {
         autoHighlight: true,
         highlightColor: [252, 192, 38],
       });
-      setLayers([layer]);
+      setTableLayer(layer);
     } else {
-      setLayers([]);
+      setTableLayer(undefined);
     }
   }, [table]);
 
@@ -59,6 +62,33 @@ export default function Map() {
       }
     }
   }, [bbox]);
+
+  useEffect(() => {
+    if (geojson) {
+      const layer = new GeoJsonLayer({
+        id: "geojson",
+        data: geojson,
+        stroked: false,
+        filled: true,
+        pickable: true,
+        getFillColor: [160, 160, 180, 200],
+      });
+      setGeoJsonLayer(layer);
+    } else {
+      setGeoJsonLayer(undefined);
+    }
+  }, [geojson]);
+
+  useEffect(() => {
+    const layers = [];
+    if (geoJsonLayer) {
+      layers.push(geoJsonLayer);
+    }
+    if (tableLayer) {
+      layers.push(tableLayer);
+    }
+    setLayers(layers);
+  }, [geoJsonLayer, tableLayer]);
 
   return (
     <MaplibreMap

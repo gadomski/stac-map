@@ -66,12 +66,26 @@ function reducer(state: StacState, action: StacAction) {
           href: action.href,
           value: undefined,
           table: undefined,
+          geojson: undefined,
         };
       } else {
         return state;
       }
-    case "set-value":
-      return { ...state, value: action.value };
+    case "set-value": {
+      const newState = { ...state, value: action.value };
+      if (
+        ["Feature", "FeatureCollection"].includes(action.value.type) &&
+        action.value.geometry !== null
+      ) {
+        // @ts-expect-error We know that we want this here
+        newState.geojson = action.value;
+      }
+      if (action.value.bbox !== undefined) {
+        // @ts-expect-error Man this is hard
+        newState.bbox = action.value.bbox;
+      }
+      return newState;
+    }
     case "set-table":
       return { ...state, table: action.table };
     case "set-bbox":
