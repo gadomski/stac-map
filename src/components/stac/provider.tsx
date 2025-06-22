@@ -56,12 +56,16 @@ export function StacProvider({ children }: { children: ReactNode }) {
 function reducer(state: StacState, action: StacAction) {
   switch (action.type) {
     case "set-href":
-      return {
-        ...state,
-        href: action.href,
-        value: undefined,
-        table: undefined,
-      };
+      if (state.href !== action.href) {
+        return {
+          ...state,
+          href: action.href,
+          value: undefined,
+          table: undefined,
+        };
+      } else {
+        return state;
+      }
     case "set-value":
       return { ...state, value: action.value };
     case "set-table":
