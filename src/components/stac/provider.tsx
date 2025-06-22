@@ -10,7 +10,15 @@ export function StacProvider({ children }: { children: ReactNode }) {
     (async () => {
       if (state.href) {
         if (state.href?.endsWith(".parquet")) {
-          // TODO
+          dispatch({
+            type: "set-value",
+            value: {
+              type: "FeatureCollection",
+              id: state.href.split("/").pop(),
+              description: "A stac-geoparquet file",
+              features: [],
+            },
+          });
         } else {
           const value = await getStacJson(state.href);
           dispatch({ type: "set-value", value });
