@@ -7,24 +7,17 @@ import {
   Portal,
   type MenuSelectionDetails,
 } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
-import { useStac, useStacDispatch } from "./stac/hooks";
+import { useState } from "react";
+import { useStacDispatch } from "./stac/hooks";
 import { ColorModeButton } from "./ui/color-mode";
 
 export default function Header() {
   const [href, setHref] = useState<string>("");
   const dispatch = useStacDispatch();
-  const { href: stacHref } = useStac();
 
   async function onSelectExample(details: MenuSelectionDetails) {
     dispatch({ type: "set-href", href: details.value });
   }
-
-  useEffect(() => {
-    if (stacHref) {
-      setHref(stacHref);
-    }
-  }, [href, stacHref]);
 
   return (
     <HStack spaceX={2} pointerEvents={"auto"}>
