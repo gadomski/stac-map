@@ -1,4 +1,4 @@
-import { Box, Heading, SimpleGrid, Stack, Tabs } from "@chakra-ui/react";
+import { Box, Heading, SimpleGrid, Stack, Tabs, Text } from "@chakra-ui/react";
 import { useState } from "react";
 import { LuInfo } from "react-icons/lu";
 import type { StacValue } from "./stac";
@@ -12,10 +12,15 @@ function Value({ value }: { value: StacValue }) {
         {value.type}
       </Heading>
       <Heading>{title}</Heading>
-      {value.title !== undefined && value.id !== undefined && (
+      {value.title !== undefined && typeof value.id === "string" && (
         <Heading fontSize={"xs"} fontWeight={"lighter"}>
           {value.id}
         </Heading>
+      )}
+      {typeof value.description === "string" && (
+        <Text lineClamp={3} fontSize={"md"} fontWeight={"light"}>
+          {value.description}
+        </Text>
       )}
     </Stack>
   );

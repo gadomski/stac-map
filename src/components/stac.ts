@@ -1,4 +1,4 @@
-import type { StacCatalog, StacCollection, StacItem, StacLink } from "stac-ts";
+import type { StacCatalog, StacCollection, StacItem } from "stac-ts";
 import { toaster } from "./ui/toaster";
 
 export type StacValue =
@@ -9,10 +9,8 @@ export type StacValue =
 
 export type StacItemCollection = {
   type: "FeatureCollection";
-  id?: string;
-  title?: string;
   features: StacItem[];
-  links: StacLink[];
+  [k: string]: unknown;
 };
 
 export async function getStac(href: string) {
