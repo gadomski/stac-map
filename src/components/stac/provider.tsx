@@ -34,6 +34,10 @@ export function StacProvider({ children }: { children: ReactNode }) {
           if (db) {
             const connection = await db.connect();
             connection.query("LOAD spatial;");
+            const bbox = await getStacGeoparquetBbox(state.href, connection);
+            if (bbox) {
+              dispatch({ type: "set-bbox", bbox });
+            }
             const table = await getStacGeoparquetTable(state.href, connection);
             if (table) {
               dispatch({
@@ -70,6 +74,8 @@ function reducer(state: StacState, action: StacAction) {
       return { ...state, value: action.value };
     case "set-table":
       return { ...state, table: action.table };
+    case "set-bbox":
+      return { ...state, bbox: action.bbox };
   }
 }
 
@@ -112,9 +118,9 @@ async function getStacGeoparquetTable(
   href: string,
   connection: AsyncDuckDBConnection
 ) {
-  const query = `SELECT ST_AsWKB(geometry) AS geometry, id FROM read_parquet('${href}')`;
-  try {
-    const result = await connection.query(query);
+  const select = "ST_AsWKB(geometry) AS geometry, id";
+  const result = await queryDuckDb(href, connection, { select });
+  if (result) {
     const geometry: Uint8Array[] = result.getChildAt(0)?.toArray();
     const wkb = new Uint8Array(geometry?.flatMap((array) => [...array]));
     const valueOffsets = new Int32Array(geometry.length + 1);
@@ -138,6 +144,30 @@ async function getStacGeoparquetTable(
       "geoarrow.polygon"
     );
     return table;
+  }
+}
+
+async function getStacGeoparquetBbox(
+  href: string,
+  connection: AsyncDuckDBConnection
+) {
+  const select =
+    "MIN(bbox.xmin) as xmin, MIN(bbox.ymin) as ymin, MAX(bbox.xmax) as xmax, MAX(bbox.ymax) as ymax";
+  const result = await queryDuckDb(href, connection, {
+    select,
+  });
+  const bbox = result?.toArray()[0].toJSON();
+  return [bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax];
+}
+
+async function queryDuckDb(
+  href: string,
+  connection: AsyncDuckDBConnection,
+  { select }: { select: string }
+) {
+  const query = `SELECT ${select} from read_parquet('${href}')`;
+  try {
+    return await connection.query(query);
   } catch (error) {
     toaster.create({
       type: "error",

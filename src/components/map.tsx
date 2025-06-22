@@ -18,7 +18,7 @@ function DeckGLOverlay(props: DeckProps) {
 }
 
 export default function Map() {
-  const { table } = useStac();
+  const { table, bbox } = useStac();
   const [layers, setLayers] = useState<GeoArrowPolygonLayer[]>([]);
   const mapRef = useRef<MapRef>(null);
   const mapStyle = useColorModeValue(
@@ -45,6 +45,20 @@ export default function Map() {
       setLayers([]);
     }
   }, [table]);
+
+  useEffect(() => {
+    if (bbox) {
+      if (mapRef.current) {
+        mapRef.current.fitBounds(
+          [
+            [bbox[0], bbox[1]],
+            [bbox[2], bbox[3]],
+          ],
+          { padding: 100 }
+        );
+      }
+    }
+  }, [bbox]);
 
   return (
     <MaplibreMap
