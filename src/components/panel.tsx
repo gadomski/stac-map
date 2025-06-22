@@ -1,7 +1,8 @@
 import { Box, Heading, SimpleGrid, Stack, Tabs, Text } from "@chakra-ui/react";
 import { useState } from "react";
 import { LuInfo } from "react-icons/lu";
-import type { StacValue } from "./stac";
+import { useStac } from "./stac/hooks";
+import type { StacValue } from "./stac/types";
 
 function Value({ value }: { value: StacValue }) {
   // @ts-expect-error Items don't have a title.
@@ -26,8 +27,9 @@ function Value({ value }: { value: StacValue }) {
   );
 }
 
-export default function Panel({ value }: { value?: StacValue }) {
+export default function Panel() {
   const [tabValue, setTabValue] = useState<string | undefined>();
+  const { value } = useStac();
 
   return (
     <SimpleGrid columns={{ base: 1, md: 3 }} my={2}>

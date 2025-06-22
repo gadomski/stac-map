@@ -1,16 +1,13 @@
 import { Box } from "@chakra-ui/react";
-import { useState } from "react";
 import "./app.css";
 import Map from "./components/map";
 import Overlay from "./components/overlay";
-import type { StacValue } from "./components/stac";
+import { StacProvider } from "./components/stac/provider";
 import { Toaster } from "./components/ui/toaster";
 
 function App() {
-  const [value, setValue] = useState<StacValue | undefined>();
-
   return (
-    <>
+    <StacProvider>
       <Box
         style={{
           position: "absolute",
@@ -22,10 +19,10 @@ function App() {
         <Map></Map>
       </Box>
       <Box style={{ zIndex: 1 }}>
-        <Overlay value={value} setValue={setValue}></Overlay>
+        <Overlay></Overlay>
       </Box>
       <Toaster></Toaster>
-    </>
+    </StacProvider>
   );
 }
 

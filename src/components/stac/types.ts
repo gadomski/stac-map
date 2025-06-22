@@ -1,0 +1,28 @@
+import { type Dispatch } from "react";
+import type { StacCatalog, StacCollection, StacItem } from "stac-ts";
+
+export type StacValue =
+  | StacCatalog
+  | StacCollection
+  | StacItem
+  | StacItemCollection;
+
+export type StacItemCollection = {
+  type: "FeatureCollection";
+  features: StacItem[];
+  [k: string]: unknown;
+};
+
+export type StacState = {
+  href?: string;
+  value?: StacValue;
+};
+
+export type StacAction =
+  | { type: "set-href"; href: string }
+  | { type: "set-value"; value: StacValue };
+
+export type StacContextType = {
+  state: StacState;
+  dispatch: Dispatch<StacAction>;
+};
