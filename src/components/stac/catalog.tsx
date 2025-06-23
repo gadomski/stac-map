@@ -8,6 +8,7 @@ export function Catalog({ catalog }: { catalog: StacCatalog }) {
     <Stack>
       <ValueInfo
         type={"Catalog"}
+        value={catalog}
         id={catalog.id}
         icon={<LuFolder></LuFolder>}
         title={catalog.title}

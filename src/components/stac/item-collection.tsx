@@ -12,6 +12,7 @@ export function ItemCollection({
     <Stack>
       <ValueInfo
         type={"Item collection"}
+        value={itemCollection}
         id={itemCollection.id || "no id"}
         icon={<LuFiles></LuFiles>}
       ></ValueInfo>

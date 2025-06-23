@@ -8,6 +8,7 @@ export function Collection({ collection }: { collection: StacCollection }) {
     <Stack>
       <ValueInfo
         type={"Collection"}
+        value={collection}
         id={collection.id}
         icon={<LuFolderPlus></LuFolderPlus>}
         title={collection.title}
