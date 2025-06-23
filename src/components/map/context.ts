@@ -2,11 +2,13 @@ import { Layer } from "@deck.gl/core";
 import type { LngLatBounds } from "maplibre-gl";
 import { createContext, useContext, type Dispatch } from "react";
 
-export type LayersAction = {
-  type: "set-layers";
-  layers: Layer[];
-  bbox?: number[];
-};
+export type LayersAction =
+  | {
+      type: "set-layers";
+      layers: Layer[];
+      bbox?: number[];
+    }
+  | { type: "set-bbox"; bbox: number[] };
 
 export type LayersState = {
   layers: Layer[];

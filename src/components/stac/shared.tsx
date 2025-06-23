@@ -1,6 +1,7 @@
 import { Button, Heading, HStack, Stack, Text } from "@chakra-ui/react";
 import { type ReactNode } from "react";
 import { LuExternalLink } from "react-icons/lu";
+import Markdown from "react-markdown";
 import { RawJsonDialogButton } from "../json";
 import type { StacValue } from "./types";
 import { getSelfHref } from "./utils";
@@ -47,7 +48,11 @@ export function ValueInfo({
         {type}
       </Text>
       <Heading>{heading}</Heading>
-      {description && <Text fontWeight={"light"}>{description}</Text>}
+      {description && (
+        <Text fontWeight={"light"}>
+          <Markdown>{description}</Markdown>
+        </Text>
+      )}
       <HStack>
         {selfHrefButtons}
         <RawJsonDialogButton

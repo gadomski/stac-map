@@ -19,6 +19,8 @@
     "@emotion/react": "^11.13.5",
     "@geoarrow/deck.gl-layers": "^0.3.0",
     "@geoarrow/geoarrow-js": "github:smohiudd/geoarrow-js#feature/wkb",
+    "@turf/bbox-polygon": "^7.2.0",
+    "@turf/centroid": "^7.2.0",
     "apache-arrow": "^19.0.0",
     "deck.gl": "^9.1.12",
     "duckdb-wasm-kit": "^0.1.38",
@@ -28,6 +30,7 @@
     "react-dom": "^19.1.0",
     "react-icons": "^5.5.0",
     "react-map-gl": "^7.1.7",
+    "react-markdown": "^10.1.0",
     "stac-ts": "^1.0.4"
   },
   "devDependencies": {

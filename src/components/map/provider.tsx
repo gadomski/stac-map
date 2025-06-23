@@ -15,6 +15,8 @@ function reducer(state: LayersState, action: LayersAction) {
         layers: action.layers,
         bounds: (action.bbox && bboxToBounds(action.bbox)) || undefined,
       };
+    case "set-bbox":
+      return { ...state, bounds: bboxToBounds(action.bbox) };
   }
 }
 
