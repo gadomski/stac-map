@@ -6,17 +6,33 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import type { Dispatch, SetStateAction } from "react";
+import { GeoJsonLayer } from "@deck.gl/layers";
+import bboxPolygon from "@turf/bbox-polygon";
+import type { BBox } from "geojson";
+import { useEffect, type Dispatch, type SetStateAction } from "react";
 import { LuFolderPlus, LuUpload, LuZoomIn } from "react-icons/lu";
-import Markdown from "react-markdown";
 import type { StacCollection } from "stac-ts";
 import { RawJsonDialogButton } from "../json";
 import { useLayersDispatch } from "../map/context";
 import { Tooltip } from "../ui/tooltip";
 import { ValueInfo } from "./shared";
-import { getSelfHref } from "./utils";
+import { getSelfHref, sanitizeBbox } from "./utils";
 
 export function Collection({ collection }: { collection: StacCollection }) {
+  const dispatch = useLayersDispatch();
+
+  useEffect(() => {
+    const bbox = sanitizeBbox(collection.extent.spatial.bbox[0]);
+    const polygon = bboxPolygon(bbox as BBox);
+    const layer = new GeoJsonLayer({
+      id: "collection",
+      data: polygon,
+      stroked: false,
+      filled: true,
+      getFillColor: [207, 63, 2, 100],
+    });
+    dispatch({ type: "set-layers", layers: [layer], bbox: bbox });
+  }, [collection, dispatch]);
   return (
     <Stack>
       <ValueInfo
@@ -48,9 +64,7 @@ export function CollectionCard({
       </Card.Header>
       <Card.Body>
         <Stack>
-          <Text lineClamp={3}>
-            <Markdown>{collection.description}</Markdown>
-          </Text>
+          <Text lineClamp={3}>{collection.description}</Text>
           <DataList.Root orientation={"horizontal"}>
             <DataList.Item>
               <DataList.ItemLabel>Bounding box</DataList.ItemLabel>
