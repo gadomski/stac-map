@@ -30,7 +30,7 @@ export function AssetCard({
     <Card.Root size={"sm"}>
       <Card.Header>{asset.title || assetKey}</Card.Header>
       <Card.Body>
-        {(preview && <Image src={asset.href} maxH={"100%"}></Image>) || (
+        {(preview && <Image src={asset.href}></Image>) || (
           <Text fontSize={"xs"} fontWeight={"lighter"}>
             {asset.type}
           </Text>

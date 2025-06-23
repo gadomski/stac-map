@@ -7,8 +7,9 @@ import {
   type UseFileUploadReturn,
 } from "@chakra-ui/react";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
-import { LuInfo, LuUpload } from "react-icons/lu";
-import Value from "./stac/value";
+import { LuInfo, LuMousePointerClick, LuUpload } from "react-icons/lu";
+import { useLayers } from "./map/context";
+import { HrefValue, Value } from "./stac/value";
 
 export function Panel({
   href,
@@ -20,12 +21,19 @@ export function Panel({
   fileUpload: UseFileUploadReturn;
 }) {
   const [tabValue, setTabValue] = useState("upload");
+  const { picked } = useLayers();
 
   useEffect(() => {
     if (href.length > 0) {
       setTabValue("value");
     }
   }, [href]);
+
+  useEffect(() => {
+    if (picked) {
+      setTabValue("picked");
+    }
+  }, [picked]);
 
   useEffect(() => {
     if (fileUpload.acceptedFiles.length == 1) {
@@ -48,18 +56,26 @@ export function Panel({
           <Tabs.Trigger value="value" disabled={href.length === 0}>
             <LuInfo></LuInfo>
           </Tabs.Trigger>
+          <Tabs.Trigger value="picked" disabled={picked === undefined}>
+            <LuMousePointerClick></LuMousePointerClick>
+          </Tabs.Trigger>
           <Tabs.Trigger value="upload">
             <LuUpload></LuUpload>
           </Tabs.Trigger>
         </Tabs.List>
         <Box px={4} pb={4}>
           <Tabs.Content value="value">
-            <Value
+            <HrefValue
               href={href}
               setHref={setHref}
               fileUpload={fileUpload}
-            ></Value>
+            ></HrefValue>
           </Tabs.Content>
+          {picked && (
+            <Tabs.Content value="picked">
+              <Value value={picked} href={href} setHref={setHref}></Value>
+            </Tabs.Content>
+          )}
           <Tabs.Content value="upload">
             <FileUpload.RootProvider alignItems={"stretch"} value={fileUpload}>
               <FileUpload.HiddenInput></FileUpload.HiddenInput>

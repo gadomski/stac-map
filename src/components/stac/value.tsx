@@ -5,9 +5,10 @@ import { Catalog } from "./catalog";
 import { Collection } from "./collection";
 import { Item } from "./item";
 import { ItemCollection } from "./item-collection";
+import type { StacValue } from "./types";
 import { isUrl } from "./utils";
 
-export default function Value({
+export function HrefValue({
   href,
   setHref,
   fileUpload,
@@ -25,25 +26,52 @@ export default function Value({
   } else if (error) {
     return <Text color={"red"}>Error: {error}</Text>;
   } else if (value) {
-    switch (value.type) {
-      case "Catalog":
-        return <Catalog catalog={value} setHref={setHref}></Catalog>;
-      case "Collection":
-        return <Collection collection={value}></Collection>;
-      case "Feature":
-        return <Item item={value}></Item>;
-      case "FeatureCollection":
-        return (
-          <ItemCollection
-            itemCollection={value}
-            stacGeoparquetPath={(isStacGeoparquet && href) || undefined}
-          ></ItemCollection>
-        );
-      default:
+    return (
+      <Value
+        value={value}
+        href={href}
+        setHref={setHref}
+        isStacGeoparquet={isStacGeoparquet}
+      ></Value>
+    );
+  }
+}
+
+export function Value({
+  value,
+  href,
+  setHref,
+  isStacGeoparquet,
+}: {
+  value: StacValue;
+  href: string;
+  setHref: Dispatch<SetStateAction<string>>;
+  isStacGeoparquet?: boolean;
+}) {
+  switch (value.type) {
+    case "Catalog":
+      return <Catalog catalog={value} setHref={setHref}></Catalog>;
+    case "Collection":
+      return <Collection collection={value}></Collection>;
+    case "Feature":
+      return <Item item={value}></Item>;
+    case "FeatureCollection":
+      return (
+        <ItemCollection
+          itemCollection={value}
+          stacGeoparquetPath={(isStacGeoparquet && href) || undefined}
+        ></ItemCollection>
+      );
+    default:
+      return (
         <Text color={"red"}>
-          Could not parse STAC value with type={value.type}
-        </Text>;
-    }
+          Could not parse STAC value with type
+          {
+            // @ts-expect-error Fallback
+            value.type
+          }
+        </Text>
+      );
   }
 }
 

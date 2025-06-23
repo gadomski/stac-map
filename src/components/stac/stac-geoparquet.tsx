@@ -144,9 +144,9 @@ export default function StacGeoparquet({ path }: { path: string }) {
   useEffect(() => {
     if (itemTable) {
       const item = stacWasm.arrowToStacJson(itemTable)[0];
-      console.log(item);
+      dispatch({ type: "set-picked", picked: item });
     }
-  }, [itemTable]);
+  }, [itemTable, dispatch]);
 
   if (error) {
     return <Text color={"red"}>Error: {error}</Text>;

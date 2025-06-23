@@ -36,7 +36,7 @@ export function Item({ item }: { item: StacItem }) {
       <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
         {Object.entries(item.assets).map(([key, asset]) => (
           <AssetCard
-            key={"asset:" + key}
+            key={item.id + key}
             asset={asset}
             assetKey={key}
           ></AssetCard>
