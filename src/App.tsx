@@ -1,24 +1,29 @@
 import { Box } from "@chakra-ui/react";
-import { Layer } from "@deck.gl/core";
 import { useState } from "react";
 import "./app.css";
+import Header from "./components/header";
 import { Map } from "./components/map";
+import { LayersProvider } from "./components/map/provider";
 import Overlay from "./components/overlay";
+import { Panel } from "./components/panel";
 import { Toaster } from "./components/ui/toaster";
 
 function App() {
-  const [layers, setLayers] = useState<Layer[]>([]);
+  const [href, setHref] = useState("");
 
   return (
-    <>
+    <LayersProvider>
       <Box position={"absolute"} top={0} left={0} zIndex={0}>
-        <Map layers={layers}></Map>
+        <Map></Map>
       </Box>
       <Box zIndex={1}>
-        <Overlay setLayers={setLayers}></Overlay>
+        <Overlay>
+          <Header setHref={setHref}></Header>
+          <Panel href={href}></Panel>
+        </Overlay>
       </Box>
       <Toaster></Toaster>
-    </>
+    </LayersProvider>
   );
 }
 

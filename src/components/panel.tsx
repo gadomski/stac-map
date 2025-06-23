@@ -1,16 +1,9 @@
 import { Box, FileUpload, Icon, SimpleGrid, Tabs } from "@chakra-ui/react";
-import type { Layer } from "@deck.gl/core";
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useState } from "react";
 import { LuInfo, LuUpload } from "react-icons/lu";
 import Value from "./stac/value";
 
-export function Panel({
-  href,
-  setLayers,
-}: {
-  href: string;
-  setLayers: Dispatch<SetStateAction<Layer[]>>;
-}) {
+export function Panel({ href }: { href: string }) {
   const [tabValue, setTabValue] = useState("upload");
 
   useEffect(() => {
