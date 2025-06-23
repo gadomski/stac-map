@@ -1,5 +1,5 @@
 import { Box } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./app.css";
 import Header from "./components/header";
 import { Map } from "./components/map";
@@ -9,7 +9,26 @@ import { Panel } from "./components/panel";
 import { Toaster } from "./components/ui/toaster";
 
 function App() {
-  const [href, setHref] = useState("");
+  const [href, setHref] = useState(
+    new URLSearchParams(location.search).get("href") ?? ""
+  );
+
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get("href") != href) {
+      history.pushState(null, "", "?href=" + href);
+    }
+  }, [href]);
+
+  useEffect(() => {
+    function handlePopState() {
+      setHref(new URLSearchParams(location.search).get("href") ?? "");
+    }
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
 
   return (
     <LayersProvider>
@@ -18,7 +37,7 @@ function App() {
       </Box>
       <Box zIndex={1}>
         <Overlay>
-          <Header setHref={setHref}></Header>
+          <Header href={href} setHref={setHref}></Header>
           <Panel href={href}></Panel>
         </Overlay>
       </Box>

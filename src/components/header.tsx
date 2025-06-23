@@ -6,7 +6,7 @@ import {
   Menu,
   Portal,
 } from "@chakra-ui/react";
-import { type Dispatch, type SetStateAction } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { LuSearch } from "react-icons/lu";
 
 const EXAMPLES = [
@@ -22,14 +22,36 @@ const EXAMPLES = [
 ];
 
 export default function Header({
+  href,
   setHref,
 }: {
+  href: string;
   setHref: Dispatch<SetStateAction<string>>;
 }) {
+  const [value, setValue] = useState(href);
+
+  useEffect(() => {
+    setValue(href);
+  }, [href]);
+
   return (
     <HStack py={4} pointerEvents={"auto"}>
-      <InputGroup w="full" startElement={<LuSearch></LuSearch>}>
-        <Input flex={1} variant={"subtle"} rounded={4}></Input>
+      <InputGroup
+        w="full"
+        startElement={<LuSearch></LuSearch>}
+        as={"form"}
+        onSubmit={(e) => {
+          e.preventDefault();
+          setHref(value);
+        }}
+      >
+        <Input
+          flex={1}
+          variant={"subtle"}
+          rounded={4}
+          value={value}
+          onChange={(e) => setValue(e.currentTarget.value)}
+        ></Input>
       </InputGroup>
       <Menu.Root onSelect={(details) => setHref(details.value)}>
         <Menu.Trigger asChild>

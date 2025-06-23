@@ -23,7 +23,7 @@ export function RawJsonDialogButton({
     <Dialog.Root scrollBehavior={"inside"} size={"xl"}>
       <Dialog.Trigger>
         <Tooltip content="Show raw JSON in a dialog">
-          <IconButton {...rest}>
+          <IconButton {...rest} as={"div"}>
             <LuSearchCode></LuSearchCode>
           </IconButton>
         </Tooltip>
