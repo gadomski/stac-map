@@ -17,6 +17,7 @@ import {
 } from "apache-arrow";
 import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState } from "react";
+import * as stacWasm from "../../stac-wasm";
 import { useLayersDispatch } from "../map/context";
 
 type Summary = {
@@ -27,17 +28,23 @@ type Summary = {
 export default function StacGeoparquet({ path }: { path: string }) {
   const { table, loading, error } = useQuery(
     path,
-    "ST_AsWKB(geometry) as geometry, id"
+    "ST_AsWKB(geometry) as geometry, id",
+    {}
   );
   const { table: summaryTable } = useQuery(
     path,
-    "COUNT(*) as count, MIN(bbox.xmin) as xmin, MIN(bbox.ymin) as ymin, MAX(bbox.xmax) as xmax, MAX(bbox.ymax) as ymax"
+    "COUNT(*) as count, MIN(bbox.xmin) as xmin, MIN(bbox.ymin) as ymin, MAX(bbox.xmax) as xmax, MAX(bbox.ymax) as ymax",
+    {}
   );
-  const { table: kvMetadataTable } = useQuery(
-    path,
-    "key, value",
-    "parquet_kv_metadata"
-  );
+  const { table: kvMetadataTable } = useQuery(path, "key, value", {
+    customFunction: "parquet_kv_metadata",
+  });
+  const [id, setId] = useState<string | undefined>();
+  const { table: itemTable } = useQuery(path, "* EXCLUDE geometry", {
+    enabled: id !== undefined,
+    where: `id = '${id}'`,
+  });
+
   const [summary, setSummary] = useState<Summary | undefined>();
   const [keyValueMetadata, setKeyValueMetadata] = useState<
     { key: string; value: any }[] | undefined // eslint-disable-line
@@ -77,13 +84,16 @@ export default function StacGeoparquet({ path }: { path: string }) {
         getLineColor: [207, 63, 2, 50],
         lineWidthUnits: "pixels",
         pickable: true,
+        onClick: (info) => {
+          setId(newTable.getChild("id")?.get(info.index) as string | undefined);
+        },
         autoHighlight: true,
       });
       dispatch({ type: "set-layers", layers: [layer] });
     } else {
       dispatch({ type: "set-layers", layers: [] });
     }
-  }, [table, dispatch]);
+  }, [table, dispatch, setId]);
 
   useEffect(() => {
     if (summaryTable) {
@@ -130,6 +140,13 @@ export default function StacGeoparquet({ path }: { path: string }) {
       setKeyValueMetadata(metadata);
     }
   }, [kvMetadataTable, setKeyValueMetadata]);
+
+  useEffect(() => {
+    if (itemTable) {
+      const item = stacWasm.arrowToStacJson(itemTable)[0];
+      console.log(item);
+    }
+  }, [itemTable]);
 
   if (error) {
     return <Text color={"red"}>Error: {error}</Text>;
@@ -187,7 +204,15 @@ function MetataDataListItem({
   );
 }
 
-function useQuery(path: string, select: string, customFunction?: string) {
+function useQuery(
+  path: string,
+  select: string,
+  {
+    customFunction,
+    where,
+    enabled,
+  }: { customFunction?: string; where?: string; enabled?: boolean }
+) {
   const { db, loading: duckDbLoading, error: duckDbError } = useDuckDb();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -199,13 +224,17 @@ function useQuery(path: string, select: string, customFunction?: string) {
     `read_parquet('${path}', union_by_name=true)`;
 
   useEffect(() => {
-    if (db) {
+    if (db && enabled !== false) {
       (async () => {
         setLoading(true);
         try {
           const connection = await db.connect();
           connection.query("LOAD spatial;");
-          const table = await connection.query(`SELECT ${select} FROM ${from}`);
+          let query = `SELECT ${select} FROM ${from}`;
+          if (where) {
+            query += " WHERE " + where;
+          }
+          const table = await connection.query(query);
           // @ts-expect-error Don't know why the tables aren't recognized
           setTable(table);
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -216,7 +245,7 @@ function useQuery(path: string, select: string, customFunction?: string) {
         setLoading(false);
       })();
     }
-  }, [db, setError, setLoading, setTable, select, from]);
+  }, [db, setError, setLoading, setTable, select, from, where, enabled]);
 
   useEffect(() => {
     if (duckDbLoading) {
