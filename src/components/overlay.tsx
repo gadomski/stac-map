@@ -1,14 +1,19 @@
 import { Container } from "@chakra-ui/react";
-import Footer from "./footer";
+import type { Layer } from "@deck.gl/core";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import Header from "./header";
-import Panel from "./panel";
+import { Panel } from "./panel";
 
-export default function Overlay() {
+export default function Overlay({
+  setLayers,
+}: {
+  setLayers: Dispatch<SetStateAction<Layer[]>>;
+}) {
+  const [href, setHref] = useState("");
   return (
-    <Container fluid py={2} h={"100vh"} pointerEvents={"none"}>
-      <Header></Header>
-      <Panel></Panel>
-      <Footer></Footer>
+    <Container fluid h={"100vh"} pointerEvents={"none"}>
+      <Header setHref={setHref}></Header>
+      <Panel href={href} setLayers={setLayers}></Panel>
     </Container>
   );
 }
