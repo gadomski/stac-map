@@ -6,6 +6,6 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: "/stac-viewer/",
+  base: "/stac-geoparquet-viewer/",
   plugins: [react(), tsconfigPaths(), wasm(), topLevelAwait()],
 });
