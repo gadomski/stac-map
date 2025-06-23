@@ -4,6 +4,7 @@ import {
   HStack,
   IconButton,
   Image,
+  SimpleGrid,
   Stack,
   Text,
 } from "@chakra-ui/react";
@@ -16,6 +17,7 @@ import type { StacCollection } from "stac-ts";
 import { RawJsonDialogButton } from "../json";
 import { useLayersDispatch } from "../map/context";
 import { Tooltip } from "../ui/tooltip";
+import { AssetCard } from "./asset";
 import { ValueInfo } from "./shared";
 import { getSelfHref, sanitizeBbox } from "./utils";
 
@@ -35,7 +37,7 @@ export function Collection({ collection }: { collection: StacCollection }) {
     dispatch({ type: "set-layers", layers: [layer], bbox: bbox });
   }, [collection, dispatch]);
   return (
-    <Stack>
+    <Stack gap={4}>
       <ValueInfo
         type={"Collection"}
         value={collection}
@@ -44,6 +46,18 @@ export function Collection({ collection }: { collection: StacCollection }) {
         title={collection.title}
         description={collection.description}
       ></ValueInfo>
+
+      {collection.assets && (
+        <SimpleGrid columns={{ base: 1, md: 2 }} gap={2}>
+          {Object.entries(collection.assets).map(([key, asset]) => (
+            <AssetCard
+              asset={asset}
+              assetKey={key}
+              key={collection.id + key}
+            ></AssetCard>
+          ))}
+        </SimpleGrid>
+      )}
     </Stack>
   );
 }

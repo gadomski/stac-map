@@ -1,6 +1,5 @@
 import {
   Badge,
-  Box,
   Card,
   HStack,
   IconButton,
@@ -38,6 +37,13 @@ export function AssetCard({
       </Card.Body>
       <Card.Footer>
         <Stack>
+          <Tooltip content="Asset roles">
+            <HStack>
+              {asset.roles?.map((role) => (
+                <Badge key={"role:" + role}>{role}</Badge>
+              ))}
+            </HStack>
+          </Tooltip>
           <HStack>
             <Tooltip content="Copy the asset href to your clipboard">
               <IconButton
@@ -66,13 +72,6 @@ export function AssetCard({
               size={"xs"}
             ></RawJsonDialogButton>
           </HStack>
-          <Tooltip content="Asset roles">
-            <Box>
-              {asset.roles?.map((role) => (
-                <Badge key={"role:" + role}>{role}</Badge>
-              ))}
-            </Box>
-          </Tooltip>
         </Stack>
       </Card.Footer>
     </Card.Root>
