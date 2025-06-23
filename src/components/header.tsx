@@ -10,11 +10,13 @@ import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { LuSearch } from "react-icons/lu";
 
 const EXAMPLES = [
+  ["NASA VEDA", "https://openveda.cloud/api/stac"],
   ["eoAPI DevSeed", "https://stac.eoapi.dev/"],
   [
     "Microsoft Planetary Computer",
     "https://planetarycomputer.microsoft.com/api/stac/v1",
   ],
+  ["Earth Search by Element 84", "https://earth-search.aws.element84.com/v1"],
   [
     "Simple item",
     "https://raw.githubusercontent.com/radiantearth/stac-spec/refs/heads/master/examples/simple-item.json",
