@@ -53,9 +53,7 @@ function Collections({
   }, [collections, dispatch]);
 
   if (error) {
-    return (
-      <Text colorPalette={"red"}>Error when loading collections: {error}</Text>
-    );
+    return <Text color={"red"}>Error when loading collections: {error}</Text>;
   } else if (loading) {
     return <Skeleton h={200}></Skeleton>;
   } else {

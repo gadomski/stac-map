@@ -10,6 +10,8 @@ export type StacItemCollection = {
   type: "FeatureCollection";
   features: StacItem[];
   id?: string;
+  title?: string;
+  description?: string;
   links?: StacLink[];
   [k: string]: unknown;
 };

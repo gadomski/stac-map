@@ -11,6 +11,7 @@ export function ValueInfo({
   id,
   title,
   description,
+  hideJsonButton,
 }: {
   type: string;
   value: StacValue;
@@ -18,6 +19,7 @@ export function ValueInfo({
   id: string;
   title?: string;
   description?: string;
+  hideJsonButton?: boolean;
 }) {
   const heading = title || id;
   const selfHref = getSelfHref(value);
@@ -50,12 +52,14 @@ export function ValueInfo({
       {description && <Text fontWeight={"light"}>{description}</Text>}
       <HStack>
         {selfHrefButtons}
-        <RawJsonDialogButton
-          title={id}
-          value={value}
-          size={"xs"}
-          variant={"surface"}
-        ></RawJsonDialogButton>
+        {!hideJsonButton && (
+          <RawJsonDialogButton
+            title={id}
+            value={value}
+            size={"xs"}
+            variant={"surface"}
+          ></RawJsonDialogButton>
+        )}
       </HStack>
     </Stack>
   );
