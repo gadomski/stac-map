@@ -86,7 +86,7 @@ function AssetCard({
                 <Dialog.Positioner>
                   <Dialog.Content>
                     <Dialog.Header>
-                      <Dialog.Title>{assetKey} (raw JSON)</Dialog.Title>
+                      <Dialog.Title>{assetKey}</Dialog.Title>
                     </Dialog.Header>
                     <Dialog.Body>
                       <pre style={{ width: "100%" }}>
@@ -103,11 +103,13 @@ function AssetCard({
               </Portal>
             </Dialog.Root>
           </HStack>
-          <Box>
-            {asset.roles?.map((role) => (
-              <Badge key={"role:" + role}>{role}</Badge>
-            ))}
-          </Box>
+          <Tooltip content="Asset roles">
+            <Box>
+              {asset.roles?.map((role) => (
+                <Badge key={"role:" + role}>{role}</Badge>
+              ))}
+            </Box>
+          </Tooltip>
         </Stack>
       </Card.Footer>
     </Card.Root>
