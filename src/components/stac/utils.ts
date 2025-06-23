@@ -20,3 +20,12 @@ export function sanitizeBbox(bbox: number[]) {
   }
   return bbox;
 }
+
+export function isUrl(href: string) {
+  try {
+    new URL(href);
+  } catch {
+    return false;
+  }
+  return true;
+}

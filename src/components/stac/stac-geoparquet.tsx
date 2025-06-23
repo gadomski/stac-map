@@ -18,7 +18,6 @@ import {
 import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState } from "react";
 import { useLayersDispatch } from "../map/context";
-import { toaster } from "../ui/toaster";
 
 type Summary = {
   count: number;
@@ -173,7 +172,7 @@ function MetataDataListItem({
           <ChakraTable.Root size={"sm"}>
             <ChakraTable.Body>
               {Object.entries(row.value).map(([k, v]) => (
-                <ChakraTable.Row>
+                <ChakraTable.Row key={k}>
                   <ChakraTable.Cell>{k}</ChakraTable.Cell>
                   <ChakraTable.Cell>
                     {(typeof v === "string" && v) || JSON.stringify(v)}
@@ -230,16 +229,6 @@ function useQuery(path: string, select: string, customFunction?: string) {
       setError(`DuckDB Error: ${duckDbError.toString()}`);
     }
   }, [duckDbError, setError]);
-
-  useEffect(() => {
-    if (error) {
-      toaster.create({
-        type: "error",
-        title: "DuckDB query error",
-        description: error,
-      });
-    }
-  }, [error]);
 
   return { table, loading, error };
 }

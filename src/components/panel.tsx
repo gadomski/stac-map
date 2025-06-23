@@ -1,4 +1,11 @@
-import { Box, FileUpload, Icon, SimpleGrid, Tabs } from "@chakra-ui/react";
+import {
+  Box,
+  FileUpload,
+  Icon,
+  SimpleGrid,
+  Tabs,
+  type UseFileUploadReturn,
+} from "@chakra-ui/react";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { LuInfo, LuUpload } from "react-icons/lu";
 import Value from "./stac/value";
@@ -6,9 +13,11 @@ import Value from "./stac/value";
 export function Panel({
   href,
   setHref,
+  fileUpload,
 }: {
   href: string;
   setHref: Dispatch<SetStateAction<string>>;
+  fileUpload: UseFileUploadReturn;
 }) {
   const [tabValue, setTabValue] = useState("upload");
 
@@ -17,6 +26,12 @@ export function Panel({
       setTabValue("value");
     }
   }, [href]);
+
+  useEffect(() => {
+    if (fileUpload.acceptedFiles.length == 1) {
+      setHref(fileUpload.acceptedFiles[0].name);
+    }
+  }, [fileUpload.acceptedFiles, setHref]);
 
   return (
     <SimpleGrid columns={{ base: 1, md: 3 }}>
@@ -30,7 +45,7 @@ export function Panel({
         maxH={{ base: "40vh", md: "90vh" }}
       >
         <Tabs.List>
-          <Tabs.Trigger value="value">
+          <Tabs.Trigger value="value" disabled={href.length === 0}>
             <LuInfo></LuInfo>
           </Tabs.Trigger>
           <Tabs.Trigger value="upload">
@@ -39,10 +54,14 @@ export function Panel({
         </Tabs.List>
         <Box px={4} pb={4}>
           <Tabs.Content value="value">
-            <Value href={href} setHref={setHref}></Value>
+            <Value
+              href={href}
+              setHref={setHref}
+              fileUpload={fileUpload}
+            ></Value>
           </Tabs.Content>
           <Tabs.Content value="upload">
-            <FileUpload.Root alignItems={"stretch"}>
+            <FileUpload.RootProvider alignItems={"stretch"} value={fileUpload}>
               <FileUpload.HiddenInput></FileUpload.HiddenInput>
               <FileUpload.Dropzone>
                 <Icon>
@@ -53,7 +72,7 @@ export function Panel({
                 </FileUpload.DropzoneContent>
               </FileUpload.Dropzone>
               <FileUpload.List />
-            </FileUpload.Root>
+            </FileUpload.RootProvider>
           </Tabs.Content>
         </Box>
       </Tabs.Root>

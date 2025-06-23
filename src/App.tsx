@@ -1,4 +1,4 @@
-import { Box } from "@chakra-ui/react";
+import { Box, useFileUpload } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import "./app.css";
 import Header from "./components/header";
@@ -6,18 +6,22 @@ import { Map } from "./components/map";
 import { LayersProvider } from "./components/map/provider";
 import Overlay from "./components/overlay";
 import { Panel } from "./components/panel";
+import { isUrl } from "./components/stac/utils";
 import { Toaster } from "./components/ui/toaster";
 
 function App() {
-  const [href, setHref] = useState(
-    new URLSearchParams(location.search).get("href") ?? ""
-  );
+  const initialHref = new URLSearchParams(location.search).get("href") || "";
+  const [href, setHref] = useState((isUrl(initialHref) && initialHref) || "");
+  const fileUpload = useFileUpload({ maxFiles: 1 });
 
   useEffect(() => {
     if (new URLSearchParams(location.search).get("href") != href) {
       history.pushState(null, "", "?href=" + href);
+      if (!isUrl(href)) {
+        fileUpload.clearFiles();
+      }
     }
-  }, [href]);
+  }, [href, fileUpload]);
 
   useEffect(() => {
     function handlePopState() {
@@ -38,7 +42,7 @@ function App() {
       <Box zIndex={1}>
         <Overlay>
           <Header href={href} setHref={setHref}></Header>
-          <Panel href={href} setHref={setHref}></Panel>
+          <Panel href={href} setHref={setHref} fileUpload={fileUpload}></Panel>
         </Overlay>
       </Box>
       <Toaster></Toaster>
