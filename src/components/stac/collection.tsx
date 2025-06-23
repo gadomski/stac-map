@@ -3,6 +3,7 @@ import {
   DataList,
   HStack,
   IconButton,
+  Image,
   Stack,
   Text,
 } from "@chakra-ui/react";
@@ -56,6 +57,9 @@ export function CollectionCard({
 }) {
   const selfHref = getSelfHref(collection);
   const dispatch = useLayersDispatch();
+  const thumbnail = Object.values(collection.assets || {}).find((asset) =>
+    asset.roles?.includes("thumbnail")
+  );
 
   return (
     <Card.Root size={"sm"}>
@@ -64,8 +68,9 @@ export function CollectionCard({
       </Card.Header>
       <Card.Body>
         <Stack>
+          {thumbnail && <Image src={thumbnail.href}></Image>}
           <Text lineClamp={3}>{collection.description}</Text>
-          <DataList.Root orientation={"horizontal"}>
+          <DataList.Root>
             <DataList.Item>
               <DataList.ItemLabel>Bounding box</DataList.ItemLabel>
               <DataList.ItemValue>

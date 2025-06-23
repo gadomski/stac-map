@@ -2,6 +2,7 @@ import {
   Badge,
   Heading,
   HStack,
+  SimpleGrid,
   Skeleton,
   Stack,
   Text,
@@ -63,13 +64,15 @@ function Collections({
           <Heading size={"md"}>Collections</Heading>{" "}
           <Badge>{collections.length}</Badge>
         </HStack>
-        {collections.map((collection) => (
-          <CollectionCard
-            collection={collection}
-            setHref={setHref}
-            key={collection.id}
-          ></CollectionCard>
-        ))}
+        <SimpleGrid columns={{ base: 1, md: 2 }} gap={2}>
+          {collections.map((collection) => (
+            <CollectionCard
+              collection={collection}
+              setHref={setHref}
+              key={collection.id}
+            ></CollectionCard>
+          ))}
+        </SimpleGrid>
       </Stack>
     );
   }
