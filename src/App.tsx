@@ -38,7 +38,7 @@ function App() {
       <Box zIndex={1}>
         <Overlay>
           <Header href={href} setHref={setHref}></Header>
-          <Panel href={href}></Panel>
+          <Panel href={href} setHref={setHref}></Panel>
         </Overlay>
       </Box>
       <Toaster></Toaster>

@@ -1,9 +1,15 @@
 import { Box, FileUpload, Icon, SimpleGrid, Tabs } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { LuInfo, LuUpload } from "react-icons/lu";
 import Value from "./stac/value";
 
-export function Panel({ href }: { href: string }) {
+export function Panel({
+  href,
+  setHref,
+}: {
+  href: string;
+  setHref: Dispatch<SetStateAction<string>>;
+}) {
   const [tabValue, setTabValue] = useState("upload");
 
   useEffect(() => {
@@ -20,6 +26,8 @@ export function Panel({ href }: { href: string }) {
         bg={"bg.muted"}
         rounded={4}
         pointerEvents={"auto"}
+        overflow={"scroll"}
+        maxH={{ base: "40vh", md: "90vh" }}
       >
         <Tabs.List>
           <Tabs.Trigger value="value">
@@ -31,7 +39,7 @@ export function Panel({ href }: { href: string }) {
         </Tabs.List>
         <Box px={4} pb={4}>
           <Tabs.Content value="value">
-            <Value href={href}></Value>
+            <Value href={href} setHref={setHref}></Value>
           </Tabs.Content>
           <Tabs.Content value="upload">
             <FileUpload.Root alignItems={"stretch"}>

@@ -1,11 +1,17 @@
 import { SkeletonText, Text } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { Catalog } from "./catalog";
 import { Collection } from "./collection";
 import { Item } from "./item";
 import { ItemCollection } from "./item-collection";
 
-export default function Value({ href }: { href: string }) {
+export default function Value({
+  href,
+  setHref,
+}: {
+  href: string;
+  setHref: Dispatch<SetStateAction<string>>;
+}) {
   const { value, loading, error } = useStacValue(href);
   if (loading) {
     return <SkeletonText></SkeletonText>;
@@ -14,7 +20,7 @@ export default function Value({ href }: { href: string }) {
   } else if (value) {
     switch (value.type) {
       case "Catalog":
-        return <Catalog catalog={value}></Catalog>;
+        return <Catalog catalog={value} setHref={setHref}></Catalog>;
       case "Collection":
         return <Collection collection={value}></Collection>;
       case "Feature":
