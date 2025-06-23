@@ -71,11 +71,11 @@ export function Panel({
               fileUpload={fileUpload}
             ></HrefValue>
           </Tabs.Content>
-          {picked && (
-            <Tabs.Content value="picked">
+          <Tabs.Content value="picked">
+            {picked && (
               <Value value={picked} href={href} setHref={setHref}></Value>
-            </Tabs.Content>
-          )}
+            )}
+          </Tabs.Content>
           <Tabs.Content value="upload">
             <FileUpload.RootProvider alignItems={"stretch"} value={fileUpload}>
               <FileUpload.HiddenInput></FileUpload.HiddenInput>
