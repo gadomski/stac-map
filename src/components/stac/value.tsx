@@ -10,10 +10,12 @@ export function Value({
   value,
   setHref,
   stacGeoparquetPath,
+  setPicked,
 }: {
   value: StacValue;
   setHref: Dispatch<SetStateAction<string>>;
   stacGeoparquetPath?: string;
+  setPicked?: Dispatch<SetStateAction<StacValue | undefined>>;
 }) {
   switch (value.type) {
     case "Catalog":
@@ -27,6 +29,7 @@ export function Value({
         <ItemCollection
           itemCollection={value}
           stacGeoparquetPath={stacGeoparquetPath}
+          setPicked={setPicked}
         ></ItemCollection>
       );
     default:

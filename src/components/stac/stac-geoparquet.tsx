@@ -16,16 +16,23 @@ import {
   vectorFromArray,
 } from "apache-arrow";
 import { useDuckDb } from "duckdb-wasm-kit";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import * as stacWasm from "../../stac-wasm";
 import { useLayersDispatch } from "../map/context";
+import type { StacValue } from "./types";
 
 type Summary = {
   count: number;
   bbox: number[];
 };
 
-export default function StacGeoparquet({ path }: { path: string }) {
+export default function StacGeoparquet({
+  path,
+  setPicked,
+}: {
+  path: string;
+  setPicked?: Dispatch<SetStateAction<StacValue | undefined>>;
+}) {
   const { table, loading, error } = useQuery(
     path,
     "ST_AsWKB(geometry) as geometry, id",
@@ -142,11 +149,11 @@ export default function StacGeoparquet({ path }: { path: string }) {
   }, [kvMetadataTable, setKeyValueMetadata]);
 
   useEffect(() => {
-    if (itemTable) {
+    if (itemTable && setPicked) {
       const item = stacWasm.arrowToStacJson(itemTable)[0];
-      dispatch({ type: "set-picked", picked: item });
+      setPicked(item);
     }
-  }, [itemTable, dispatch]);
+  }, [itemTable, setPicked]);
 
   if (error) {
     return <Text color={"red"}>Error: {error}</Text>;

@@ -18,11 +18,6 @@ function reducer(state: LayersState, action: LayersAction) {
       };
     case "set-bbox":
       return { ...state, bounds: bboxToBounds(action.bbox) };
-    case "set-picked":
-      return {
-        ...state,
-        picked: action.picked,
-      };
   }
 }
 

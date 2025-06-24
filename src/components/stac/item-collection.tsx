@@ -1,15 +1,18 @@
 import { Stack } from "@chakra-ui/react";
+import type { Dispatch, SetStateAction } from "react";
 import { LuFiles } from "react-icons/lu";
 import { ValueInfo } from "./shared";
 import StacGeoparquet from "./stac-geoparquet";
-import type { StacItemCollection } from "./types";
+import type { StacItemCollection, StacValue } from "./types";
 
 export function ItemCollection({
   itemCollection,
   stacGeoparquetPath,
+  setPicked,
 }: {
   itemCollection: StacItemCollection;
   stacGeoparquetPath?: string;
+  setPicked?: Dispatch<SetStateAction<StacValue | undefined>>;
 }) {
   return (
     <Stack>
@@ -23,7 +26,10 @@ export function ItemCollection({
         hideJsonButton={stacGeoparquetPath !== undefined}
       ></ValueInfo>
       {stacGeoparquetPath && (
-        <StacGeoparquet path={stacGeoparquetPath}></StacGeoparquet>
+        <StacGeoparquet
+          path={stacGeoparquetPath}
+          setPicked={setPicked}
+        ></StacGeoparquet>
       )}
     </Stack>
   );

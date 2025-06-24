@@ -1,7 +1,6 @@
 import { Layer } from "@deck.gl/core";
 import type { LngLatBounds } from "maplibre-gl";
 import { createContext, useContext, type Dispatch } from "react";
-import type { StacValue } from "../stac/types";
 
 export type LayersAction =
   | {
@@ -9,13 +8,11 @@ export type LayersAction =
       layers: Layer[];
       bbox?: number[];
     }
-  | { type: "set-bbox"; bbox: number[] }
-  | { type: "set-picked"; picked: StacValue };
+  | { type: "set-bbox"; bbox: number[] };
 
 export type LayersState = {
   layers: Layer[];
   bounds?: LngLatBounds;
-  picked?: StacValue;
 };
 
 type LayersContextType = {

@@ -23,12 +23,19 @@ export function Panel({
   stacGeoparquetPath?: string;
 }) {
   const [tabValue, setTabValue] = useState("upload");
+  const [picked, setPicked] = useState<StacValue | undefined>();
 
   useEffect(() => {
     if (value) {
       setTabValue("value");
     }
   }, [value]);
+
+  useEffect(() => {
+    if (picked) {
+      setTabValue("picked");
+    }
+  }, [picked]);
 
   return (
     <SimpleGrid columns={{ base: 1, md: 3 }}>
@@ -45,7 +52,7 @@ export function Panel({
           <Tabs.Trigger value="value" disabled={value === undefined}>
             <LuInfo></LuInfo>
           </Tabs.Trigger>
-          <Tabs.Trigger value="picked" disabled={true}>
+          <Tabs.Trigger value="picked" disabled={picked === undefined}>
             <LuMousePointerClick></LuMousePointerClick>
           </Tabs.Trigger>
           <Tabs.Trigger value="upload">
@@ -59,10 +66,13 @@ export function Panel({
                 value={value}
                 stacGeoparquetPath={stacGeoparquetPath}
                 setHref={setHref}
+                setPicked={setPicked}
               ></Value>
             )}
           </Tabs.Content>
-          <Tabs.Content value="picked"></Tabs.Content>
+          <Tabs.Content value="picked">
+            {picked && <Value value={picked} setHref={setHref}></Value>}
+          </Tabs.Content>
           <Tabs.Content value="upload">
             <FileUpload.RootProvider alignItems={"stretch"} value={fileUpload}>
               <FileUpload.HiddenInput></FileUpload.HiddenInput>
