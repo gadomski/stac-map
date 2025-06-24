@@ -9,7 +9,7 @@ import { Panel } from "./components/panel";
 import { isUrl } from "./components/stac/utils";
 import { Toaster } from "./components/ui/toaster";
 
-function App() {
+export default function App() {
   const initialHref = new URLSearchParams(location.search).get("href") || "";
   const [href, setHref] = useState((isUrl(initialHref) && initialHref) || "");
   const fileUpload = useFileUpload({ maxFiles: 1 });
@@ -49,5 +49,3 @@ function App() {
     </LayersProvider>
   );
 }
-
-export default App;
