@@ -16,11 +16,8 @@ export default function App() {
   useEffect(() => {
     if (new URLSearchParams(location.search).get("href") != href) {
       history.pushState(null, "", "?href=" + href);
-      if (!isUrl(href)) {
-        fileUpload.clearFiles();
-      }
     }
-  }, [href, fileUpload]);
+  }, [href]);
 
   useEffect(() => {
     function handlePopState() {
