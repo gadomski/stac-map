@@ -1,17 +1,24 @@
-import { Box, Container, useFileUpload } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { Box, Center, Container, Spinner } from "@chakra-ui/react";
+import { useEffect } from "react";
 import "./app.css";
 import Header from "./components/header";
 import { Map } from "./components/map";
 import { LayersProvider } from "./components/map/provider";
 import { Panel } from "./components/panel";
+import { useStacValue } from "./components/stac/hooks";
 import { isUrl } from "./components/stac/utils";
-import { Toaster } from "./components/ui/toaster";
+import { toaster, Toaster } from "./components/ui/toaster";
 
 export default function App() {
-  const initialHref = new URLSearchParams(location.search).get("href") || "";
-  const [href, setHref] = useState((isUrl(initialHref) && initialHref) || "");
-  const fileUpload = useFileUpload({ maxFiles: 1 });
+  const {
+    href,
+    setHref,
+    value,
+    stacGeoparquetPath,
+    fileUpload,
+    loading,
+    error,
+  } = useStacValue(getInitialHref());
 
   useEffect(() => {
     if (new URLSearchParams(location.search).get("href") != href) {
@@ -28,7 +35,17 @@ export default function App() {
     return () => {
       window.removeEventListener("popstate", handlePopState);
     };
-  }, []);
+  }, [setHref]);
+
+  useEffect(() => {
+    if (error) {
+      toaster.create({
+        type: "error",
+        title: "Error fetching STAC value",
+        description: error,
+      });
+    }
+  }, [error]);
 
   return (
     <LayersProvider>
@@ -37,9 +54,30 @@ export default function App() {
       </Box>
       <Container zIndex={1} fluid h={"dvh"} pointerEvents={"none"}>
         <Header href={href} setHref={setHref}></Header>
-        <Panel href={href} setHref={setHref} fileUpload={fileUpload}></Panel>
+        <Panel
+          value={value}
+          stacGeoparquetPath={stacGeoparquetPath}
+          setHref={setHref}
+          fileUpload={fileUpload}
+        ></Panel>
       </Container>
+      {loading && (
+        <Box zIndex={2} pos={"absolute"} inset={0} pointerEvents={"none"}>
+          <Center h={"full"}>
+            <Spinner></Spinner>
+          </Center>
+        </Box>
+      )}
       <Toaster></Toaster>
     </LayersProvider>
   );
+}
+
+function getInitialHref() {
+  const href = new URLSearchParams(location.search).get("href") || "";
+  if (isUrl(href)) {
+    return href;
+  } else {
+    return "";
+  }
 }

@@ -8,38 +8,27 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { LuInfo, LuMousePointerClick, LuUpload } from "react-icons/lu";
-import { useLayers } from "./map/context";
-import { HrefValue, Value } from "./stac/value";
+import type { StacValue } from "./stac/types";
+import { Value } from "./stac/value";
 
 export function Panel({
-  href,
   setHref,
   fileUpload,
+  value,
+  stacGeoparquetPath,
 }: {
-  href: string;
   setHref: Dispatch<SetStateAction<string>>;
   fileUpload: UseFileUploadReturn;
+  value?: StacValue;
+  stacGeoparquetPath?: string;
 }) {
   const [tabValue, setTabValue] = useState("upload");
-  const { picked } = useLayers();
 
   useEffect(() => {
-    if (href.length > 0) {
+    if (value) {
       setTabValue("value");
     }
-  }, [href]);
-
-  useEffect(() => {
-    if (picked) {
-      setTabValue("picked");
-    }
-  }, [picked]);
-
-  useEffect(() => {
-    if (fileUpload.acceptedFiles.length == 1) {
-      setHref(fileUpload.acceptedFiles[0].name);
-    }
-  }, [fileUpload.acceptedFiles, setHref]);
+  }, [value]);
 
   return (
     <SimpleGrid columns={{ base: 1, md: 3 }}>
@@ -53,10 +42,10 @@ export function Panel({
         maxH={{ base: "40vh", md: "90vh" }}
       >
         <Tabs.List>
-          <Tabs.Trigger value="value" disabled={href.length === 0}>
+          <Tabs.Trigger value="value" disabled={value === undefined}>
             <LuInfo></LuInfo>
           </Tabs.Trigger>
-          <Tabs.Trigger value="picked" disabled={picked === undefined}>
+          <Tabs.Trigger value="picked" disabled={true}>
             <LuMousePointerClick></LuMousePointerClick>
           </Tabs.Trigger>
           <Tabs.Trigger value="upload">
@@ -65,17 +54,15 @@ export function Panel({
         </Tabs.List>
         <Box px={4} pb={4}>
           <Tabs.Content value="value">
-            <HrefValue
-              href={href}
-              setHref={setHref}
-              fileUpload={fileUpload}
-            ></HrefValue>
-          </Tabs.Content>
-          <Tabs.Content value="picked">
-            {picked && (
-              <Value value={picked} href={href} setHref={setHref}></Value>
+            {value && (
+              <Value
+                value={value}
+                stacGeoparquetPath={stacGeoparquetPath}
+                setHref={setHref}
+              ></Value>
             )}
           </Tabs.Content>
+          <Tabs.Content value="picked"></Tabs.Content>
           <Tabs.Content value="upload">
             <FileUpload.RootProvider alignItems={"stretch"} value={fileUpload}>
               <FileUpload.HiddenInput></FileUpload.HiddenInput>
