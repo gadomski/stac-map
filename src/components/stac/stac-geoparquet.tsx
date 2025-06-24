@@ -40,16 +40,14 @@ export default function StacGeoparquet({
   const [id, setId] = useState<string | undefined>();
 
   return (
-    <>
-      <Stack>
-        <Layer path={path} setId={setId}></Layer>
-        <SummaryDataList path={path}></SummaryDataList>
-        <MetadataTables path={path}></MetadataTables>
-        {id && setPicked && (
-          <PickedItem id={id} path={path} setPicked={setPicked}></PickedItem>
-        )}
-      </Stack>
-    </>
+    <Stack>
+      <Layer path={path} setId={setId}></Layer>
+      <SummaryDataList path={path}></SummaryDataList>
+      <MetadataTables path={path}></MetadataTables>
+      {id && setPicked && (
+        <PickedItem id={id} path={path} setPicked={setPicked}></PickedItem>
+      )}
+    </Stack>
   );
 }
 
