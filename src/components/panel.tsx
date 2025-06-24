@@ -28,6 +28,7 @@ export function Panel({
   useEffect(() => {
     if (value) {
       setTabValue("value");
+      setPicked(undefined);
     }
   }, [value]);
 
