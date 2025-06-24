@@ -1,9 +1,11 @@
 import {
   Badge,
+  Center,
   Table as ChakraTable,
   DataList,
-  Skeleton,
-  Text,
+  HStack,
+  Spinner,
+  Stack,
 } from "@chakra-ui/react";
 import { GeoArrowPolygonLayer } from "@geoarrow/deck.gl-layers";
 import { io } from "@geoarrow/geoarrow-js";
@@ -15,16 +17,18 @@ import {
   Table,
   vectorFromArray,
 } from "apache-arrow";
-import { useDuckDb } from "duckdb-wasm-kit";
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import {
+  useEffect,
+  useState,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+} from "react";
 import * as stacWasm from "../../stac-wasm";
 import { useLayersDispatch } from "../map/context";
+import { toaster } from "../ui/toaster";
+import { useDuckDbQuery } from "./hooks";
 import type { StacValue } from "./types";
-
-type Summary = {
-  count: number;
-  bbox: number[];
-};
 
 export default function StacGeoparquet({
   path,
@@ -33,29 +37,33 @@ export default function StacGeoparquet({
   path: string;
   setPicked?: Dispatch<SetStateAction<StacValue | undefined>>;
 }) {
-  const { table, loading, error } = useQuery(
-    path,
-    "ST_AsWKB(geometry) as geometry, id",
-    {}
-  );
-  const { table: summaryTable } = useQuery(
-    path,
-    "COUNT(*) as count, MIN(bbox.xmin) as xmin, MIN(bbox.ymin) as ymin, MAX(bbox.xmax) as xmax, MAX(bbox.ymax) as ymax",
-    {}
-  );
-  const { table: kvMetadataTable } = useQuery(path, "key, value", {
-    customFunction: "parquet_kv_metadata",
-  });
   const [id, setId] = useState<string | undefined>();
-  const { table: itemTable } = useQuery(path, "* EXCLUDE geometry", {
-    enabled: id !== undefined,
-    where: `id = '${id}'`,
-  });
 
-  const [summary, setSummary] = useState<Summary | undefined>();
-  const [keyValueMetadata, setKeyValueMetadata] = useState<
-    { key: string; value: any }[] | undefined // eslint-disable-line
-  >();
+  return (
+    <>
+      <Stack>
+        <Layer path={path} setId={setId}></Layer>
+        <SummaryDataList path={path}></SummaryDataList>
+        <MetadataTables path={path}></MetadataTables>
+        {id && setPicked && (
+          <PickedItem id={id} path={path} setPicked={setPicked}></PickedItem>
+        )}
+      </Stack>
+    </>
+  );
+}
+
+function Layer({
+  path,
+  setId,
+}: {
+  path: string;
+  setId: Dispatch<SetStateAction<string | undefined>>;
+}) {
+  const { table, loading, error } = useDuckDbQuery({
+    path,
+    select: "ST_AsWKB(geometry) as geometry, id",
+  });
   const dispatch = useLayersDispatch();
 
   useEffect(() => {
@@ -102,36 +110,76 @@ export default function StacGeoparquet({
     }
   }, [table, dispatch, setId]);
 
+  return <Status error={error} loading={loading} what={"layer"}></Status>;
+}
+
+type Summary = {
+  count: number;
+  bbox: number[];
+};
+
+function SummaryDataList({ path }: { path: string }) {
+  const { table, error } = useDuckDbQuery({
+    path,
+    select:
+      "COUNT(*) as count, MIN(bbox.xmin) as xmin, MIN(bbox.ymin) as ymin, MAX(bbox.xmax) as xmax, MAX(bbox.ymax) as ymax",
+  });
+  const [summary, setSummary] = useState<Summary | undefined>();
+  const dispatch = useLayersDispatch();
+
   useEffect(() => {
-    if (summaryTable) {
-      const row = summaryTable.toArray().map((row) => row.toJSON())[0];
-      const summary: Summary = {
+    if (table) {
+      const row = table.toArray().map((row) => row.toJSON())[0];
+      setSummary({
         count: row.count,
         bbox: [row.xmin, row.ymin, row.xmax, row.ymax],
-      };
-      setSummary(summary);
-      dispatch({
-        type: "set-bbox",
-        bbox: summary.bbox,
       });
     }
-  }, [summaryTable, dispatch]);
+  }, [table, setSummary]);
 
   useEffect(() => {
-    if (summaryTable) {
-      const row = summaryTable.toArray().map((row) => row.toJSON())[0];
-      const summary: Summary = {
-        count: row.count,
-        bbox: [row.xmin, row.ymin, row.xmax, row.ymax],
-      };
-      setSummary(summary);
+    if (summary?.bbox) {
+      dispatch({ type: "set-bbox", bbox: summary.bbox });
     }
-  }, [summaryTable, dispatch]);
+  }, [summary?.bbox, dispatch]);
+
+  return (
+    <Status error={error} what={"summary"}>
+      {summary && (
+        <DataList.Root>
+          <DataList.Item>
+            <DataList.ItemLabel>Number of items</DataList.ItemLabel>
+            <DataList.ItemValue>{summary.count}</DataList.ItemValue>
+          </DataList.Item>
+          <DataList.Item>
+            <DataList.ItemLabel>Bounding box</DataList.ItemLabel>
+            <DataList.ItemValue>
+              {summary.bbox.map((n) => Number(n.toFixed(4))).join(", ")}
+            </DataList.ItemValue>
+          </DataList.Item>
+        </DataList.Root>
+      )}
+    </Status>
+  );
+}
+
+type Metadata = {
+  key: string;
+  value: any; // eslint-disable-line
+};
+
+function MetadataTables({ path }: { path: string }) {
+  const { table, error } = useDuckDbQuery({
+    path,
+    select: "key, value",
+    customFunction: "parquet_kv_metadata",
+  });
+  const [metadata, setMetadata] = useState<Metadata[]>([]);
 
   useEffect(() => {
-    if (kvMetadataTable) {
+    if (table) {
       const decoder = new TextDecoder("utf-8");
-      const metadata = kvMetadataTable
+      const metadata = table
         .toArray()
         .map((row) => {
           const jsonRow = row.toJSON();
@@ -144,127 +192,97 @@ export default function StacGeoparquet({
           }
         })
         .filter((row) => row !== undefined);
-      setKeyValueMetadata(metadata);
-    }
-  }, [kvMetadataTable, setKeyValueMetadata]);
 
-  useEffect(() => {
-    if (itemTable && setPicked) {
-      const item = stacWasm.arrowToStacJson(itemTable)[0];
-      setPicked(item);
+      setMetadata(metadata);
     }
-  }, [itemTable, setPicked]);
+  }, [table, setMetadata]);
 
-  if (error) {
-    return <Text color={"red"}>Error: {error}</Text>;
-  } else if (loading || summary === undefined) {
-    return <Skeleton h={200}></Skeleton>;
-  } else {
-    return (
-      <DataList.Root orientation={"horizontal"}>
-        <DataList.Item>
-          <DataList.ItemLabel>Number of items</DataList.ItemLabel>
-          <DataList.ItemValue>{summary.count}</DataList.ItemValue>
-        </DataList.Item>
-        <DataList.Item>
-          <DataList.ItemLabel>Bounding box</DataList.ItemLabel>
-          <DataList.ItemValue>
-            {summary.bbox.map((n) => Number(n.toFixed(4))).join(", ")}
-          </DataList.ItemValue>
-        </DataList.Item>
-        {keyValueMetadata?.map((row) => (
-          <MetataDataListItem row={row} key={row.key}></MetataDataListItem>
+  return (
+    <Status error={error} what="metadata">
+      <DataList.Root>
+        {metadata.map((row) => (
+          <DataList.Item>
+            <DataList.ItemLabel>
+              <HStack>
+                {row.key} <Badge>metadata</Badge>
+              </HStack>
+            </DataList.ItemLabel>
+            <DataList.ItemValue>
+              <ChakraTable.ScrollArea>
+                <ChakraTable.Root size={"sm"}>
+                  <ChakraTable.Body>
+                    {Object.entries(row.value).map(([k, v]) => (
+                      <ChakraTable.Row key={row.key + k}>
+                        <ChakraTable.Cell>{k}</ChakraTable.Cell>
+                        <ChakraTable.Cell>
+                          {(typeof v === "string" && v) || JSON.stringify(v)}
+                        </ChakraTable.Cell>
+                      </ChakraTable.Row>
+                    ))}
+                  </ChakraTable.Body>
+                </ChakraTable.Root>
+              </ChakraTable.ScrollArea>
+            </DataList.ItemValue>
+          </DataList.Item>
         ))}
       </DataList.Root>
-    );
-  }
-}
-
-function MetataDataListItem({
-  row,
-}: {
-  // eslint-disable-next-line
-  row: { key: string; value: { [k: string]: any } };
-}) {
-  return (
-    <DataList.Item>
-      <DataList.ItemLabel>
-        {row.key} <Badge>metadata</Badge>
-      </DataList.ItemLabel>
-      <DataList.ItemValue>
-        <ChakraTable.ScrollArea>
-          <ChakraTable.Root size={"sm"}>
-            <ChakraTable.Body>
-              {Object.entries(row.value).map(([k, v]) => (
-                <ChakraTable.Row key={k}>
-                  <ChakraTable.Cell>{k}</ChakraTable.Cell>
-                  <ChakraTable.Cell>
-                    {(typeof v === "string" && v) || JSON.stringify(v)}
-                  </ChakraTable.Cell>
-                </ChakraTable.Row>
-              ))}
-            </ChakraTable.Body>
-          </ChakraTable.Root>
-        </ChakraTable.ScrollArea>
-      </DataList.ItemValue>
-    </DataList.Item>
+    </Status>
   );
 }
 
-function useQuery(
-  path: string,
-  select: string,
-  {
-    customFunction,
-    where,
-    enabled,
-  }: { customFunction?: string; where?: string; enabled?: boolean }
-) {
-  const { db, loading: duckDbLoading, error: duckDbError } = useDuckDb();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | undefined>();
-  const [table, setTable] = useState<Table | undefined>();
-
-  // TODO what do we do about union by name issues with globs?
-  const from =
-    (customFunction && `${customFunction}('${path}')`) ||
-    `read_parquet('${path}', union_by_name=true)`;
+function PickedItem({
+  id,
+  path,
+  setPicked,
+}: {
+  id: string;
+  path: string;
+  setPicked: Dispatch<SetStateAction<StacValue | undefined>>;
+}) {
+  const { table, error } = useDuckDbQuery({
+    path,
+    // TODO can we include geometry and then render it again?
+    select: "* EXCLUDE geometry",
+    where: `id = '${id}'`,
+  });
 
   useEffect(() => {
-    if (db && enabled !== false) {
-      (async () => {
-        setLoading(true);
-        try {
-          const connection = await db.connect();
-          connection.query("LOAD spatial;");
-          let query = `SELECT ${select} FROM ${from}`;
-          if (where) {
-            query += " WHERE " + where;
-          }
-          const table = await connection.query(query);
-          // @ts-expect-error Don't know why the tables aren't recognized
-          setTable(table);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (e: any) {
-          setError(e.toString());
-        }
-
-        setLoading(false);
-      })();
+    if (table) {
+      const item = stacWasm.arrowToStacJson(table)[0];
+      setPicked(item);
     }
-  }, [db, setError, setLoading, setTable, select, from, where, enabled]);
+  }, [table, setPicked]);
+  return <Status error={error} what="picked item"></Status>;
+}
 
+function Status({
+  error,
+  loading,
+  what,
+  children,
+}: {
+  error?: string;
+  loading?: boolean;
+  what: string;
+  children?: ReactNode;
+}) {
   useEffect(() => {
-    if (duckDbLoading) {
-      setLoading(duckDbLoading);
+    if (error) {
+      toaster.create({
+        type: "error",
+        title: `Error querying stac-geoparquet ${what}`,
+        description: error,
+      });
     }
-  }, [duckDbLoading, setLoading]);
+  }, [error, what]);
 
-  useEffect(() => {
-    if (duckDbError) {
-      setError(`DuckDB Error: ${duckDbError.toString()}`);
-    }
-  }, [duckDbError, setError]);
-
-  return { table, loading, error };
+  if (loading == true) {
+    return (
+      <Center>
+        <Spinner></Spinner>
+      </Center>
+    );
+  } else {
+    return children;
+  }
 }

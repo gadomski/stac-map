@@ -1,4 +1,5 @@
 import { useFileUpload } from "@chakra-ui/react";
+import { Table } from "apache-arrow";
 import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState } from "react";
 import type { StacItemCollection, StacValue } from "./types";
@@ -85,4 +86,63 @@ function getStacGeoparquetItemCollection(href: string): StacItemCollection {
     title: href.split("/").pop(),
     description: "A stac-geoparquet file",
   };
+}
+
+export function useDuckDbQuery({
+  path,
+  select,
+  customFunction,
+  where,
+}: {
+  path: string;
+  select: string;
+  customFunction?: string;
+  where?: string;
+}) {
+  const { db, loading: duckDbLoading, error: duckDbError } = useDuckDb();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | undefined>();
+  const [table, setTable] = useState<Table | undefined>();
+
+  // TODO what do we do about union by name issues with globs?
+  const from =
+    (customFunction && `${customFunction}('${path}')`) ||
+    `read_parquet('${path}', union_by_name=true)`;
+
+  useEffect(() => {
+    if (db) {
+      setLoading(true);
+      (async () => {
+        try {
+          const connection = await db.connect();
+          connection.query("LOAD spatial;");
+          let query = `SELECT ${select} FROM ${from}`;
+          if (where) {
+            query += " WHERE " + where;
+          }
+          const table = await connection.query(query);
+          // @ts-expect-error Don't know why the tables aren't recognized
+          setTable(table);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (e: any) {
+          setError(`DuckDB query error: ${e.toString()}`);
+        }
+      })();
+      setLoading(false);
+    }
+  }, [db, setError, setLoading, setTable, select, from, where]);
+
+  useEffect(() => {
+    if (duckDbLoading) {
+      setLoading(duckDbLoading);
+    }
+  }, [duckDbLoading, setLoading]);
+
+  useEffect(() => {
+    if (duckDbError) {
+      setError(`DuckDB Error: ${duckDbError.toString()}`);
+    }
+  }, [duckDbError, setError]);
+
+  return { table, loading, error };
 }
