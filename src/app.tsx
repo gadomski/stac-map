@@ -35,15 +35,13 @@ export default function App() {
 
   return (
     <LayersProvider>
-      <Box position={"absolute"} top={0} left={0} zIndex={0}>
+      <Box zIndex={0} position={"absolute"} top={0} left={0}>
         <Map></Map>
       </Box>
-      <Box zIndex={1}>
-        <Container fluid h={"dvh"} pointerEvents={"none"}>
-          <Header href={href} setHref={setHref}></Header>
-          <Panel href={href} setHref={setHref} fileUpload={fileUpload}></Panel>
-        </Container>
-      </Box>
+      <Container zIndex={1} fluid h={"dvh"} pointerEvents={"none"}>
+        <Header href={href} setHref={setHref}></Header>
+        <Panel href={href} setHref={setHref} fileUpload={fileUpload}></Panel>
+      </Container>
       <Toaster></Toaster>
     </LayersProvider>
   );
