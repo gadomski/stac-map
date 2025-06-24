@@ -39,8 +39,8 @@ export function Map() {
         zoom: 1,
       }}
       style={{
-        height: "100vh",
-        width: "100vw",
+        height: "100dvh",
+        width: "100dvw",
       }}
       mapStyle={`https://basemaps.cartocdn.com/gl/${mapStyle}/style.json`}
     >
