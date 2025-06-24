@@ -100,6 +100,17 @@ export function CollectionCard({
         <Card.Footer>
           <Stack>
             <HStack>
+              {selfHref && (
+                <Tooltip content="Load collection">
+                  <IconButton
+                    variant={"surface"}
+                    size={"xs"}
+                    onClick={() => setHref(selfHref)}
+                  >
+                    <LuUpload></LuUpload>
+                  </IconButton>
+                </Tooltip>
+              )}
               <Tooltip content="Zoom to collection">
                 <IconButton
                   variant={"surface"}
@@ -114,17 +125,6 @@ export function CollectionCard({
                   <LuZoomIn></LuZoomIn>
                 </IconButton>
               </Tooltip>
-              {selfHref && (
-                <Tooltip content="Load collection">
-                  <IconButton
-                    variant={"surface"}
-                    size={"xs"}
-                    onClick={() => setHref(selfHref)}
-                  >
-                    <LuUpload></LuUpload>
-                  </IconButton>
-                </Tooltip>
-              )}
               <Tooltip content="View raw JSON">
                 <RawJsonDialogButton
                   title={collection.id}
