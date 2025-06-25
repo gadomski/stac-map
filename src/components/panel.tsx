@@ -15,8 +15,9 @@ import {
   LuUpload,
 } from "react-icons/lu";
 import type { StacCollection, StacLink } from "stac-ts";
+import { ItemCollection } from "./stac/item-collection";
 import Search from "./stac/search";
-import type { StacValue } from "./stac/types";
+import type { StacItemCollection, StacValue } from "./stac/types";
 import { Value } from "./stac/value";
 import { toaster } from "./ui/toaster";
 
@@ -35,6 +36,7 @@ export function Panel({
 }) {
   const [tabValue, setTabValue] = useState("upload");
   const [picked, setPicked] = useState<StacValue | undefined>();
+  const [search, setSearch] = useState<StacItemCollection | undefined>();
   const { collections, error } = useCollections(value);
   // We make this a hook b/c we'll eventually want to fetch them from the root (for collections)
   const searchLinks = useSearchLinks(value);
@@ -46,6 +48,8 @@ export function Panel({
     if (value) {
       setTabValue("value");
       setPicked(undefined);
+      setSearch(undefined);
+      setSearchLayers([]);
     }
   }, [value]);
 
@@ -66,16 +70,16 @@ export function Panel({
   }, [error]);
 
   useEffect(() => {
-    function addVisibility(value: string) {
+    function addVisibility(values: string[]) {
       return (layer: Layer) => {
-        return layer.clone({ visible: value == tabValue });
+        return layer.clone({ visible: values.includes(tabValue) });
       };
     }
 
     setLayers([
-      ...valueLayers.map(addVisibility("value")),
-      ...searchLayers.map(addVisibility("search")),
-      ...pickedLayers.map(addVisibility("picked")),
+      ...valueLayers.map(addVisibility(["value", "search"])),
+      ...searchLayers.map(addVisibility(["value", "search"])),
+      ...pickedLayers.map(addVisibility(["picked"])),
     ]);
   }, [valueLayers, searchLayers, pickedLayers, setLayers, tabValue]);
 
@@ -121,9 +125,15 @@ export function Panel({
             <Search
               collections={collections}
               links={searchLinks}
-              setPicked={setPicked}
-              setLayers={setSearchLayers}
+              setSearch={setSearch}
             ></Search>
+            {search && (
+              <ItemCollection
+                itemCollection={search}
+                setLayers={setSearchLayers}
+                setPicked={setPicked}
+              ></ItemCollection>
+            )}
           </Tabs.Content>
           <Tabs.Content value="picked">
             {picked && (
