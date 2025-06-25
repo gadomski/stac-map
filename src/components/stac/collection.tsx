@@ -15,14 +15,14 @@ import { useEffect, type Dispatch, type SetStateAction } from "react";
 import { LuFolderPlus, LuUpload, LuZoomIn } from "react-icons/lu";
 import type { StacCollection } from "stac-ts";
 import { RawJsonDialogButton } from "../json";
-import { useLayersDispatch } from "../map/context";
+import { useMapDispatch } from "../map/context";
 import { Tooltip } from "../ui/tooltip";
 import { AssetCard } from "./asset";
 import { ValueInfo } from "./shared";
 import { getSelfHref, sanitizeBbox } from "./utils";
 
 export function Collection({ collection }: { collection: StacCollection }) {
-  const dispatch = useLayersDispatch();
+  const dispatch = useMapDispatch();
 
   useEffect(() => {
     const bbox = sanitizeBbox(collection.extent.spatial.bbox[0]);
@@ -70,7 +70,7 @@ export function CollectionCard({
   setHref: Dispatch<SetStateAction<string>>;
 }) {
   const selfHref = getSelfHref(collection);
-  const dispatch = useLayersDispatch();
+  const dispatch = useMapDispatch();
   const thumbnail = Object.values(collection.assets || {}).find((asset) =>
     asset.roles?.includes("thumbnail")
   );
@@ -117,7 +117,7 @@ export function CollectionCard({
                   size={"xs"}
                   onClick={() =>
                     dispatch({
-                      type: "set-bbox",
+                      type: "set-fit-bbox",
                       bbox: collection.extent.spatial.bbox[0],
                     })
                   }

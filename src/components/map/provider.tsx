@@ -1,13 +1,13 @@
 import { LngLatBounds } from "maplibre-gl";
 import { type ReactNode, useReducer } from "react";
-import { type LayersAction, type LayersState, LayersContext } from "./context";
+import { type MapAction, type MapState, LayersContext } from "./context";
 
-export function LayersProvider({ children }: { children: ReactNode }) {
+export function MapProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, { layers: [] });
   return <LayersContext value={{ state, dispatch }}>{children}</LayersContext>;
 }
 
-function reducer(state: LayersState, action: LayersAction) {
+function reducer(state: MapState, action: MapAction) {
   switch (action.type) {
     case "set-layers":
       return {
@@ -16,7 +16,7 @@ function reducer(state: LayersState, action: LayersAction) {
         fitBounds: (action.bbox && bboxToBounds(action.bbox)) || undefined,
         picked: undefined,
       };
-    case "set-fit-bounds":
+    case "set-fit-bbox":
       return { ...state, fitBounds: bboxToBounds(action.bbox) };
   }
 }

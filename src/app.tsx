@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import "./app.css";
 import Header from "./components/header";
 import { Map } from "./components/map";
-import { LayersProvider } from "./components/map/provider";
+import { MapProvider } from "./components/map/provider";
 import { Panel } from "./components/panel";
 import { useStacValue } from "./components/stac/hooks";
 import { isUrl } from "./components/stac/utils";
@@ -48,7 +48,7 @@ export default function App() {
   }, [error]);
 
   return (
-    <LayersProvider>
+    <MapProvider>
       <Box zIndex={0} position={"absolute"} top={0} left={0}>
         <Map></Map>
       </Box>
@@ -69,7 +69,7 @@ export default function App() {
         </Box>
       )}
       <Toaster></Toaster>
-    </LayersProvider>
+    </MapProvider>
   );
 }
 

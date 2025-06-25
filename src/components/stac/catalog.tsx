@@ -5,7 +5,7 @@ import type { BBox } from "geojson";
 import { useEffect, type Dispatch, type SetStateAction } from "react";
 import { LuFolder } from "react-icons/lu";
 import type { StacCatalog, StacCollection } from "stac-ts";
-import { useLayersDispatch } from "../map/context";
+import { useMapDispatch } from "../map/context";
 import { CollectionCard } from "./collection";
 import { ValueInfo } from "./shared";
 import { sanitizeBbox } from "./utils";
@@ -17,7 +17,7 @@ function Collections({
   collections: StacCollection[];
   setHref: Dispatch<SetStateAction<string>>;
 }) {
-  const dispatch = useLayersDispatch();
+  const dispatch = useMapDispatch();
 
   useEffect(() => {
     const collectionBbox = [-180, -90, 180, 90];

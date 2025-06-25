@@ -3,12 +3,12 @@ import { GeoJsonLayer } from "@deck.gl/layers";
 import { useEffect } from "react";
 import { LuFile } from "react-icons/lu";
 import type { StacItem } from "stac-ts";
-import { useLayersDispatch } from "../map/context";
+import { useMapDispatch } from "../map/context";
 import { AssetCard } from "./asset";
 import { ValueInfo } from "./shared";
 
 export function Item({ item }: { item: StacItem }) {
-  const dispatch = useLayersDispatch();
+  const dispatch = useMapDispatch();
 
   useEffect(() => {
     if (item.geometry) {
