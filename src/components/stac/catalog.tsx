@@ -6,9 +6,7 @@ import {
   SimpleGrid,
   Stack,
 } from "@chakra-ui/react";
-import { GeoJsonLayer } from "@deck.gl/layers";
-import { bboxPolygon } from "@turf/bbox-polygon";
-import type { BBox } from "geojson";
+import { Layer } from "@deck.gl/core";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { LuFolder } from "react-icons/lu";
 import type { StacCatalog, StacCollection } from "stac-ts";
@@ -16,14 +14,16 @@ import { useMap, useMapDispatch } from "../map/context";
 import { InfoTip } from "../ui/toggle-tip";
 import { CollectionCard } from "./collection";
 import { ValueInfo } from "./shared";
-import { filterCollections, sanitizeBbox } from "./utils";
+import { filterCollections, getCollectionExtents } from "./utils";
 
 function Collections({
   collections,
   setHref,
+  setLayers,
 }: {
   collections: StacCollection[];
   setHref: Dispatch<SetStateAction<string>>;
+  setLayers: Dispatch<SetStateAction<Layer[]>>;
 }) {
   const [includeGlobalCollections, setIncludeGlobalCollections] =
     useState(true);
@@ -32,28 +32,13 @@ function Collections({
   const dispatch = useMapDispatch();
 
   useEffect(() => {
-    const collectionBbox = [-180, -90, 180, 90];
-    const polygons = collections.map((collection) => {
-      const bbox = sanitizeBbox(collection.extent.spatial.bbox[0]);
-      collectionBbox[0] = Math.min(collectionBbox[0], bbox[0]);
-      collectionBbox[1] = Math.min(collectionBbox[1], bbox[1]);
-      collectionBbox[2] = Math.max(collectionBbox[2], bbox[2]);
-      collectionBbox[3] = Math.max(collectionBbox[3], bbox[3]);
-      return bboxPolygon(bbox as BBox);
-    });
-    const polygonLayer = new GeoJsonLayer({
-      id: "collection-polygons",
-      data: polygons,
-      stroked: true,
-      filled: false,
-      getLineColor: [207, 63, 2],
-      lineWidthUnits: "pixels",
-    });
+    const { layer, bbox } = getCollectionExtents(collections, "collections");
+    setLayers([layer]);
     dispatch({
       type: "set-fit-bbox",
-      bbox: collectionBbox,
+      bbox,
     });
-  }, [collections, dispatch]);
+  }, [collections, dispatch, setLayers]);
 
   useEffect(() => {
     setFilteredCollections(
@@ -97,10 +82,12 @@ export function Catalog({
   catalog,
   collections,
   setHref,
+  setLayers,
 }: {
   catalog: StacCatalog;
   collections?: StacCollection[];
   setHref: Dispatch<SetStateAction<string>>;
+  setLayers: Dispatch<SetStateAction<Layer[]>>;
 }) {
   return (
     <Stack>
@@ -114,7 +101,11 @@ export function Catalog({
       ></ValueInfo>
 
       {collections && collections.length > 0 && (
-        <Collections collections={collections} setHref={setHref}></Collections>
+        <Collections
+          collections={collections}
+          setHref={setHref}
+          setLayers={setLayers}
+        ></Collections>
       )}
     </Stack>
   );

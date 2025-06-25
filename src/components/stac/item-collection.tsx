@@ -1,4 +1,5 @@
 import { DataList, Stack } from "@chakra-ui/react";
+import { Layer } from "@deck.gl/core";
 import { GeoJsonLayer } from "@deck.gl/layers";
 import { useEffect, type Dispatch, type SetStateAction } from "react";
 import { LuFiles } from "react-icons/lu";
@@ -11,10 +12,12 @@ export function ItemCollection({
   itemCollection,
   stacGeoparquetPath,
   setPicked,
+  setLayers,
 }: {
   itemCollection: StacItemCollection;
   stacGeoparquetPath?: string;
   setPicked?: Dispatch<SetStateAction<StacValue | undefined>>;
+  setLayers: Dispatch<SetStateAction<Layer[]>>;
 }) {
   return (
     <Stack>
@@ -31,11 +34,13 @@ export function ItemCollection({
         <StacGeoparquet
           path={stacGeoparquetPath}
           setPicked={setPicked}
+          setLayers={setLayers}
         ></StacGeoparquet>
       )) || (
         <JsonItemCollection
           itemCollection={itemCollection}
           setPicked={setPicked}
+          setLayers={setLayers}
         ></JsonItemCollection>
       )}
     </Stack>
@@ -45,9 +50,11 @@ export function ItemCollection({
 function JsonItemCollection({
   itemCollection,
   setPicked,
+  setLayers,
 }: {
   itemCollection: StacItemCollection;
   setPicked?: Dispatch<SetStateAction<StacValue | undefined>>;
+  setLayers: Dispatch<SetStateAction<Layer[]>>;
 }) {
   const dispatch = useMapDispatch();
 
@@ -63,8 +70,9 @@ function JsonItemCollection({
         pickable: true,
         onClick: (e) => e.object && setPicked && setPicked(e.object),
       });
+      setLayers([layer]);
     }
-  }, [itemCollection, dispatch, setPicked]);
+  }, [itemCollection, dispatch, setPicked, setLayers]);
 
   return (
     <DataList.Root>

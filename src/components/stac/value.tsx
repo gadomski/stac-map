@@ -30,10 +30,11 @@ export function Value({
           catalog={value}
           collections={collections}
           setHref={setHref}
+          setLayers={setLayers}
         ></Catalog>
       );
     case "Collection":
-      return <Collection collection={value}></Collection>;
+      return <Collection collection={value} setLayers={setLayers}></Collection>;
     case "Feature":
       return <Item item={value} setLayers={setLayers}></Item>;
     case "FeatureCollection":
@@ -42,6 +43,7 @@ export function Value({
           itemCollection={value}
           stacGeoparquetPath={stacGeoparquetPath}
           setPicked={setPicked}
+          setLayers={setLayers}
         ></ItemCollection>
       );
     default:

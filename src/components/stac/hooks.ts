@@ -34,7 +34,7 @@ export function useStacValue(initialHref: string) {
             setError(
               `Could not GET ${href} (${
                 response.status
-              }): ${await response.text()}`,
+              }): ${await response.text()}`
             );
           }
         })();

@@ -38,6 +38,9 @@ export function Panel({
   const { collections, error } = useCollections(value);
   // We make this a hook b/c we'll eventually want to fetch them from the root (for collections)
   const searchLinks = useSearchLinks(value);
+  const [valueLayers, setValueLayers] = useState<Layer[]>([]);
+  const [searchLayers, setSearchLayers] = useState<Layer[]>([]);
+  const [pickedLayers, setPickedLayers] = useState<Layer[]>([]);
 
   useEffect(() => {
     if (value) {
@@ -62,12 +65,19 @@ export function Panel({
     }
   }, [error]);
 
-  // function makeSetLayers(value: string) {
-  //   return (layers: Layer[]) => {
-  //     console.log(value);
-  //     setLayers(layers);
-  //   };
-  // }
+  useEffect(() => {
+    function addVisibility(value: string) {
+      return (layer: Layer) => {
+        return layer.clone({ visible: value == tabValue });
+      };
+    }
+
+    setLayers([
+      ...valueLayers.map(addVisibility("value")),
+      ...searchLayers.map(addVisibility("search")),
+      ...pickedLayers.map(addVisibility("picked")),
+    ]);
+  }, [valueLayers, searchLayers, pickedLayers, setLayers, tabValue]);
 
   return (
     <SimpleGrid columns={{ base: 1, md: 3 }}>
@@ -103,7 +113,7 @@ export function Panel({
                 stacGeoparquetPath={stacGeoparquetPath}
                 setHref={setHref}
                 setPicked={setPicked}
-                setLayers={makeSetLayers("value")}
+                setLayers={setValueLayers}
               ></Value>
             )}
           </Tabs.Content>
@@ -112,6 +122,7 @@ export function Panel({
               collections={collections}
               links={searchLinks}
               setPicked={setPicked}
+              setLayers={setSearchLayers}
             ></Search>
           </Tabs.Content>
           <Tabs.Content value="picked">
@@ -119,7 +130,7 @@ export function Panel({
               <Value
                 value={picked}
                 setHref={setHref}
-                setLayers={setLayers}
+                setLayers={setPickedLayers}
               ></Value>
             )}
           </Tabs.Content>
