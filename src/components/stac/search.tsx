@@ -1,4 +1,5 @@
 import {
+  Alert,
   Badge,
   Button,
   Checkbox,
@@ -35,8 +36,11 @@ export default function Search({
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
   const [includeGlobalCollections, setIncludeGlobalCollections] =
     useState(true);
+  const [allowCollectionlessSearch, setAllowCollectionlessSearch] =
+    useState(false);
   const [link, setLink] = useState<StacLink | undefined>();
   const [searchData, setSearchData] = useState<SearchData | undefined>();
+  const [searchError, setSearchError] = useState<string | undefined>();
 
   useEffect(() => {
     if (bounds) {
@@ -44,15 +48,15 @@ export default function Search({
         collections.filter(
           (collection) =>
             isCollectionWithinBounds(collection, bounds) &&
-            (includeGlobalCollections || !isGlobalCollection(collection)),
-        ),
+            (includeGlobalCollections || !isGlobalCollection(collection))
+        )
       );
     } else {
       setFilteredCollections(
         collections.filter(
           (collection) =>
-            includeGlobalCollections || !isGlobalCollection(collection),
-        ),
+            includeGlobalCollections || !isGlobalCollection(collection)
+        )
       );
     }
   }, [collections, setFilteredCollections, bounds, includeGlobalCollections]);
@@ -106,19 +110,46 @@ export default function Search({
           </DataList.ItemValue>
         </DataList.Item>
       </DataList.Root>
-      <HStack>
+      <HStack gap={4}>
         <Button
-          onClick={() =>
-            setSearchData({
-              collections: selectedCollections,
-              bbox: bounds?.toArray().flat(),
-            })
-          }
+          onClick={() => {
+            if (
+              selectedCollections.length === 0 &&
+              !allowCollectionlessSearch
+            ) {
+              setSearchError(
+                "Collection-less search is disabled, choose at least once collection before searching"
+              );
+            } else {
+              setSearchError(undefined);
+              setSearchData({
+                collections: selectedCollections,
+                bbox: bounds?.toArray().flat(),
+              });
+            }
+          }}
           disabled={link == undefined}
         >
           <LuSearch></LuSearch>Search
         </Button>
+        <Checkbox.Root
+          size={"sm"}
+          checked={allowCollectionlessSearch}
+          onCheckedChange={(e) => setAllowCollectionlessSearch(!!e.checked)}
+          variant={"subtle"}
+        >
+          <Checkbox.HiddenInput></Checkbox.HiddenInput>
+          <Checkbox.Control></Checkbox.Control>
+          <Checkbox.Label>Allow collection-less search?</Checkbox.Label>
+        </Checkbox.Root>
       </HStack>
+
+      {searchError && (
+        <Alert.Root status={"error"}>
+          <Alert.Indicator></Alert.Indicator>
+          <Alert.Description>{searchError}</Alert.Description>
+        </Alert.Root>
+      )}
 
       {searchData && link && (
         <SearchResults
@@ -282,7 +313,7 @@ function useStacSearch({
               const newUrl = new URL(nextLink.href);
               if (newUrl == url) {
                 setError(
-                  `'next' link had the same url as the current page: ${newUrl}`,
+                  `'next' link had the same url as the current page: ${newUrl}`
                 );
                 break;
               } else {
@@ -306,7 +337,7 @@ function useStacSearch({
 
 function isCollectionWithinBounds(
   collection: StacCollection,
-  bounds: LngLatBounds,
+  bounds: LngLatBounds
 ) {
   const bbox = collection.extent.spatial.bbox[0];
   let collectionBounds;
