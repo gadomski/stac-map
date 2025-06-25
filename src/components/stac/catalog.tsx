@@ -1,31 +1,22 @@
-import {
-  Badge,
-  Heading,
-  HStack,
-  SimpleGrid,
-  Skeleton,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
+import { Badge, Heading, HStack, SimpleGrid, Stack } from "@chakra-ui/react";
 import { GeoJsonLayer } from "@deck.gl/layers";
 import { bboxPolygon } from "@turf/bbox-polygon";
 import type { BBox } from "geojson";
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, type Dispatch, type SetStateAction } from "react";
 import { LuFolder } from "react-icons/lu";
-import type { StacCatalog, StacCollection, StacLink } from "stac-ts";
+import type { StacCatalog, StacCollection } from "stac-ts";
 import { useMapDispatch } from "../map/context";
 import { CollectionCard } from "./collection";
 import { ValueInfo } from "./shared";
 import { sanitizeBbox } from "./utils";
 
 function Collections({
-  href,
+  collections,
   setHref,
 }: {
-  href: string;
+  collections: StacCollection[];
   setHref: Dispatch<SetStateAction<string>>;
 }) {
-  const { collections, loading, error } = useCollections(href);
   const dispatch = useMapDispatch();
 
   useEffect(() => {
@@ -49,45 +40,41 @@ function Collections({
     dispatch({
       type: "set-layers",
       layers: [polygonLayer],
+    });
+    dispatch({
+      type: "set-fit-bbox",
       bbox: collectionBbox,
     });
   }, [collections, dispatch]);
 
-  if (error) {
-    return <Text color={"red"}>Error when loading collections: {error}</Text>;
-  } else if (loading) {
-    return <Skeleton h={200}></Skeleton>;
-  } else {
-    return (
-      <Stack>
-        <HStack mt={8}>
-          <Heading size={"md"}>Collections</Heading>{" "}
-          <Badge>{collections.length}</Badge>
-        </HStack>
-        <SimpleGrid columns={{ base: 1, md: 2 }} gap={2}>
-          {collections.map((collection) => (
-            <CollectionCard
-              collection={collection}
-              setHref={setHref}
-              key={collection.id}
-            ></CollectionCard>
-          ))}
-        </SimpleGrid>
-      </Stack>
-    );
-  }
+  return (
+    <Stack>
+      <HStack mt={8}>
+        <Heading size={"md"}>Collections</Heading>{" "}
+        <Badge>{collections.length}</Badge>
+      </HStack>
+      <SimpleGrid columns={{ base: 1, md: 2 }} gap={2}>
+        {collections.map((collection) => (
+          <CollectionCard
+            collection={collection}
+            setHref={setHref}
+            key={collection.id}
+          ></CollectionCard>
+        ))}
+      </SimpleGrid>
+    </Stack>
+  );
 }
 
 export function Catalog({
   catalog,
+  collections,
   setHref,
 }: {
   catalog: StacCatalog;
+  collections?: StacCollection[];
   setHref: Dispatch<SetStateAction<string>>;
 }) {
-  const collectionsHref = catalog.links.find(
-    (link) => link.rel == "data"
-  )?.href;
   return (
     <Stack>
       <ValueInfo
@@ -99,50 +86,9 @@ export function Catalog({
         description={catalog.description}
       ></ValueInfo>
 
-      {collectionsHref && (
-        <Collections href={collectionsHref} setHref={setHref}></Collections>
+      {collections && collections.length > 0 && (
+        <Collections collections={collections} setHref={setHref}></Collections>
       )}
     </Stack>
   );
-}
-
-function useCollections(href: string) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | undefined>();
-  const [collections, setCollections] = useState<StacCollection[]>([]);
-
-  useEffect(() => {
-    setLoading(true);
-    (async () => {
-      let nextHref = href;
-      let fetchedCollections: StacCollection[] = [];
-      while (true) {
-        const response = await fetch(nextHref);
-        if (response.ok) {
-          const data = await response.json();
-          fetchedCollections = [
-            ...fetchedCollections,
-            ...(data.collections ?? []),
-          ];
-          const nextLink = (data.links ?? []).find(
-            (link: StacLink) => link.rel == "next"
-          );
-          if (nextLink && nextLink.href != nextHref) {
-            nextHref = nextLink.href;
-          } else {
-            break;
-          }
-        } else {
-          setError(
-            "Error while fetching " + href + ": " + (await response.text())
-          );
-          break;
-        }
-      }
-      setCollections(fetchedCollections);
-      setLoading(false);
-    })();
-  }, [href]);
-
-  return { collections, loading, error };
 }

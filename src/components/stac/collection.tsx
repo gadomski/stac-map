@@ -34,7 +34,8 @@ export function Collection({ collection }: { collection: StacCollection }) {
       filled: true,
       getFillColor: [207, 63, 2, 100],
     });
-    dispatch({ type: "set-layers", layers: [layer], bbox: bbox });
+    dispatch({ type: "set-layers", layers: [layer] });
+    dispatch({ type: "set-fit-bbox", bbox: bbox });
   }, [collection, dispatch]);
   return (
     <Stack gap={4}>
