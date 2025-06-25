@@ -42,7 +42,7 @@ function Collections({
 
   useEffect(() => {
     setFilteredCollections(
-      filterCollections(collections, bounds, includeGlobalCollections)
+      filterCollections(collections, bounds, includeGlobalCollections),
     );
   }, [bounds, collections, includeGlobalCollections]);
 
