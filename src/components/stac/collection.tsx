@@ -73,7 +73,7 @@ export function CollectionCard({
   const selfHref = getSelfHref(collection);
   const dispatch = useMapDispatch();
   const thumbnail = Object.values(collection.assets || {}).find((asset) =>
-    asset.roles?.includes("thumbnail")
+    asset.roles?.includes("thumbnail"),
   );
 
   return (

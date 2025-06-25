@@ -14,25 +14,25 @@ export enum BufferType {
   /**
    *
    *     * used in List type, Dense Union and variable length primitive types (String, Binary)
-   *     
+   *
    */
   Offset = 0,
   /**
    *
    *     * actual data, either fixed width primitive types in slots or variable width delimited by an OFFSET vector
-   *     
+   *
    */
   Data = 1,
   /**
    *
    *     * Bit vector indicating if each value is null
-   *     
+   *
    */
   Validity = 2,
   /**
    *
    *     * Type vector used in Union type
-   *     
+   *
    */
   Type = 3,
 }
@@ -142,18 +142,11 @@ export enum UnionMode {
 
 export type SchemaMetadata = Map<string, string>;
 
-
-
 export type FieldMetadata = Map<string, string>;
-
-
 
 export type FunctionTable = WebAssembly.Table;
 
-
-
 export type Memory = WebAssembly.Memory;
-
 
 /**
  * Opaque binary data of variable length.

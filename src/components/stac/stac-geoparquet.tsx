@@ -86,7 +86,7 @@ function Layer({
       });
       newTable.schema.fields[0].metadata.set(
         "ARROW:extension:name",
-        "geoarrow.polygon"
+        "geoarrow.polygon",
       );
       const layer = new GeoArrowPolygonLayer({
         id: "geoarrow-polygons",

@@ -43,8 +43,13 @@ export const recordbatch_numColumns: (a: number) => number;
 export const recordbatch_schema: (a: number) => number;
 export const recordbatch_toFFI: (a: number) => [number, number, number];
 export const recordbatch_intoFFI: (a: number) => [number, number, number];
-export const recordbatch_intoIPCStream: (a: number) => [number, number, number, number];
-export const recordbatch_withSchema: (a: number, b: number) => [number, number, number];
+export const recordbatch_intoIPCStream: (
+  a: number,
+) => [number, number, number, number];
+export const recordbatch_withSchema: (
+  a: number,
+  b: number,
+) => [number, number, number];
 export const recordbatch_slice: (a: number, b: number, c: number) => number;
 export const recordbatch_getArrayMemorySize: (a: number) => number;
 export const __wbg_table_free: (a: number, b: number) => void;
@@ -54,8 +59,13 @@ export const table_recordBatches: (a: number) => [number, number];
 export const table_numBatches: (a: number) => number;
 export const table_toFFI: (a: number) => [number, number, number];
 export const table_intoFFI: (a: number) => [number, number, number];
-export const table_intoIPCStream: (a: number) => [number, number, number, number];
-export const table_fromIPCStream: (a: number, b: number) => [number, number, number];
+export const table_intoIPCStream: (
+  a: number,
+) => [number, number, number, number];
+export const table_fromIPCStream: (
+  a: number,
+  b: number,
+) => [number, number, number];
 export const table_getArrayMemorySize: (a: number) => number;
 export const __wbg_data_free: (a: number, b: number) => void;
 export const data_toFFI: (a: number) => [number, number, number];
@@ -68,20 +78,40 @@ export const ffidata_schemaAddr: (a: number) => number;
 export const __wbg_schema_free: (a: number, b: number) => void;
 export const schema_toFFI: (a: number) => [number, number, number];
 export const schema_intoFFI: (a: number) => [number, number, number];
-export const schema_intoIPCStream: (a: number) => [number, number, number, number];
+export const schema_intoIPCStream: (
+  a: number,
+) => [number, number, number, number];
 export const schema_field: (a: number, b: number) => number;
-export const schema_fieldWithName: (a: number, b: number, c: number) => [number, number, number];
-export const schema_withMetadata: (a: number, b: any) => [number, number, number];
-export const schema_indexOf: (a: number, b: number, c: number) => [number, number, number];
+export const schema_fieldWithName: (
+  a: number,
+  b: number,
+  c: number,
+) => [number, number, number];
+export const schema_withMetadata: (
+  a: number,
+  b: any,
+) => [number, number, number];
+export const schema_indexOf: (
+  a: number,
+  b: number,
+  c: number,
+) => [number, number, number];
 export const schema_metadata: (a: number) => [number, number, number];
 export const __wbg_field_free: (a: number, b: number) => void;
 export const field_toFFI: (a: number) => [number, number, number];
 export const field_name: (a: number) => [number, number];
-export const field_withName: (a: number, b: number, c: number) => [number, number, number];
+export const field_withName: (
+  a: number,
+  b: number,
+  c: number,
+) => [number, number, number];
 export const field_dataType: (a: number) => [number, number, number];
 export const field_isNullable: (a: number) => number;
 export const field_metadata: (a: number) => [number, number, number];
-export const field_withMetadata: (a: number, b: any) => [number, number, number];
+export const field_withMetadata: (
+  a: number,
+  b: any,
+) => [number, number, number];
 export const __wbg_ffistream_free: (a: number, b: number) => void;
 export const ffistream_numArrays: (a: number) => number;
 export const ffistream_schemaAddr: (a: number) => number;
@@ -92,7 +122,12 @@ export const __wbg_vector_free: (a: number, b: number) => void;
 export const wasmMemory: () => any;
 export const _functionTable: () => any;
 export const __wbindgen_malloc: (a: number, b: number) => number;
-export const __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
+export const __wbindgen_realloc: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+) => number;
 export const __externref_table_alloc: () => number;
 export const __wbindgen_export_3: WebAssembly.Table;
 export const __wbindgen_exn_store: (a: number) => void;
