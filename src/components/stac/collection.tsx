@@ -8,6 +8,7 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
+import { Layer } from "@deck.gl/core";
 import { GeoJsonLayer } from "@deck.gl/layers";
 import bboxPolygon from "@turf/bbox-polygon";
 import type { BBox } from "geojson";
@@ -21,7 +22,13 @@ import { AssetCard } from "./asset";
 import { ValueInfo } from "./shared";
 import { getSelfHref, sanitizeBbox } from "./utils";
 
-export function Collection({ collection }: { collection: StacCollection }) {
+export function Collection({
+  collection,
+  setLayers,
+}: {
+  collection: StacCollection;
+  setLayers: Dispatch<SetStateAction<Layer[]>>;
+}) {
   const dispatch = useMapDispatch();
 
   useEffect(() => {
@@ -34,9 +41,10 @@ export function Collection({ collection }: { collection: StacCollection }) {
       filled: true,
       getFillColor: [207, 63, 2, 100],
     });
-    dispatch({ type: "set-layers", layers: [layer] });
+    setLayers([layer]);
     dispatch({ type: "set-fit-bbox", bbox: bbox });
-  }, [collection, dispatch]);
+  }, [collection, dispatch, setLayers]);
+
   return (
     <Stack gap={4}>
       <ValueInfo

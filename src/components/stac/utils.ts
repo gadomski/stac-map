@@ -1,3 +1,6 @@
+import { GeoJsonLayer } from "@deck.gl/layers";
+import { bboxPolygon } from "@turf/bbox-polygon";
+import type { BBox } from "geojson";
 import type { LngLatBounds } from "maplibre-gl";
 import type { StacCollection } from "stac-ts";
 import type { StacValue } from "./types";
@@ -35,25 +38,25 @@ export function isUrl(href: string) {
 export function filterCollections(
   collections: StacCollection[],
   bounds: LngLatBounds | undefined,
-  includeGlobalCollections: boolean
+  includeGlobalCollections: boolean,
 ) {
   if (bounds) {
     return collections.filter(
       (collection) =>
         isCollectionWithinBounds(collection, bounds) &&
-        (includeGlobalCollections || !isGlobalCollection(collection))
+        (includeGlobalCollections || !isGlobalCollection(collection)),
     );
   } else {
     return collections.filter(
       (collection) =>
-        includeGlobalCollections || !isGlobalCollection(collection)
+        includeGlobalCollections || !isGlobalCollection(collection),
     );
   }
 }
 
 function isCollectionWithinBounds(
   collection: StacCollection,
-  bounds: LngLatBounds
+  bounds: LngLatBounds,
 ) {
   const bbox = collection.extent.spatial.bbox[0];
   let collectionBounds;
@@ -81,4 +84,28 @@ function isGlobalCollection(collection: StacCollection) {
     // Assume length 6
     return bbox[0] == -180 && bbox[3] == 180;
   }
+}
+
+export function getCollectionExtents(
+  collections: StacCollection[],
+  id: string,
+) {
+  const bbox = [-180, -90, 180, 90];
+  const polygons = collections.map((collection) => {
+    const bbox = sanitizeBbox(collection.extent.spatial.bbox[0]);
+    bbox[0] = Math.min(bbox[0], bbox[0]);
+    bbox[1] = Math.min(bbox[1], bbox[1]);
+    bbox[2] = Math.max(bbox[2], bbox[2]);
+    bbox[3] = Math.max(bbox[3], bbox[3]);
+    return bboxPolygon(bbox as BBox);
+  });
+  const layer = new GeoJsonLayer({
+    id,
+    data: polygons,
+    stroked: true,
+    filled: false,
+    getLineColor: [207, 63, 2],
+    lineWidthUnits: "pixels",
+  });
+  return { layer, bbox };
 }

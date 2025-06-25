@@ -7,6 +7,7 @@ import {
   Spinner,
   Stack,
 } from "@chakra-ui/react";
+import { Layer } from "@deck.gl/core";
 import { GeoArrowPolygonLayer } from "@geoarrow/deck.gl-layers";
 import { io } from "@geoarrow/geoarrow-js";
 import {
@@ -33,15 +34,21 @@ import type { StacValue } from "./types";
 export default function StacGeoparquet({
   path,
   setPicked,
+  setLayers,
 }: {
   path: string;
   setPicked?: Dispatch<SetStateAction<StacValue | undefined>>;
+  setLayers: Dispatch<SetStateAction<Layer[]>>;
 }) {
   const [id, setId] = useState<string | undefined>();
 
   return (
     <Stack>
-      <Layer path={path} setId={setId}></Layer>
+      <StacGeoparquetLayer
+        path={path}
+        setId={setId}
+        setLayers={setLayers}
+      ></StacGeoparquetLayer>
       <SummaryDataList path={path}></SummaryDataList>
       <MetadataTables path={path}></MetadataTables>
       {id && setPicked && (
@@ -51,12 +58,14 @@ export default function StacGeoparquet({
   );
 }
 
-function Layer({
+function StacGeoparquetLayer({
   path,
   setId,
+  setLayers,
 }: {
   path: string;
   setId: Dispatch<SetStateAction<string | undefined>>;
+  setLayers: Dispatch<SetStateAction<Layer[]>>;
 }) {
   const { table, loading, error } = useDuckDbQuery({
     path,
@@ -102,11 +111,9 @@ function Layer({
         },
         autoHighlight: true,
       });
-      dispatch({ type: "set-layers", layers: [layer] });
-    } else {
-      dispatch({ type: "set-layers", layers: [] });
+      setLayers([layer]);
     }
-  }, [table, dispatch, setId]);
+  }, [table, dispatch, setId, setLayers]);
 
   return <Status error={error} loading={loading} what={"layer"}></Status>;
 }
