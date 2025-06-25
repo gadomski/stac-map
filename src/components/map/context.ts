@@ -5,6 +5,7 @@ import { createContext, useContext, type Dispatch } from "react";
 export type MapState = {
   layers: Layer[];
   fitBounds?: LngLatBounds;
+  bounds?: LngLatBounds;
 };
 
 export type MapAction =
@@ -12,7 +13,8 @@ export type MapAction =
       type: "set-layers";
       layers: Layer[];
     }
-  | { type: "set-fit-bbox"; bbox: number[] };
+  | { type: "set-fit-bbox"; bbox: number[] }
+  | { type: "set-bounds"; bounds: LngLatBounds };
 
 type MapContextType = {
   state: MapState;
@@ -45,11 +47,11 @@ export function reduceMapAction(state: MapState, action: MapAction) {
       return {
         ...state,
         layers: action.layers,
-        fitBounds: (action.bbox && bboxToBounds(action.bbox)) || undefined,
-        picked: undefined,
       };
     case "set-fit-bbox":
       return { ...state, fitBounds: bboxToBounds(action.bbox) };
+    case "set-bounds":
+      return { ...state, bounds: clampBounds(action.bounds) };
   }
 }
 
@@ -61,4 +63,14 @@ function bboxToBounds(bbox: number[]) {
   } else {
     console.log("ERROR: invalid bbox=" + bbox);
   }
+}
+
+function clampBounds(bounds: LngLatBounds) {
+  if (bounds.getWest() < -180) {
+    bounds.setSouthWest([-180, bounds.getSouth()]);
+  }
+  if (bounds.getEast() > 180) {
+    bounds.setNorthEast([180, bounds.getNorth()]);
+  }
+  return bounds;
 }

@@ -97,7 +97,11 @@ export function Panel({
             )}
           </Tabs.Content>
           <Tabs.Content value="search">
-            <Search collections={collections} links={searchLinks}></Search>
+            <Search
+              collections={collections}
+              links={searchLinks}
+              setPicked={setPicked}
+            ></Search>
           </Tabs.Content>
           <Tabs.Content value="picked">
             {picked && <Value value={picked} setHref={setHref}></Value>}
