@@ -13,11 +13,11 @@ function reducer(state: LayersState, action: LayersAction) {
       return {
         ...state,
         layers: action.layers,
-        bounds: (action.bbox && bboxToBounds(action.bbox)) || undefined,
+        fitBounds: (action.bbox && bboxToBounds(action.bbox)) || undefined,
         picked: undefined,
       };
-    case "set-bbox":
-      return { ...state, bounds: bboxToBounds(action.bbox) };
+    case "set-fit-bounds":
+      return { ...state, fitBounds: bboxToBounds(action.bbox) };
   }
 }
 

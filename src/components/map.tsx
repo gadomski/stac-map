@@ -22,13 +22,13 @@ export function Map() {
     "positron-gl-style",
     "dark-matter-gl-style"
   );
-  const { layers, bounds } = useLayers();
+  const { layers, fitBounds } = useLayers();
 
   useEffect(() => {
-    if (bounds && mapRef.current) {
-      mapRef.current.fitBounds(bounds, { padding: 200 });
+    if (fitBounds && mapRef.current) {
+      mapRef.current.fitBounds(fitBounds, { padding: 200 });
     }
-  }, [bounds]);
+  }, [fitBounds]);
 
   return (
     <MaplibreMap

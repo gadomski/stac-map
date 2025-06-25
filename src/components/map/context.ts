@@ -8,11 +8,11 @@ export type LayersAction =
       layers: Layer[];
       bbox?: number[];
     }
-  | { type: "set-bbox"; bbox: number[] };
+  | { type: "set-fit-bounds"; bbox: number[] };
 
 export type LayersState = {
   layers: Layer[];
-  bounds?: LngLatBounds;
+  fitBounds?: LngLatBounds;
 };
 
 type LayersContextType = {
