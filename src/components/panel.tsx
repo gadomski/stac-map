@@ -22,19 +22,22 @@ import { Value } from "./stac/value";
 import { toaster } from "./ui/toaster";
 
 export function Panel({
+  tab,
+  setTab,
   setHref,
   fileUpload,
   value,
   stacGeoparquetPath,
   setLayers,
 }: {
+  tab: string;
+  setTab: Dispatch<SetStateAction<string>>;
   setHref: Dispatch<SetStateAction<string>>;
   fileUpload: UseFileUploadReturn;
   value: StacValue | undefined;
   stacGeoparquetPath?: string;
   setLayers: Dispatch<SetStateAction<Layer[]>>;
 }) {
-  const [tabValue, setTabValue] = useState("upload");
   const [picked, setPicked] = useState<StacValue | undefined>();
   const [search, setSearch] = useState<StacItemCollection | undefined>();
   const { collections, error } = useCollections(value);
@@ -46,7 +49,6 @@ export function Panel({
 
   useEffect(() => {
     if (value) {
-      setTabValue("value");
       setPicked(undefined);
       setSearch(undefined);
       setSearchLayers([]);
@@ -55,9 +57,9 @@ export function Panel({
 
   useEffect(() => {
     if (picked) {
-      setTabValue("picked");
+      setTab("picked");
     }
-  }, [picked]);
+  }, [picked, setTab]);
 
   useEffect(() => {
     if (error) {
@@ -72,7 +74,7 @@ export function Panel({
   useEffect(() => {
     function addVisibility(values: string[]) {
       return (layer: Layer) => {
-        return layer.clone({ visible: values.includes(tabValue) });
+        return layer.clone({ visible: values.includes(tab) });
       };
     }
 
@@ -81,13 +83,13 @@ export function Panel({
       ...searchLayers.map(addVisibility(["value", "search"])),
       ...pickedLayers.map(addVisibility(["picked"])),
     ]);
-  }, [valueLayers, searchLayers, pickedLayers, setLayers, tabValue]);
+  }, [valueLayers, searchLayers, pickedLayers, setLayers, tab]);
 
   return (
     <SimpleGrid columns={{ base: 1, md: 3 }}>
       <Tabs.Root
-        value={tabValue}
-        onValueChange={(e) => setTabValue(e.value)}
+        value={tab}
+        onValueChange={(e) => setTab(e.value)}
         bg={"bg.muted"}
         rounded={4}
         pointerEvents={"auto"}
@@ -172,7 +174,7 @@ function useSearchLinks(value?: StacValue) {
       (value &&
         value.links &&
         value.links.filter((link) => link.rel == "search")) ||
-        [],
+        []
     );
   }, [value, setSearchLinks]);
 
@@ -200,7 +202,7 @@ function useCollections(value?: StacValue) {
               ...(data.collections ?? []),
             ];
             const nextLink = (data.links ?? []).find(
-              (link: StacLink) => link.rel == "next",
+              (link: StacLink) => link.rel == "next"
             );
             if (nextLink && nextLink.href != nextHref) {
               nextHref = nextLink.href;
@@ -212,7 +214,7 @@ function useCollections(value?: StacValue) {
               "Error while fetching " +
                 nextHref +
                 ": " +
-                (await response.text()),
+                (await response.text())
             );
             break;
           }
