@@ -1,5 +1,5 @@
 {
-  "name": "stac-geoparquet-viewer",
+  "name": "stac-map",
   "private": true,
   "version": "0.0.0",
   "type": "module",
