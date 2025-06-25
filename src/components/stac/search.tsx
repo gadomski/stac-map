@@ -53,7 +53,7 @@ export default function Search({
 
   useEffect(() => {
     setFilteredCollections(
-      filterCollections(collections, bounds, includeGlobalCollections)
+      filterCollections(collections, bounds, includeGlobalCollections),
     );
   }, [collections, setFilteredCollections, bounds, includeGlobalCollections]);
 
@@ -153,7 +153,7 @@ export default function Search({
               !allowCollectionlessSearch
             ) {
               setSearchError(
-                "Collection-less search is disabled, choose at least once collection before searching"
+                "Collection-less search is disabled, choose at least once collection before searching",
               );
             } else {
               setSearchError(undefined);
@@ -372,7 +372,7 @@ function useStacSearch({
               const newUrl = new URL(nextLink.href);
               if (newUrl == url) {
                 setError(
-                  `'next' link had the same url as the current page: ${newUrl}`
+                  `'next' link had the same url as the current page: ${newUrl}`,
                 );
                 break;
               } else {
