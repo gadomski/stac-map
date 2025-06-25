@@ -8,11 +8,9 @@ import {
   HStack,
   Portal,
   Select,
-  Skeleton,
   Stack,
   type MenuSelectionDetails,
 } from "@chakra-ui/react";
-import { Layer } from "@deck.gl/core";
 import {
   useEffect,
   useRef,
@@ -25,20 +23,17 @@ import type { StacCollection, StacItem, StacLink } from "stac-ts";
 import { useMap } from "../map/context";
 import { toaster } from "../ui/toaster";
 import { InfoTip } from "../ui/toggle-tip";
-import { ItemCollection } from "./item-collection";
-import type { StacItemCollection, StacValue } from "./types";
-import { filterCollections, getCollectionExtents } from "./utils";
+import type { StacItemCollection } from "./types";
+import { filterCollections } from "./utils";
 
 export default function Search({
   collections,
   links,
-  setPicked,
-  setLayers,
+  setSearch,
 }: {
   collections: StacCollection[];
   links: StacLink[];
-  setPicked: Dispatch<SetStateAction<StacValue | undefined>>;
-  setLayers: Dispatch<SetStateAction<Layer[]>>;
+  setSearch: Dispatch<SetStateAction<StacItemCollection | undefined>>;
 }) {
   const { bounds } = useMap();
   const [filteredCollections, setFilteredCollections] = useState(collections);
@@ -50,7 +45,6 @@ export default function Search({
   const [link, setLink] = useState<StacLink | undefined>();
   const [searchData, setSearchData] = useState<SearchData | undefined>();
   const [searchError, setSearchError] = useState<string | undefined>();
-  const [searchLayers, setSearchLayers] = useState<Layer[]>([]);
 
   useEffect(() => {
     setFilteredCollections(
@@ -63,11 +57,6 @@ export default function Search({
       setLink(links[0]);
     }
   }, [links, setLink]);
-
-  useEffect(() => {
-    const { layer } = getCollectionExtents(collections, "collections-search");
-    setLayers([...searchLayers, layer]);
-  }, [collections, searchLayers, setLayers]);
 
   return (
     <Stack gap={8}>
@@ -156,8 +145,7 @@ export default function Search({
       {searchData && link && (
         <SearchResults
           link={link}
-          setPicked={setPicked}
-          setLayers={setSearchLayers}
+          setSearch={setSearch}
           {...searchData}
         ></SearchResults>
       )}
@@ -229,23 +217,18 @@ function SearchResults({
   collections,
   bbox,
   link,
-  setPicked,
-  setLayers,
+  setSearch,
 }: {
   collections: string[];
   bbox?: number[];
   link: StacLink;
-  setPicked: Dispatch<SetStateAction<StacValue | undefined>>;
-  setLayers: Dispatch<SetStateAction<Layer[]>>;
+  setSearch: Dispatch<SetStateAction<StacItemCollection | undefined>>;
 }) {
   const { items, error, loading, cancel } = useStacSearch({
     collections,
     bbox,
     link,
   });
-  const [itemCollection, setItemCollection] = useState<
-    StacItemCollection | undefined
-  >();
 
   useEffect(() => {
     if (error) {
@@ -259,14 +242,14 @@ function SearchResults({
 
   useEffect(() => {
     if (items && items.length > 0) {
-      setItemCollection({
+      setSearch({
         type: "FeatureCollection",
         features: items,
         id: "search-results",
         title: "Search results",
       });
     }
-  }, [items, setItemCollection]);
+  }, [items, setSearch]);
 
   return (
     <Stack>
@@ -277,14 +260,6 @@ function SearchResults({
           </Button>
         </HStack>
       )}
-      {(itemCollection && (
-        <ItemCollection
-          itemCollection={itemCollection}
-          setPicked={setPicked}
-          setLayers={setLayers}
-        ></ItemCollection>
-      )) ||
-        (loading && <Skeleton h={200}></Skeleton>)}
     </Stack>
   );
 }
