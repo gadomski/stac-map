@@ -21,11 +21,14 @@ export function Item({ item }: { item: StacItem }) {
         getFillColor: [207, 63, 2, 100],
       });
       dispatch({ type: "set-layers", layers: [layer] });
-      if (item.bbox) {
-        dispatch({ type: "set-fit-bbox", bbox: item.bbox });
-      }
     }
   }, [item, dispatch]);
+
+  useEffect(() => {
+    if (item.bbox) {
+      dispatch({ type: "set-fit-bbox", bbox: item.bbox });
+    }
+  }, [item.bbox, dispatch]);
 
   return (
     <Stack>
