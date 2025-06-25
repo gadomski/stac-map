@@ -4,9 +4,10 @@ import {
   DataList,
   Portal,
   Select,
+  type MenuSelectionDetails,
 } from "@chakra-ui/react";
 import { LngLatBounds } from "maplibre-gl";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import type { StacCollection, StacLink } from "stac-ts";
 import { useMap } from "../map/context";
 import { InfoTip } from "../ui/toggle-tip";
@@ -20,6 +21,7 @@ export default function Search({
 }) {
   const { bounds } = useMap();
   const [filteredCollections, setFilteredCollections] = useState(collections);
+  const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
 
   useEffect(() => {
     if (bounds) {
@@ -28,8 +30,12 @@ export default function Search({
           isCollectionWithinBounds(collection, bounds)
         )
       );
+    } else {
+      setFilteredCollections(collections);
     }
   }, [collections, setFilteredCollections, bounds]);
+
+  console.log(selectedCollections);
 
   return (
     <DataList.Root>
@@ -53,6 +59,8 @@ export default function Search({
         </DataList.ItemLabel>
         <DataList.ItemValue>
           <CollectionsSelect
+            selectedCollections={selectedCollections}
+            setSelectedCollections={setSelectedCollections}
             collections={filteredCollections}
           ></CollectionsSelect>
         </DataList.ItemValue>
@@ -61,14 +69,36 @@ export default function Search({
   );
 }
 
-function CollectionsSelect({ collections }: { collections: StacCollection[] }) {
+function CollectionsSelect({
+  collections,
+  selectedCollections,
+  setSelectedCollections,
+}: {
+  collections: StacCollection[];
+  selectedCollections: string[];
+  setSelectedCollections: Dispatch<SetStateAction<string[]>>;
+}) {
   const collection = createListCollection({
     items: collections,
     itemToString: (collection) => collection.title || collection.id,
     itemToValue: (collection) => collection.id,
   });
+
+  function onSelect(e: MenuSelectionDetails) {
+    if (selectedCollections.includes(e.value)) {
+      setSelectedCollections(selectedCollections.filter((s) => s != e.value));
+    } else {
+      setSelectedCollections([...selectedCollections, e.value]);
+    }
+  }
+
   return (
-    <Select.Root multiple collection={collection}>
+    <Select.Root
+      multiple
+      collection={collection}
+      onSelect={onSelect}
+      value={selectedCollections}
+    >
       <Select.HiddenSelect />
       <Select.Control>
         <Select.Trigger>
