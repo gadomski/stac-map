@@ -97,7 +97,11 @@ export function Panel({
             )}
           </Tabs.Content>
           <Tabs.Content value="search">
-            <Search collections={collections} links={searchLinks}></Search>
+            <Search
+              collections={collections}
+              links={searchLinks}
+              setPicked={setPicked}
+            ></Search>
           </Tabs.Content>
           <Tabs.Content value="picked">
             {picked && <Value value={picked} setHref={setHref}></Value>}
@@ -130,7 +134,7 @@ function useSearchLinks(value?: StacValue) {
       (value &&
         value.links &&
         value.links.filter((link) => link.rel == "search")) ||
-        [],
+        []
     );
   }, [value, setSearchLinks]);
 
@@ -158,7 +162,7 @@ function useCollections(value?: StacValue) {
               ...(data.collections ?? []),
             ];
             const nextLink = (data.links ?? []).find(
-              (link: StacLink) => link.rel == "next",
+              (link: StacLink) => link.rel == "next"
             );
             if (nextLink && nextLink.href != nextHref) {
               nextHref = nextLink.href;
@@ -170,7 +174,7 @@ function useCollections(value?: StacValue) {
               "Error while fetching " +
                 nextHref +
                 ": " +
-                (await response.text()),
+                (await response.text())
             );
             break;
           }
