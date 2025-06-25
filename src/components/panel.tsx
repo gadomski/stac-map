@@ -162,7 +162,7 @@ function useSearchLinks(value?: StacValue) {
       (value &&
         value.links &&
         value.links.filter((link) => link.rel == "search")) ||
-        []
+        [],
     );
   }, [value, setSearchLinks]);
 
@@ -190,7 +190,7 @@ function useCollections(value?: StacValue) {
               ...(data.collections ?? []),
             ];
             const nextLink = (data.links ?? []).find(
-              (link: StacLink) => link.rel == "next"
+              (link: StacLink) => link.rel == "next",
             );
             if (nextLink && nextLink.href != nextHref) {
               nextHref = nextLink.href;
@@ -202,7 +202,7 @@ function useCollections(value?: StacValue) {
               "Error while fetching " +
                 nextHref +
                 ": " +
-                (await response.text())
+                (await response.text()),
             );
             break;
           }

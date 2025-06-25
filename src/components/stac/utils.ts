@@ -38,25 +38,25 @@ export function isUrl(href: string) {
 export function filterCollections(
   collections: StacCollection[],
   bounds: LngLatBounds | undefined,
-  includeGlobalCollections: boolean
+  includeGlobalCollections: boolean,
 ) {
   if (bounds) {
     return collections.filter(
       (collection) =>
         isCollectionWithinBounds(collection, bounds) &&
-        (includeGlobalCollections || !isGlobalCollection(collection))
+        (includeGlobalCollections || !isGlobalCollection(collection)),
     );
   } else {
     return collections.filter(
       (collection) =>
-        includeGlobalCollections || !isGlobalCollection(collection)
+        includeGlobalCollections || !isGlobalCollection(collection),
     );
   }
 }
 
 function isCollectionWithinBounds(
   collection: StacCollection,
-  bounds: LngLatBounds
+  bounds: LngLatBounds,
 ) {
   const bbox = collection.extent.spatial.bbox[0];
   let collectionBounds;
@@ -88,7 +88,7 @@ function isGlobalCollection(collection: StacCollection) {
 
 export function getCollectionExtents(
   collections: StacCollection[],
-  id: string
+  id: string,
 ) {
   const bbox = [-180, -90, 180, 90];
   const polygons = collections.map((collection) => {
