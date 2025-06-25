@@ -25,7 +25,7 @@ import {
   type SetStateAction,
 } from "react";
 import * as stacWasm from "../../stac-wasm";
-import { useLayersDispatch } from "../map/context";
+import { useMapDispatch } from "../map/context";
 import { toaster } from "../ui/toaster";
 import { useDuckDbQuery } from "./hooks";
 import type { StacValue } from "./types";
@@ -62,7 +62,7 @@ function Layer({
     path,
     select: "ST_AsWKB(geometry) as geometry, id",
   });
-  const dispatch = useLayersDispatch();
+  const dispatch = useMapDispatch();
 
   useEffect(() => {
     if (table) {
@@ -123,7 +123,7 @@ function SummaryDataList({ path }: { path: string }) {
       "COUNT(*) as count, MIN(bbox.xmin) as xmin, MIN(bbox.ymin) as ymin, MAX(bbox.xmax) as xmax, MAX(bbox.ymax) as ymax",
   });
   const [summary, setSummary] = useState<Summary | undefined>();
-  const dispatch = useLayersDispatch();
+  const dispatch = useMapDispatch();
 
   useEffect(() => {
     if (table) {
@@ -137,7 +137,7 @@ function SummaryDataList({ path }: { path: string }) {
 
   useEffect(() => {
     if (summary?.bbox) {
-      dispatch({ type: "set-bbox", bbox: summary.bbox });
+      dispatch({ type: "set-fit-bbox", bbox: summary.bbox });
     }
   }, [summary?.bbox, dispatch]);
 

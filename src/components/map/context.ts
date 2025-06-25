@@ -2,41 +2,39 @@ import { Layer } from "@deck.gl/core";
 import type { LngLatBounds } from "maplibre-gl";
 import { createContext, useContext, type Dispatch } from "react";
 
-export type LayersAction =
+export type MapAction =
   | {
       type: "set-layers";
       layers: Layer[];
       bbox?: number[];
     }
-  | { type: "set-bbox"; bbox: number[] };
+  | { type: "set-fit-bbox"; bbox: number[] };
 
-export type LayersState = {
+export type MapState = {
   layers: Layer[];
-  bounds?: LngLatBounds;
+  fitBounds?: LngLatBounds;
 };
 
-type LayersContextType = {
-  state: LayersState;
-  dispatch: Dispatch<LayersAction>;
+type MapContextType = {
+  state: MapState;
+  dispatch: Dispatch<MapAction>;
 };
 
-export const LayersContext = createContext<LayersContextType | null>(null);
+export const LayersContext = createContext<MapContextType | null>(null);
 
-export function useLayers() {
+export function useMap() {
   const context = useContext(LayersContext);
   if (context === null) {
-    throw new Error("useLayers must be used from within a LayersProvider");
+    throw new Error("useMap must be used from within a MapProvider");
   } else {
     return context.state;
   }
 }
 
-export function useLayersDispatch() {
+export function useMapDispatch() {
   const context = useContext(LayersContext);
   if (context === null) {
-    throw new Error(
-      "useLayersDispatch must be used from within a LayersProvider"
-    );
+    throw new Error("useLayersDispatch must be used from within a MapProvider");
   } else {
     return context.dispatch;
   }
