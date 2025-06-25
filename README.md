@@ -1,3 +1,11 @@
-# stac-geoparquet-viewer
+# stac-map
 
-View **stac-geoparquet** in your browser.
+A map-first STAC visualizer.
+Includes:
+
+- Search
+- **stac-geoparquet**
+- Uploads
+
+> [!NOTE]
+> This is a prototype, and might change significantly and/or break at any time.
