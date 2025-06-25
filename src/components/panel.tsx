@@ -22,22 +22,19 @@ import { Value } from "./stac/value";
 import { toaster } from "./ui/toaster";
 
 export function Panel({
-  tab,
-  setTab,
   setHref,
   fileUpload,
   value,
   stacGeoparquetPath,
   setLayers,
 }: {
-  tab: string;
-  setTab: Dispatch<SetStateAction<string>>;
   setHref: Dispatch<SetStateAction<string>>;
   fileUpload: UseFileUploadReturn;
   value: StacValue | undefined;
   stacGeoparquetPath?: string;
   setLayers: Dispatch<SetStateAction<Layer[]>>;
 }) {
+  const [tabValue, setTabValue] = useState("upload");
   const [picked, setPicked] = useState<StacValue | undefined>();
   const [search, setSearch] = useState<StacItemCollection | undefined>();
   const { collections, error } = useCollections(value);
@@ -49,6 +46,7 @@ export function Panel({
 
   useEffect(() => {
     if (value) {
+      setTabValue("value");
       setPicked(undefined);
       setSearch(undefined);
       setSearchLayers([]);
@@ -57,9 +55,9 @@ export function Panel({
 
   useEffect(() => {
     if (picked) {
-      setTab("picked");
+      setTabValue("picked");
     }
-  }, [picked, setTab]);
+  }, [picked]);
 
   useEffect(() => {
     if (error) {
@@ -74,7 +72,7 @@ export function Panel({
   useEffect(() => {
     function addVisibility(values: string[]) {
       return (layer: Layer) => {
-        return layer.clone({ visible: values.includes(tab) });
+        return layer.clone({ visible: values.includes(tabValue) });
       };
     }
 
@@ -83,13 +81,13 @@ export function Panel({
       ...searchLayers.map(addVisibility(["value", "search"])),
       ...pickedLayers.map(addVisibility(["picked"])),
     ]);
-  }, [valueLayers, searchLayers, pickedLayers, setLayers, tab]);
+  }, [valueLayers, searchLayers, pickedLayers, setLayers, tabValue]);
 
   return (
     <SimpleGrid columns={{ base: 1, md: 3 }}>
       <Tabs.Root
-        value={tab}
-        onValueChange={(e) => setTab(e.value)}
+        value={tabValue}
+        onValueChange={(e) => setTabValue(e.value)}
         bg={"bg.muted"}
         rounded={4}
         pointerEvents={"auto"}

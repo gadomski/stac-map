@@ -21,30 +21,16 @@ export default function App() {
     error,
   } = useStacValue(getInitialHref());
   const [layers, setLayers] = useState<Layer[]>([]);
-  const [tab, setTab] = useState(getInitialTab());
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    if (searchParams.get("href") != href) {
-      searchParams.set("href", href);
-      history.pushState(null, "", "?" + searchParams.toString());
+    if (new URLSearchParams(location.search).get("href") != href) {
+      history.pushState(null, "", "?href=" + href);
     }
   }, [href]);
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    if (searchParams.get("tab") != tab) {
-      searchParams.set("tab", tab);
-      history.pushState(null, "", "?" + searchParams.toString());
-    }
-  }, [tab]);
-
-  useEffect(() => {
     function handlePopState() {
-      const searchParams = new URLSearchParams(location.search);
-      const href = searchParams.get("href");
-      setHref(href ?? "");
-      setTab(searchParams.get("tab") ?? ((href && "value") || "upload"));
+      setHref(new URLSearchParams(location.search).get("href") ?? "");
     }
 
     window.addEventListener("popstate", handlePopState);
@@ -71,8 +57,6 @@ export default function App() {
       <Container zIndex={1} fluid h={"dvh"} pointerEvents={"none"}>
         <Header href={href} setHref={setHref}></Header>
         <Panel
-          tab={tab}
-          setTab={setTab}
           value={value}
           stacGeoparquetPath={stacGeoparquetPath}
           setHref={setHref}
@@ -99,8 +83,4 @@ function getInitialHref() {
   } else {
     return "";
   }
-}
-
-function getInitialTab() {
-  return new URLSearchParams(location.search).get("tab") || "";
 }
