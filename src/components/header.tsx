@@ -8,6 +8,7 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { LuSearch } from "react-icons/lu";
+import { ColorModeButton } from "./ui/color-mode";
 
 const EXAMPLES = [
   ["eoAPI DevSeed", "https://stac.eoapi.dev/"],
@@ -75,6 +76,7 @@ export default function Header({
           </Menu.Positioner>
         </Portal>
       </Menu.Root>
+      <ColorModeButton></ColorModeButton>
     </HStack>
   );
 }
