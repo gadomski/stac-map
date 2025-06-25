@@ -1,13 +1,20 @@
 import { HStack, IconButton, SimpleGrid, Stack } from "@chakra-ui/react";
+import type { Layer } from "@deck.gl/core";
 import { GeoJsonLayer } from "@deck.gl/layers";
-import { useEffect } from "react";
+import { useEffect, type Dispatch, type SetStateAction } from "react";
 import { LuFile, LuMaximize } from "react-icons/lu";
 import type { StacItem } from "stac-ts";
 import { useMapDispatch } from "../map/context";
 import { AssetCard } from "./asset";
 import { ValueInfo } from "./shared";
 
-export function Item({ item }: { item: StacItem }) {
+export function Item({
+  item,
+  setLayers,
+}: {
+  item: StacItem;
+  setLayers: Dispatch<SetStateAction<Layer[]>>;
+}) {
   const dispatch = useMapDispatch();
 
   useEffect(() => {
@@ -20,9 +27,9 @@ export function Item({ item }: { item: StacItem }) {
         filled: true,
         getFillColor: [207, 63, 2, 100],
       });
-      dispatch({ type: "set-layers", layers: [layer] });
+      setLayers([layer]);
     }
-  }, [item, dispatch]);
+  }, [item, setLayers]);
 
   useEffect(() => {
     if (item.bbox) {

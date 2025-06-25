@@ -63,7 +63,6 @@ function JsonItemCollection({
         pickable: true,
         onClick: (e) => e.object && setPicked && setPicked(e.object),
       });
-      dispatch({ type: "set-layers", layers: [layer] });
     }
   }, [itemCollection, dispatch, setPicked]);
 

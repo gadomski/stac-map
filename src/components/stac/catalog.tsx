@@ -50,10 +50,6 @@ function Collections({
       lineWidthUnits: "pixels",
     });
     dispatch({
-      type: "set-layers",
-      layers: [polygonLayer],
-    });
-    dispatch({
       type: "set-fit-bbox",
       bbox: collectionBbox,
     });

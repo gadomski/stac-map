@@ -1,18 +1,12 @@
-import { Layer } from "@deck.gl/core";
 import { LngLatBounds } from "maplibre-gl";
 import { createContext, useContext, type Dispatch } from "react";
 
 export type MapState = {
-  layers: Layer[];
   fitBounds?: LngLatBounds;
   bounds?: LngLatBounds;
 };
 
 export type MapAction =
-  | {
-      type: "set-layers";
-      layers: Layer[];
-    }
   | { type: "set-fit-bbox"; bbox: number[] }
   | { type: "set-bounds"; bounds: LngLatBounds };
 
@@ -43,11 +37,6 @@ export function useMapDispatch() {
 
 export function reduceMapAction(state: MapState, action: MapAction) {
   switch (action.type) {
-    case "set-layers":
-      return {
-        ...state,
-        layers: action.layers,
-      };
     case "set-fit-bbox":
       return { ...state, fitBounds: bboxToBounds(action.bbox) };
     case "set-bounds":

@@ -1,4 +1,4 @@
-import { type DeckProps } from "@deck.gl/core";
+import { Layer, type DeckProps } from "@deck.gl/core";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useRef } from "react";
@@ -16,13 +16,13 @@ function DeckGLOverlay(props: DeckProps) {
   return <></>;
 }
 
-export function Map() {
+export function Map({ layers }: { layers: Layer[] }) {
   const mapRef = useRef<MapRef>(null);
   const mapStyle = useColorModeValue(
     "positron-gl-style",
-    "dark-matter-gl-style",
+    "dark-matter-gl-style"
   );
-  const { layers, fitBounds } = useMap();
+  const { fitBounds } = useMap();
   const dispatch = useMapDispatch();
 
   useEffect(() => {

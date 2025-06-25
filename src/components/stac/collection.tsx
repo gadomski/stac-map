@@ -34,7 +34,6 @@ export function Collection({ collection }: { collection: StacCollection }) {
       filled: true,
       getFillColor: [207, 63, 2, 100],
     });
-    dispatch({ type: "set-layers", layers: [layer] });
     dispatch({ type: "set-fit-bbox", bbox: bbox });
   }, [collection, dispatch]);
   return (
@@ -73,7 +72,7 @@ export function CollectionCard({
   const selfHref = getSelfHref(collection);
   const dispatch = useMapDispatch();
   const thumbnail = Object.values(collection.assets || {}).find((asset) =>
-    asset.roles?.includes("thumbnail"),
+    asset.roles?.includes("thumbnail")
   );
 
   return (

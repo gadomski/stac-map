@@ -1,5 +1,6 @@
 import { Box, Center, Container, Spinner } from "@chakra-ui/react";
-import { useEffect } from "react";
+import { Layer } from "@deck.gl/core";
+import { useEffect, useState } from "react";
 import "./app.css";
 import Header from "./components/header";
 import { Map } from "./components/map";
@@ -19,6 +20,7 @@ export default function App() {
     loading,
     error,
   } = useStacValue(getInitialHref());
+  const [layers, setLayers] = useState<Layer[]>([]);
 
   useEffect(() => {
     if (new URLSearchParams(location.search).get("href") != href) {
@@ -50,7 +52,7 @@ export default function App() {
   return (
     <MapProvider>
       <Box zIndex={0} position={"absolute"} top={0} left={0}>
-        <Map></Map>
+        <Map layers={layers}></Map>
       </Box>
       <Container zIndex={1} fluid h={"dvh"} pointerEvents={"none"}>
         <Header href={href} setHref={setHref}></Header>
@@ -59,6 +61,7 @@ export default function App() {
           stacGeoparquetPath={stacGeoparquetPath}
           setHref={setHref}
           fileUpload={fileUpload}
+          setLayers={setLayers}
         ></Panel>
       </Container>
       {loading && (

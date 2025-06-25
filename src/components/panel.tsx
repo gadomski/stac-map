@@ -6,6 +6,7 @@ import {
   Tabs,
   type UseFileUploadReturn,
 } from "@chakra-ui/react";
+import { Layer } from "@deck.gl/core";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import {
   LuInfo,
@@ -24,11 +25,13 @@ export function Panel({
   fileUpload,
   value,
   stacGeoparquetPath,
+  setLayers,
 }: {
   setHref: Dispatch<SetStateAction<string>>;
   fileUpload: UseFileUploadReturn;
-  value?: StacValue;
+  value: StacValue | undefined;
   stacGeoparquetPath?: string;
+  setLayers: Dispatch<SetStateAction<Layer[]>>;
 }) {
   const [tabValue, setTabValue] = useState("upload");
   const [picked, setPicked] = useState<StacValue | undefined>();
@@ -58,6 +61,13 @@ export function Panel({
       });
     }
   }, [error]);
+
+  // function makeSetLayers(value: string) {
+  //   return (layers: Layer[]) => {
+  //     console.log(value);
+  //     setLayers(layers);
+  //   };
+  // }
 
   return (
     <SimpleGrid columns={{ base: 1, md: 3 }}>
@@ -93,6 +103,7 @@ export function Panel({
                 stacGeoparquetPath={stacGeoparquetPath}
                 setHref={setHref}
                 setPicked={setPicked}
+                setLayers={makeSetLayers("value")}
               ></Value>
             )}
           </Tabs.Content>
@@ -104,7 +115,13 @@ export function Panel({
             ></Search>
           </Tabs.Content>
           <Tabs.Content value="picked">
-            {picked && <Value value={picked} setHref={setHref}></Value>}
+            {picked && (
+              <Value
+                value={picked}
+                setHref={setHref}
+                setLayers={setLayers}
+              ></Value>
+            )}
           </Tabs.Content>
           <Tabs.Content value="upload">
             <FileUpload.RootProvider alignItems={"stretch"} value={fileUpload}>
@@ -134,7 +151,7 @@ function useSearchLinks(value?: StacValue) {
       (value &&
         value.links &&
         value.links.filter((link) => link.rel == "search")) ||
-        [],
+        []
     );
   }, [value, setSearchLinks]);
 
@@ -162,7 +179,7 @@ function useCollections(value?: StacValue) {
               ...(data.collections ?? []),
             ];
             const nextLink = (data.links ?? []).find(
-              (link: StacLink) => link.rel == "next",
+              (link: StacLink) => link.rel == "next"
             );
             if (nextLink && nextLink.href != nextHref) {
               nextHref = nextLink.href;
@@ -174,7 +191,7 @@ function useCollections(value?: StacValue) {
               "Error while fetching " +
                 nextHref +
                 ": " +
-                (await response.text()),
+                (await response.text())
             );
             break;
           }

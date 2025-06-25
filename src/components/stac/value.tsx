@@ -1,4 +1,5 @@
 import { Text } from "@chakra-ui/react";
+import { Layer } from "@deck.gl/core";
 import { type Dispatch, type SetStateAction } from "react";
 import type { StacCollection } from "stac-ts";
 import { Catalog } from "./catalog";
@@ -13,12 +14,14 @@ export function Value({
   setHref,
   stacGeoparquetPath,
   setPicked,
+  setLayers,
 }: {
   value: StacValue;
   collections?: StacCollection[];
   setHref: Dispatch<SetStateAction<string>>;
   stacGeoparquetPath?: string;
   setPicked?: Dispatch<SetStateAction<StacValue | undefined>>;
+  setLayers: Dispatch<SetStateAction<Layer[]>>;
 }) {
   switch (value.type) {
     case "Catalog":
@@ -32,7 +35,7 @@ export function Value({
     case "Collection":
       return <Collection collection={value}></Collection>;
     case "Feature":
-      return <Item item={value}></Item>;
+      return <Item item={value} setLayers={setLayers}></Item>;
     case "FeatureCollection":
       return (
         <ItemCollection
