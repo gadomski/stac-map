@@ -1,0 +1,19 @@
+name: Deploy to Github Pages
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install
+        run: yarn install
+      - name: Lint
+        run: yarn lint
+      - name: Check formatting
+        run: yarn run prettier . --check
