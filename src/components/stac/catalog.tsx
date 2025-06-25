@@ -40,6 +40,9 @@ function Collections({
     dispatch({
       type: "set-layers",
       layers: [polygonLayer],
+    });
+    dispatch({
+      type: "set-fit-bbox",
       bbox: collectionBbox,
     });
   }, [collections, dispatch]);
