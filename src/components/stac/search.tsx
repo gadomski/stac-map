@@ -1,9 +1,11 @@
 import {
   Badge,
+  Checkbox,
   createListCollection,
   DataList,
   Portal,
   Select,
+  Stack,
   type MenuSelectionDetails,
 } from "@chakra-ui/react";
 import { LngLatBounds } from "maplibre-gl";
@@ -22,20 +24,27 @@ export default function Search({
   const { bounds } = useMap();
   const [filteredCollections, setFilteredCollections] = useState(collections);
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
+  const [includeGlobalCollections, setIncludeGlobalCollections] =
+    useState(true);
 
   useEffect(() => {
     if (bounds) {
       setFilteredCollections(
-        collections.filter((collection) =>
-          isCollectionWithinBounds(collection, bounds)
+        collections.filter(
+          (collection) =>
+            isCollectionWithinBounds(collection, bounds) &&
+            (includeGlobalCollections || !isGlobalCollection(collection))
         )
       );
     } else {
-      setFilteredCollections(collections);
+      setFilteredCollections(
+        collections.filter(
+          (collection) =>
+            includeGlobalCollections || !isGlobalCollection(collection)
+        )
+      );
     }
-  }, [collections, setFilteredCollections, bounds]);
-
-  console.log(selectedCollections);
+  }, [collections, setFilteredCollections, bounds, includeGlobalCollections]);
 
   return (
     <DataList.Root>
@@ -58,11 +67,22 @@ export default function Search({
           <InfoTip content="Filtered to viewport"></InfoTip>
         </DataList.ItemLabel>
         <DataList.ItemValue>
-          <CollectionsSelect
-            selectedCollections={selectedCollections}
-            setSelectedCollections={setSelectedCollections}
-            collections={filteredCollections}
-          ></CollectionsSelect>
+          <Stack w={"full"}>
+            <CollectionsSelect
+              selectedCollections={selectedCollections}
+              setSelectedCollections={setSelectedCollections}
+              collections={filteredCollections}
+            ></CollectionsSelect>
+            <Checkbox.Root
+              size={"sm"}
+              checked={includeGlobalCollections}
+              onCheckedChange={(e) => setIncludeGlobalCollections(!!e.checked)}
+            >
+              <Checkbox.HiddenInput></Checkbox.HiddenInput>
+              <Checkbox.Control></Checkbox.Control>
+              <Checkbox.Label>Include global collections</Checkbox.Label>
+            </Checkbox.Root>
+          </Stack>
         </DataList.ItemValue>
       </DataList.Item>
     </DataList.Root>
@@ -142,4 +162,16 @@ function isCollectionWithinBounds(
     collectionBounds[1] <= bounds.getNorth() &&
     collectionBounds[3] >= bounds.getSouth()
   );
+}
+
+function isGlobalCollection(collection: StacCollection) {
+  // We don't check the poles because a lot of "global" products don't go all the way up/down there
+  // TODO do we want to check w/i some tolerances?
+  const bbox = collection.extent.spatial.bbox[0];
+  if (bbox.length == 4) {
+    return bbox[0] == -180 && bbox[2] == 180;
+  } else {
+    // Assume length 6
+    return bbox[0] == -180 && bbox[3] == 180;
+  }
 }
