@@ -7,7 +7,7 @@ import {
   useControl,
   type MapRef,
 } from "react-map-gl/maplibre";
-import { useMap } from "./map/context";
+import { useMap, useMapDispatch } from "./map/context";
 import { useColorModeValue } from "./ui/color-mode";
 
 function DeckGLOverlay(props: DeckProps) {
@@ -20,9 +20,10 @@ export function Map() {
   const mapRef = useRef<MapRef>(null);
   const mapStyle = useColorModeValue(
     "positron-gl-style",
-    "dark-matter-gl-style",
+    "dark-matter-gl-style"
   );
   const { layers, fitBounds } = useMap();
+  const dispatch = useMapDispatch();
 
   useEffect(() => {
     if (fitBounds && mapRef.current) {
@@ -43,6 +44,10 @@ export function Map() {
         width: "100dvw",
       }}
       mapStyle={`https://basemaps.cartocdn.com/gl/${mapStyle}/style.json`}
+      onMoveEnd={() =>
+        mapRef.current &&
+        dispatch({ type: "set-bounds", bounds: mapRef.current?.getBounds() })
+      }
     >
       <DeckGLOverlay layers={layers}></DeckGLOverlay>
     </MaplibreMap>
