@@ -3,9 +3,12 @@ import {
   Badge,
   Button,
   Checkbox,
+  Collapsible,
   createListCollection,
   DataList,
+  Field,
   HStack,
+  NumberInput,
   Portal,
   Select,
   Stack,
@@ -45,10 +48,12 @@ export default function Search({
   const [link, setLink] = useState<StacLink | undefined>();
   const [searchData, setSearchData] = useState<SearchData | undefined>();
   const [searchError, setSearchError] = useState<string | undefined>();
+  const [limit, setLimit] = useState<number | undefined>();
+  const [maxItems, setMaxItems] = useState(1000);
 
   useEffect(() => {
     setFilteredCollections(
-      filterCollections(collections, bounds, includeGlobalCollections),
+      filterCollections(collections, bounds, includeGlobalCollections)
     );
   }, [collections, setFilteredCollections, bounds, includeGlobalCollections]);
 
@@ -100,7 +105,46 @@ export default function Search({
             </Stack>
           </DataList.ItemValue>
         </DataList.Item>
+        <DataList.Item>
+          <DataList.ItemLabel>Max items</DataList.ItemLabel>
+          <DataList.ItemValue>
+            <NumberInput.Root
+              size={"sm"}
+              value={maxItems.toString()}
+              onValueChange={(e) => setMaxItems(e.valueAsNumber)}
+            >
+              <NumberInput.Control></NumberInput.Control>
+              <NumberInput.Input></NumberInput.Input>
+            </NumberInput.Root>
+          </DataList.ItemValue>
+        </DataList.Item>
       </DataList.Root>
+
+      <Collapsible.Root>
+        <Collapsible.Trigger mb={4}>Advanced options</Collapsible.Trigger>
+        <Collapsible.Content>
+          <DataList.Root>
+            <DataList.Item>
+              <DataList.ItemLabel>Page size</DataList.ItemLabel>
+              <DataList.ItemValue>
+                <Field.Root>
+                  <NumberInput.Root
+                    size={"sm"}
+                    value={limit?.toString()}
+                    onValueChange={(e) => setLimit(e.valueAsNumber)}
+                  >
+                    <NumberInput.Control></NumberInput.Control>
+                    <NumberInput.Input></NumberInput.Input>
+                  </NumberInput.Root>
+                  <Field.HelperText>
+                    Leave blank to use the server default
+                  </Field.HelperText>
+                </Field.Root>
+              </DataList.ItemValue>
+            </DataList.Item>
+          </DataList.Root>
+        </Collapsible.Content>
+      </Collapsible.Root>
       <HStack gap={4}>
         <Button
           onClick={() => {
@@ -109,13 +153,15 @@ export default function Search({
               !allowCollectionlessSearch
             ) {
               setSearchError(
-                "Collection-less search is disabled, choose at least once collection before searching",
+                "Collection-less search is disabled, choose at least once collection before searching"
               );
             } else {
               setSearchError(undefined);
               setSearchData({
                 collections: selectedCollections,
                 bbox: bounds?.toArray().flat(),
+                maxItems,
+                limit,
               });
             }
           }}
@@ -155,7 +201,9 @@ export default function Search({
 
 type SearchData = {
   collections: string[];
-  bbox?: number[];
+  bbox: number[] | undefined;
+  maxItems: number;
+  limit: number | undefined;
 };
 
 function CollectionsSelect({
@@ -216,17 +264,23 @@ function CollectionsSelect({
 function SearchResults({
   collections,
   bbox,
+  maxItems,
+  limit,
   link,
   setSearch,
 }: {
   collections: string[];
-  bbox?: number[];
+  bbox: number[] | undefined;
+  maxItems: number;
+  limit: number | undefined;
   link: StacLink;
   setSearch: Dispatch<SetStateAction<StacItemCollection | undefined>>;
 }) {
   const { items, error, loading, cancel } = useStacSearch({
     collections,
     bbox,
+    maxItems,
+    limit,
     link,
   });
 
@@ -267,10 +321,14 @@ function SearchResults({
 function useStacSearch({
   collections,
   bbox,
+  maxItems,
+  limit,
   link,
 }: {
   collections: string[];
-  bbox?: number[];
+  bbox: number[] | undefined;
+  maxItems: number;
+  limit: number | undefined;
   link: StacLink;
 }) {
   const [loading, setLoading] = useState(false);
@@ -291,6 +349,9 @@ function useStacSearch({
         if (bbox) {
           url.searchParams.set("bbox", bbox.join(","));
         }
+        if (limit) {
+          url.searchParams.set("limit", limit.toString());
+        }
         while (true) {
           if (cancel.current) {
             break;
@@ -302,13 +363,16 @@ function useStacSearch({
             if (data.features) {
               items = [...items, ...data.features];
               setItems(items);
+              if (items.length >= maxItems) {
+                break;
+              }
             }
             const nextLink = data.links?.find((link) => link.rel == "next");
             if (nextLink) {
               const newUrl = new URL(nextLink.href);
               if (newUrl == url) {
                 setError(
-                  `'next' link had the same url as the current page: ${newUrl}`,
+                  `'next' link had the same url as the current page: ${newUrl}`
                 );
                 break;
               } else {
@@ -326,7 +390,7 @@ function useStacSearch({
       cancel.current = false;
       setLoading(false);
     })();
-  }, [bbox, collections, link.href, link.type]);
+  }, [bbox, collections, link.href, link.type, maxItems, limit]);
 
   return { loading, error, items, cancel };
 }
