@@ -1,3 +1,5 @@
+import type { LngLatBounds } from "maplibre-gl";
+import type { StacCollection } from "stac-ts";
 import type { StacValue } from "./types";
 
 export function getSelfHref(value: StacValue) {
@@ -28,4 +30,55 @@ export function isUrl(href: string) {
     return false;
   }
   return true;
+}
+
+export function filterCollections(
+  collections: StacCollection[],
+  bounds: LngLatBounds | undefined,
+  includeGlobalCollections: boolean
+) {
+  if (bounds) {
+    return collections.filter(
+      (collection) =>
+        isCollectionWithinBounds(collection, bounds) &&
+        (includeGlobalCollections || !isGlobalCollection(collection))
+    );
+  } else {
+    return collections.filter(
+      (collection) =>
+        includeGlobalCollections || !isGlobalCollection(collection)
+    );
+  }
+}
+
+function isCollectionWithinBounds(
+  collection: StacCollection,
+  bounds: LngLatBounds
+) {
+  const bbox = collection.extent.spatial.bbox[0];
+  let collectionBounds;
+  if (bbox.length == 4) {
+    collectionBounds = [bbox[0], bbox[1], bbox[2], bbox[3]];
+  } else {
+    // assume 6
+    collectionBounds = [bbox[0], bbox[1], bbox[3], bbox[4]];
+  }
+  return (
+    collectionBounds[0] <= bounds.getEast() &&
+    collectionBounds[2] >= bounds.getWest() &&
+    collectionBounds[1] <= bounds.getNorth() &&
+    collectionBounds[3] >= bounds.getSouth()
+  );
+}
+
+function isGlobalCollection(collection: StacCollection) {
+  // We don't check the poles because a lot of "global" products don't go all the way up/down there
+  // TODO do we want to check w/i some tolerances?
+  const bbox = collection.extent.spatial.bbox[0];
+  if (bbox.length == 4) {
+    return bbox[0] == -180 && bbox[2] == 180;
+  } else {
+    // Assume length 6
+    return bbox[0] == -180 && bbox[3] == 180;
+  }
 }

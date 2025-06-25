@@ -1,14 +1,22 @@
-import { Badge, Heading, HStack, SimpleGrid, Stack } from "@chakra-ui/react";
+import {
+  Badge,
+  Checkbox,
+  Heading,
+  HStack,
+  SimpleGrid,
+  Stack,
+} from "@chakra-ui/react";
 import { GeoJsonLayer } from "@deck.gl/layers";
 import { bboxPolygon } from "@turf/bbox-polygon";
 import type { BBox } from "geojson";
-import { useEffect, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { LuFolder } from "react-icons/lu";
 import type { StacCatalog, StacCollection } from "stac-ts";
-import { useMapDispatch } from "../map/context";
+import { useMap, useMapDispatch } from "../map/context";
+import { InfoTip } from "../ui/toggle-tip";
 import { CollectionCard } from "./collection";
 import { ValueInfo } from "./shared";
-import { sanitizeBbox } from "./utils";
+import { filterCollections, sanitizeBbox } from "./utils";
 
 function Collections({
   collections,
@@ -17,6 +25,10 @@ function Collections({
   collections: StacCollection[];
   setHref: Dispatch<SetStateAction<string>>;
 }) {
+  const [includeGlobalCollections, setIncludeGlobalCollections] =
+    useState(true);
+  const [filteredCollections, setFilteredCollections] = useState(collections);
+  const { bounds } = useMap();
   const dispatch = useMapDispatch();
 
   useEffect(() => {
@@ -47,14 +59,33 @@ function Collections({
     });
   }, [collections, dispatch]);
 
+  useEffect(() => {
+    setFilteredCollections(
+      filterCollections(collections, bounds, includeGlobalCollections)
+    );
+  }, [bounds, collections, includeGlobalCollections]);
+
   return (
     <Stack>
-      <HStack mt={8}>
-        <Heading size={"md"}>Collections</Heading>{" "}
-        <Badge>{collections.length}</Badge>
+      <HStack mt={4}>
+        <Heading size={"md"}>Collections</Heading>
+        <InfoTip content="Filtered to the current viewport"></InfoTip>
+        <Badge>
+          {filteredCollections.length} / {collections.length}
+        </Badge>
+        <Checkbox.Root
+          size={"sm"}
+          variant={"subtle"}
+          checked={includeGlobalCollections}
+          onCheckedChange={(e) => setIncludeGlobalCollections(!!e.checked)}
+        >
+          <Checkbox.HiddenInput></Checkbox.HiddenInput>
+          <Checkbox.Control></Checkbox.Control>
+          <Checkbox.Label>Include global collections</Checkbox.Label>
+        </Checkbox.Root>
       </HStack>
       <SimpleGrid columns={{ base: 1, md: 2 }} gap={2}>
-        {collections.map((collection) => (
+        {filteredCollections.map((collection) => (
           <CollectionCard
             collection={collection}
             setHref={setHref}

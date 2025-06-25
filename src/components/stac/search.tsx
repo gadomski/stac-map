@@ -12,7 +12,6 @@ import {
   Stack,
   type MenuSelectionDetails,
 } from "@chakra-ui/react";
-import { LngLatBounds } from "maplibre-gl";
 import {
   useEffect,
   useRef,
@@ -27,6 +26,7 @@ import { toaster } from "../ui/toaster";
 import { InfoTip } from "../ui/toggle-tip";
 import { ItemCollection } from "./item-collection";
 import type { StacItemCollection, StacValue } from "./types";
+import { filterCollections } from "./utils";
 
 export default function Search({
   collections,
@@ -49,22 +49,9 @@ export default function Search({
   const [searchError, setSearchError] = useState<string | undefined>();
 
   useEffect(() => {
-    if (bounds) {
-      setFilteredCollections(
-        collections.filter(
-          (collection) =>
-            isCollectionWithinBounds(collection, bounds) &&
-            (includeGlobalCollections || !isGlobalCollection(collection))
-        )
-      );
-    } else {
-      setFilteredCollections(
-        collections.filter(
-          (collection) =>
-            includeGlobalCollections || !isGlobalCollection(collection)
-        )
-      );
-    }
+    setFilteredCollections(
+      filterCollections(collections, bounds, includeGlobalCollections)
+    );
   }, [collections, setFilteredCollections, bounds, includeGlobalCollections]);
 
   useEffect(() => {
@@ -354,36 +341,4 @@ function useStacSearch({
   }, [bbox, collections, link.href, link.type]);
 
   return { loading, error, items, cancel };
-}
-
-function isCollectionWithinBounds(
-  collection: StacCollection,
-  bounds: LngLatBounds
-) {
-  const bbox = collection.extent.spatial.bbox[0];
-  let collectionBounds;
-  if (bbox.length == 4) {
-    collectionBounds = [bbox[0], bbox[1], bbox[2], bbox[3]];
-  } else {
-    // assume 6
-    collectionBounds = [bbox[0], bbox[1], bbox[3], bbox[4]];
-  }
-  return (
-    collectionBounds[0] <= bounds.getEast() &&
-    collectionBounds[2] >= bounds.getWest() &&
-    collectionBounds[1] <= bounds.getNorth() &&
-    collectionBounds[3] >= bounds.getSouth()
-  );
-}
-
-function isGlobalCollection(collection: StacCollection) {
-  // We don't check the poles because a lot of "global" products don't go all the way up/down there
-  // TODO do we want to check w/i some tolerances?
-  const bbox = collection.extent.spatial.bbox[0];
-  if (bbox.length == 4) {
-    return bbox[0] == -180 && bbox[2] == 180;
-  } else {
-    // Assume length 6
-    return bbox[0] == -180 && bbox[3] == 180;
-  }
 }
