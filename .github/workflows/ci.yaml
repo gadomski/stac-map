@@ -17,3 +17,5 @@ jobs:
         run: yarn lint
       - name: Check formatting
         run: yarn run prettier . --check
+      - name: Build
+        run: yarn build
