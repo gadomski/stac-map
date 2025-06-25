@@ -188,6 +188,7 @@ function useCollections(value?: StacValue) {
     const link = value?.links?.find((link) => link.rel == "data");
     if (link) {
       setLoading(true);
+      setCollections([]);
       (async () => {
         let nextHref = link.href;
         let fetchedCollections: StacCollection[] = [];
