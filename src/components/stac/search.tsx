@@ -44,15 +44,15 @@ export default function Search({
         collections.filter(
           (collection) =>
             isCollectionWithinBounds(collection, bounds) &&
-            (includeGlobalCollections || !isGlobalCollection(collection))
-        )
+            (includeGlobalCollections || !isGlobalCollection(collection)),
+        ),
       );
     } else {
       setFilteredCollections(
         collections.filter(
           (collection) =>
-            includeGlobalCollections || !isGlobalCollection(collection)
-        )
+            includeGlobalCollections || !isGlobalCollection(collection),
+        ),
       );
     }
   }, [collections, setFilteredCollections, bounds, includeGlobalCollections]);
@@ -282,7 +282,7 @@ function useStacSearch({
               const newUrl = new URL(nextLink.href);
               if (newUrl == url) {
                 setError(
-                  `'next' link had the same url as the current page: ${newUrl}`
+                  `'next' link had the same url as the current page: ${newUrl}`,
                 );
                 break;
               } else {
@@ -306,7 +306,7 @@ function useStacSearch({
 
 function isCollectionWithinBounds(
   collection: StacCollection,
-  bounds: LngLatBounds
+  bounds: LngLatBounds,
 ) {
   const bbox = collection.extent.spatial.bbox[0];
   let collectionBounds;

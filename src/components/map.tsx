@@ -20,7 +20,7 @@ export function Map() {
   const mapRef = useRef<MapRef>(null);
   const mapStyle = useColorModeValue(
     "positron-gl-style",
-    "dark-matter-gl-style"
+    "dark-matter-gl-style",
   );
   const { layers, fitBounds } = useMap();
   const dispatch = useMapDispatch();
