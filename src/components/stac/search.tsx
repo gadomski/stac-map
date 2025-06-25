@@ -13,7 +13,13 @@ import {
   type MenuSelectionDetails,
 } from "@chakra-ui/react";
 import { LngLatBounds } from "maplibre-gl";
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { LuSearch } from "react-icons/lu";
 import type { StacCollection, StacItem, StacLink } from "stac-ts";
 import { useMap } from "../map/context";
@@ -233,7 +239,11 @@ function SearchResults({
   link: StacLink;
   setPicked: Dispatch<SetStateAction<StacValue | undefined>>;
 }) {
-  const { items, loading, error } = useStacSearch({ collections, bbox, link });
+  const { items, error, loading, cancel } = useStacSearch({
+    collections,
+    bbox,
+    link,
+  });
   const [itemCollection, setItemCollection] = useState<
     StacItemCollection | undefined
   >();
@@ -259,18 +269,24 @@ function SearchResults({
     }
   }, [items, setItemCollection]);
 
-  if (itemCollection) {
-    return (
-      <ItemCollection
-        itemCollection={itemCollection}
-        setPicked={setPicked}
-      ></ItemCollection>
-    );
-  } else if (loading) {
-    return <Skeleton h={200}></Skeleton>;
-  } else {
-    return <></>;
-  }
+  return (
+    <Stack>
+      {loading && (
+        <HStack>
+          <Button colorPalette={"red"} onClick={() => (cancel.current = true)}>
+            Abort
+          </Button>
+        </HStack>
+      )}
+      {(itemCollection && (
+        <ItemCollection
+          itemCollection={itemCollection}
+          setPicked={setPicked}
+        ></ItemCollection>
+      )) ||
+        (loading && <Skeleton h={200}></Skeleton>)}
+    </Stack>
+  );
 }
 
 function useStacSearch({
@@ -285,6 +301,7 @@ function useStacSearch({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [items, setItems] = useState<StacItem[] | undefined>([]);
+  const cancel = useRef(false);
 
   useEffect(() => {
     (async () => {
@@ -300,6 +317,9 @@ function useStacSearch({
           url.searchParams.set("bbox", bbox.join(","));
         }
         while (true) {
+          if (cancel.current) {
+            break;
+          }
           const response = await fetch(url);
           if (response.ok) {
             const data: StacItemCollection = await response.json();
@@ -328,11 +348,12 @@ function useStacSearch({
           }
         }
       }
+      cancel.current = false;
       setLoading(false);
     })();
-  }, [collections, bbox, link]);
+  }, [bbox, collections, link.href, link.type]);
 
-  return { loading, error, items };
+  return { loading, error, items, cancel };
 }
 
 function isCollectionWithinBounds(
