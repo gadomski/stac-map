@@ -29,6 +29,7 @@ export function useStacValue(initialHref: string) {
           const response = await fetch(href);
           if (response.ok) {
             const data = await response.json();
+            // TODO do we want to do some validation here?
             setValue(data);
           } else {
             setError(
