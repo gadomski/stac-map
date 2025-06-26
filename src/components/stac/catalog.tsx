@@ -33,7 +33,9 @@ function Collections({
 
   useEffect(() => {
     const { layer, bbox } = getCollectionExtents(collections, "collections");
-    setLayers([layer]);
+    if (layer) {
+      setLayers([layer]);
+    }
     dispatch({
       type: "set-fit-bbox",
       bbox,

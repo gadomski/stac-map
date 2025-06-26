@@ -88,24 +88,27 @@ function isGlobalCollection(collection: StacCollection) {
 
 export function getCollectionExtents(
   collections: StacCollection[],
-  id: string,
+  id?: string,
 ) {
-  const bbox = [-180, -90, 180, 90];
+  const combinedBbox = [180, 90, -180, -90];
   const polygons = collections.map((collection) => {
     const bbox = sanitizeBbox(collection.extent.spatial.bbox[0]);
-    bbox[0] = Math.min(bbox[0], bbox[0]);
-    bbox[1] = Math.min(bbox[1], bbox[1]);
-    bbox[2] = Math.max(bbox[2], bbox[2]);
-    bbox[3] = Math.max(bbox[3], bbox[3]);
+    combinedBbox[0] = Math.min(combinedBbox[0], bbox[0]);
+    combinedBbox[1] = Math.min(combinedBbox[1], bbox[1]);
+    combinedBbox[2] = Math.max(combinedBbox[2], bbox[2]);
+    combinedBbox[3] = Math.max(combinedBbox[3], bbox[3]);
     return bboxPolygon(bbox as BBox);
   });
-  const layer = new GeoJsonLayer({
-    id,
-    data: polygons,
-    stroked: true,
-    filled: false,
-    getLineColor: [207, 63, 2],
-    lineWidthUnits: "pixels",
-  });
-  return { layer, bbox };
+  let layer;
+  if (id) {
+    layer = new GeoJsonLayer({
+      id,
+      data: polygons,
+      stroked: true,
+      filled: false,
+      getLineColor: [207, 63, 2],
+      lineWidthUnits: "pixels",
+    });
+  }
+  return { layer, bbox: combinedBbox };
 }
