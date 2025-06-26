@@ -6,7 +6,9 @@ import {
   createListCollection,
   DataList,
   Field,
+  Group,
   HStack,
+  Input,
   NumberInput,
   Portal,
   Select,
@@ -20,7 +22,11 @@ import type { StacCollection, StacLink } from "stac-ts";
 import { useMap } from "../map/context";
 import { toaster } from "../ui/toaster";
 import { InfoTip } from "../ui/toggle-tip";
-import type { StacSearch } from "./types";
+import { useNaturalLanguageCollectionSearch } from "./hooks";
+import type {
+  NaturalLanguageCollectionSearchResult,
+  StacSearch,
+} from "./types";
 import { filterCollections } from "./utils";
 
 export default function SearchDialog({
@@ -31,6 +37,7 @@ export default function SearchDialog({
   maxItems,
   setMaxItems,
   setSearch,
+  catalogHref,
 }: {
   collections: StacCollection[];
   link: StacLink | undefined;
@@ -39,6 +46,7 @@ export default function SearchDialog({
   maxItems: number;
   setMaxItems: Dispatch<SetStateAction<number>>;
   setSearch: Dispatch<SetStateAction<StacSearch | undefined>>;
+  catalogHref: string | undefined;
 }) {
   const { bounds } = useMap();
   const [limit, setLimit] = useState<number | undefined>();
@@ -53,7 +61,7 @@ export default function SearchDialog({
 
   return (
     <Stack gap={4}>
-      <DataList.Root gap={6} orientation={"horizontal"}>
+      <DataList.Root gap={6} orientation={"vertical"} variant={"bold"}>
         <DataList.Item>
           <DataList.ItemLabel>
             Bounding box
@@ -79,6 +87,12 @@ export default function SearchDialog({
                 setSelectedCollections={setSelectedCollections}
                 collections={filteredCollections}
               ></CollectionsSelect>
+              {catalogHref && (
+                <NaturalLanguageCollectionSearch
+                  catalogHref={catalogHref}
+                  setSelectedCollections={setSelectedCollections}
+                ></NaturalLanguageCollectionSearch>
+              )}
             </Stack>
           </DataList.ItemValue>
         </DataList.Item>
@@ -174,6 +188,103 @@ export default function SearchDialog({
         </Checkbox.Root>
       </HStack>
     </Stack>
+  );
+}
+
+function NaturalLanguageCollectionSearch({
+  setSelectedCollections,
+  catalogHref,
+}: {
+  setSelectedCollections: Dispatch<SetStateAction<string[]>>;
+  catalogHref: string;
+}) {
+  const [query, setQuery] = useState<string | undefined>();
+  const [inputText, setInputText] = useState("");
+  const { results, loading, error } = useNaturalLanguageCollectionSearch({
+    query,
+    catalog: catalogHref,
+  });
+
+  useEffect(() => {
+    if (results.length > 0) {
+      setSelectedCollections(results.map((result) => result.collection_id));
+    }
+  }, [results, setSelectedCollections]);
+
+  useEffect(() => {
+    if (error) {
+      toaster.create({
+        type: "error",
+        title: "Error when performing natural language collection search",
+        description: error,
+      });
+    }
+  }, [error]);
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (inputText.length > 0) {
+          setQuery(inputText);
+        }
+      }}
+    >
+      <Field.Root>
+        <Group attached w="full">
+          <Input
+            flex="1"
+            placeholder="Find collections with..."
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            size={"sm"}
+            fontSize={"xs"}
+            disabled={loading}
+          />
+          <Button
+            bg="bg.subtle"
+            variant="outline"
+            type="submit"
+            size="sm"
+            disabled={loading}
+          >
+            {(loading && "Searching...") || "Search"}
+          </Button>
+        </Group>
+        <Field.HelperText>
+          {(results.length > 0 && (
+            <Collapsible.Root>
+              <Collapsible.Trigger mb={4}>
+                Found {results.length} collection{results.length > 1 && "s"}...
+              </Collapsible.Trigger>
+              <Collapsible.Content>
+                <NaturalLanguageCollectionSearchResults
+                  results={results}
+                ></NaturalLanguageCollectionSearchResults>
+              </Collapsible.Content>
+            </Collapsible.Root>
+          )) ||
+            "Natural language collection search is experimental, and can be rather slow"}
+        </Field.HelperText>
+      </Field.Root>
+    </form>
+  );
+}
+
+function NaturalLanguageCollectionSearchResults({
+  results,
+}: {
+  results: NaturalLanguageCollectionSearchResult[];
+}) {
+  return (
+    <DataList.Root size={"sm"}>
+      {results.map((result) => (
+        <DataList.Item key={result.collection_id}>
+          <DataList.ItemLabel>{result.collection_id}</DataList.ItemLabel>
+          <DataList.ItemValue>{result.explanation}</DataList.ItemValue>
+        </DataList.Item>
+      ))}
+    </DataList.Root>
   );
 }
 

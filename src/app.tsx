@@ -57,6 +57,7 @@ export default function App() {
       <Container zIndex={1} fluid h={"dvh"} pointerEvents={"none"}>
         <Header href={href} setHref={setHref}></Header>
         <Panel
+          href={href}
           value={value}
           stacGeoparquetPath={stacGeoparquetPath}
           setHref={setHref}
