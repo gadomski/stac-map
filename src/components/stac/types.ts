@@ -20,6 +20,12 @@ export type StacSearch = {
   collections?: string[];
   bbox?: number[];
   limit?: number;
+  [k: string]: unknown;
+};
+
+export type NaturalLanguageSearchResult = {
+  search_params: StacSearch;
+  explanation: string;
 };
 
 export type NaturalLanguageCollectionSearchResult = {

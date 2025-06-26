@@ -30,7 +30,10 @@ import type { StacCollection, StacLink } from "stac-ts";
 import { useMap, useMapDispatch } from "../map/context";
 import { toaster } from "../ui/toaster";
 import { InfoTip } from "../ui/toggle-tip";
-import { useNaturalLanguageCollectionSearch } from "./hooks";
+import {
+  useNaturalLanguageCollectionSearch,
+  useNaturalLanguageSearch,
+} from "./hooks";
 import type {
   NaturalLanguageCollectionSearchResult,
   StacSearch,
@@ -70,6 +73,17 @@ export default function SearchDialog({
   return (
     <Stack gap={4}>
       <DataList.Root gap={6} orientation={"vertical"} variant={"bold"}>
+        {catalogHref && (
+          <DataList.Item>
+            <DataList.ItemLabel>Natural language search</DataList.ItemLabel>
+            <DataList.ItemValue>
+              <NaturalLanguageSearch
+                catalogHref={catalogHref}
+                setSearch={setSearch}
+              ></NaturalLanguageSearch>
+            </DataList.ItemValue>
+          </DataList.Item>
+        )}
         <DataList.Item>
           <DataList.ItemLabel>
             Bounding box
@@ -212,6 +226,87 @@ export default function SearchDialog({
         </Checkbox.Root>
       </HStack>
     </Stack>
+  );
+}
+
+function NaturalLanguageSearch({
+  catalogHref,
+  setSearch,
+}: {
+  catalogHref: string;
+  setSearch: Dispatch<SetStateAction<StacSearch | undefined>>;
+}) {
+  const [query, setQuery] = useState<string | undefined>();
+  const [inputText, setInputText] = useState("");
+  const { results, loading, error } = useNaturalLanguageSearch({
+    query,
+    catalog: catalogHref,
+  });
+  const ref = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (error) {
+      toaster.create({
+        type: "error",
+        title: "Error when performing natural language search",
+        description: error,
+      });
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (results) {
+      if (results.search_params.max_items) {
+        delete results.search_params.max_items;
+      }
+      setSearch(results.search_params);
+    }
+  }, [setSearch, results]);
+
+  const endElement =
+    (loading && <Spinner size={"xs"}></Spinner>) ||
+    (query && (
+      <CloseButton
+        size="xs"
+        onClick={() => {
+          setQuery("");
+          ref.current?.focus();
+        }}
+        me="-2"
+      />
+    )) ||
+    undefined;
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (inputText.length > 0) {
+          setQuery("");
+          setQuery(inputText);
+        }
+      }}
+      style={{ width: "100%" }}
+    >
+      <Field.Root>
+        <InputGroup endElement={endElement}>
+          <Input
+            flex="1"
+            placeholder="Find items that..."
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            size={"sm"}
+            fontSize={"xs"}
+            disabled={loading}
+            ref={ref}
+          />
+        </InputGroup>
+        <Field.HelperText>
+          Natural language collection search is experimental, and can be rather
+          slow
+        </Field.HelperText>
+      </Field.Root>
+    </form>
   );
 }
 

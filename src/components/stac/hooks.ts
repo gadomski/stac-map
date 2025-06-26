@@ -4,6 +4,7 @@ import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState } from "react";
 import type {
   NaturalLanguageCollectionSearchResult,
+  NaturalLanguageSearchResult,
   StacItemCollection,
   StacValue,
 } from "./types";
@@ -150,6 +151,23 @@ export function useDuckDbQuery({
   }, [duckDbError, setError]);
 
   return { table, loading, error };
+}
+
+export function useNaturalLanguageSearch({
+  query,
+  catalog,
+}: {
+  query: string | undefined;
+  catalog: string;
+}) {
+  const { loading, error, results } =
+    useNaturalLanguageRequest<NaturalLanguageSearchResult>({
+      endpoint: "items/search",
+      catalog,
+      query,
+    });
+
+  return { loading, error, results };
 }
 
 export function useNaturalLanguageCollectionSearch({
