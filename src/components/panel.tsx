@@ -25,12 +25,14 @@ import { Value } from "./stac/value";
 import { toaster } from "./ui/toaster";
 
 export function Panel({
+  href,
   setHref,
   fileUpload,
   value,
   stacGeoparquetPath,
   setLayers,
 }: {
+  href: string;
   setHref: Dispatch<SetStateAction<string>>;
   fileUpload: UseFileUploadReturn;
   value: StacValue | undefined;
@@ -129,6 +131,7 @@ export function Panel({
               collections={collections}
               links={searchLinks}
               setItemCollection={setSearch}
+              catalogHref={(value?.type === "Catalog" && href) || undefined}
             ></Search>
             {search && (
               <Stack gap={4}>

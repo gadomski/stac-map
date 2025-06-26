@@ -2,7 +2,11 @@ import { useFileUpload } from "@chakra-ui/react";
 import { Table } from "apache-arrow";
 import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState } from "react";
-import type { StacItemCollection, StacValue } from "./types";
+import type {
+  NaturalLanguageCollectionSearchResult,
+  StacItemCollection,
+  StacValue,
+} from "./types";
 import { isUrl } from "./utils";
 
 export function useStacValue(initialHref: string) {
@@ -146,4 +150,53 @@ export function useDuckDbQuery({
   }, [duckDbError, setError]);
 
   return { table, loading, error };
+}
+
+export function useNaturalLanguageCollectionSearch({
+  query,
+  catalog,
+}: {
+  query: string | undefined;
+  catalog: string;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | undefined>();
+  const [results, setResults] = useState<
+    NaturalLanguageCollectionSearchResult[]
+  >([]);
+
+  useEffect(() => {
+    (async () => {
+      if (query) {
+        setResults([]);
+        setLoading(true);
+        const body = JSON.stringify({
+          query,
+          catalog_url: catalog,
+        });
+        const url = new URL(
+          "search",
+          import.meta.env.VITE_STAC_NATURAL_QUERY_API,
+        );
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body,
+        });
+        if (response.ok) {
+          setResults((await response.json()).results);
+        } else {
+          setError(
+            "Error while making a natural language query: " +
+              (await response.text()),
+          );
+        }
+        setLoading(false);
+      }
+    })();
+  }, [query, catalog, setLoading, setError, setResults]);
+
+  return { loading, error, results };
 }

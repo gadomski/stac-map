@@ -15,10 +15,12 @@ export default function Search({
   collections,
   links,
   setItemCollection,
+  catalogHref,
 }: {
   collections: StacCollection[];
   links: StacLink[];
   setItemCollection: Dispatch<SetStateAction<StacItemCollection | undefined>>;
+  catalogHref: string | undefined;
 }) {
   const [link, setLink] = useState<StacLink | undefined>();
   const [search, setSearch] = useState<StacSearch | undefined>();
@@ -40,6 +42,7 @@ export default function Search({
         maxItems={maxItems}
         setMaxItems={setMaxItems}
         setSearch={setSearch}
+        catalogHref={catalogHref}
       ></SearchDialog>
 
       {search && link && (
