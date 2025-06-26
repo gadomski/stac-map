@@ -105,25 +105,25 @@ export default function Search({
             </Stack>
           </DataList.ItemValue>
         </DataList.Item>
-        <DataList.Item>
-          <DataList.ItemLabel>Max items</DataList.ItemLabel>
-          <DataList.ItemValue>
-            <NumberInput.Root
-              size={"sm"}
-              value={maxItems.toString()}
-              onValueChange={(e) => setMaxItems(e.valueAsNumber)}
-            >
-              <NumberInput.Control></NumberInput.Control>
-              <NumberInput.Input></NumberInput.Input>
-            </NumberInput.Root>
-          </DataList.ItemValue>
-        </DataList.Item>
       </DataList.Root>
 
       <Collapsible.Root>
         <Collapsible.Trigger mb={4}>Advanced options</Collapsible.Trigger>
         <Collapsible.Content>
           <DataList.Root>
+            <DataList.Item>
+              <DataList.ItemLabel>Max items</DataList.ItemLabel>
+              <DataList.ItemValue>
+                <NumberInput.Root
+                  size={"sm"}
+                  value={maxItems.toString()}
+                  onValueChange={(e) => setMaxItems(e.valueAsNumber)}
+                >
+                  <NumberInput.Control></NumberInput.Control>
+                  <NumberInput.Input></NumberInput.Input>
+                </NumberInput.Root>
+              </DataList.ItemValue>
+            </DataList.Item>
             <DataList.Item>
               <DataList.ItemLabel>Page size</DataList.ItemLabel>
               <DataList.ItemValue>
