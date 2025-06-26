@@ -2,21 +2,29 @@ import {
   Badge,
   Button,
   Checkbox,
+  CloseButton,
   Collapsible,
   createListCollection,
   DataList,
   Field,
-  Group,
   HStack,
   Input,
+  InputGroup,
   NumberInput,
   Portal,
   Select,
+  Spinner,
   Stack,
   Text,
   type MenuSelectionDetails,
 } from "@chakra-ui/react";
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { LuSearch } from "react-icons/lu";
 import type { StacCollection, StacLink } from "stac-ts";
 import { useMap, useMapDispatch } from "../map/context";
@@ -208,6 +216,7 @@ function NaturalLanguageCollectionSearch({
     catalog: catalogHref,
   });
   const dispatch = useMapDispatch();
+  const ref = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (results.length > 0) {
@@ -231,6 +240,20 @@ function NaturalLanguageCollectionSearch({
     }
   }, [error]);
 
+  const endElement =
+    (loading && <Spinner size={"xs"}></Spinner>) ||
+    (query && (
+      <CloseButton
+        size="xs"
+        onClick={() => {
+          setQuery("");
+          ref.current?.focus();
+        }}
+        me="-2"
+      />
+    )) ||
+    undefined;
+
   return (
     <form
       onSubmit={(e) => {
@@ -242,7 +265,7 @@ function NaturalLanguageCollectionSearch({
       }}
     >
       <Field.Root>
-        <Group attached w="full">
+        <InputGroup endElement={endElement}>
           <Input
             flex="1"
             placeholder="Find collections with..."
@@ -251,17 +274,9 @@ function NaturalLanguageCollectionSearch({
             size={"sm"}
             fontSize={"xs"}
             disabled={loading}
+            ref={ref}
           />
-          <Button
-            bg="bg.subtle"
-            variant="outline"
-            type="submit"
-            size="sm"
-            disabled={loading}
-          >
-            {(loading && "Searching...") || "Search"}
-          </Button>
-        </Group>
+        </InputGroup>
         <Field.HelperText>
           {(results.length > 0 && (
             <Collapsible.Root>

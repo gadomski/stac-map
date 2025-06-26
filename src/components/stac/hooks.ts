@@ -194,6 +194,8 @@ export function useNaturalLanguageCollectionSearch({
           );
         }
         setLoading(false);
+      } else {
+        setResults([]);
       }
     })();
   }, [query, catalog, setLoading, setError, setResults]);
