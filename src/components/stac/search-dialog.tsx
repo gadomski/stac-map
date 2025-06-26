@@ -18,6 +18,7 @@ import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { LuSearch } from "react-icons/lu";
 import type { StacCollection, StacLink } from "stac-ts";
 import { useMap } from "../map/context";
+import { toaster } from "../ui/toaster";
 import { InfoTip } from "../ui/toggle-tip";
 import type { StacSearch } from "./types";
 import { filterCollections } from "./utils";
@@ -142,7 +143,12 @@ export default function SearchDialog({
               selectedCollections.length === 0 &&
               !allowCollectionlessSearch
             ) {
-              // TODO
+              toaster.create({
+                type: "error",
+                title: "Collection-less search is disallowed",
+                description:
+                  "By default, searching requires at least one collection",
+              });
             } else {
               setSearch({
                 collections: selectedCollections,
