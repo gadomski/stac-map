@@ -159,23 +159,37 @@ export function useNaturalLanguageCollectionSearch({
   query: string | undefined;
   catalog: string;
 }) {
+  const { loading, error, results } = useNaturalLanguageRequest<
+    NaturalLanguageCollectionSearchResult[]
+  >({ endpoint: "search", catalog, query });
+
+  return { loading, error, results };
+}
+
+function useNaturalLanguageRequest<T>({
+  endpoint,
+  query,
+  catalog,
+}: {
+  endpoint: "search" | "items/search";
+  query: string | undefined;
+  catalog: string;
+}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
-  const [results, setResults] = useState<
-    NaturalLanguageCollectionSearchResult[]
-  >([]);
+  const [results, setResults] = useState<T | undefined>();
 
   useEffect(() => {
     (async () => {
       if (query) {
-        setResults([]);
+        setResults(undefined);
         setLoading(true);
         const body = JSON.stringify({
           query,
           catalog_url: catalog,
         });
         const url = new URL(
-          "search",
+          endpoint,
           import.meta.env.VITE_STAC_NATURAL_QUERY_API,
         );
         const response = await fetch(url, {
@@ -195,10 +209,10 @@ export function useNaturalLanguageCollectionSearch({
         }
         setLoading(false);
       } else {
-        setResults([]);
+        setResults(undefined);
       }
     })();
-  }, [query, catalog, setLoading, setError, setResults]);
+  }, [endpoint, query, catalog, setLoading, setError, setResults]);
 
   return { loading, error, results };
 }

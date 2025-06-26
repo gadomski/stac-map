@@ -234,7 +234,7 @@ function NaturalLanguageCollectionSearch({
   const ref = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    if (results.length > 0) {
+    if (results) {
       const collectionIds = results.map((result) => result.collection_id);
       setSelectedCollections(collectionIds);
       const selectedCollections = collections.filter((collection) =>
@@ -293,7 +293,7 @@ function NaturalLanguageCollectionSearch({
           />
         </InputGroup>
         <Field.HelperText>
-          {(results.length > 0 && (
+          {(results && (
             <Collapsible.Root>
               <Collapsible.Trigger mb={4}>
                 Found {results.length} collection{results.length > 1 && "s"}...
