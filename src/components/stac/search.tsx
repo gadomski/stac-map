@@ -134,15 +134,11 @@ function useStacSearch({
         body = JSON.stringify(search);
       } else {
         method = "GET";
-        if (search.collections) {
-          url.searchParams.set("collections", search.collections.join(","));
-        }
-        if (search.bbox) {
-          url.searchParams.set("bbox", search.bbox.join(","));
-        }
-        if (search.limit) {
-          url.searchParams.set("limit", search.limit.toString());
-        }
+        Object.entries(search).forEach(([key, value]) => {
+          if (value) {
+            url.searchParams.set(key, getSearchParamValue(value));
+          }
+        });
       }
 
       while (true) {
@@ -187,4 +183,16 @@ function useStacSearch({
   }, [search, link, maxItems]);
 
   return { loading, error, items, cancel };
+}
+// eslint-disable-next-line
+function getSearchParamValue(value: any) {
+  if (Array.isArray(value)) {
+    return value.join(",");
+  } else if (typeof value == "number") {
+    return value.toString();
+  } else if (typeof value == "object") {
+    return JSON.stringify(value);
+  } else {
+    return value;
+  }
 }
