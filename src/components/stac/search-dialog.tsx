@@ -236,6 +236,7 @@ function NaturalLanguageCollectionSearch({
       onSubmit={(e) => {
         e.preventDefault();
         if (inputText.length > 0) {
+          setQuery("");
           setQuery(inputText);
         }
       }}
