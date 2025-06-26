@@ -85,7 +85,10 @@ export default function SearchDialog({
         </DataList.Item>
         <DataList.Item>
           <DataList.ItemLabel>
-            Collections <Badge>{filteredCollections.length}</Badge>
+            Collections{" "}
+            <Badge>
+              {filteredCollections.length} / {collections.length}
+            </Badge>
             <InfoTip content="Filtered to viewport"></InfoTip>
           </DataList.ItemLabel>
           <DataList.ItemValue>
@@ -95,6 +98,18 @@ export default function SearchDialog({
                 setSelectedCollections={setSelectedCollections}
                 collections={filteredCollections}
               ></CollectionsSelect>
+              {selectedCollections.length > 0 && (
+                <HStack>
+                  <Button
+                    size={"2xs"}
+                    variant={"plain"}
+                    fontWeight={"lighter"}
+                    onClick={() => setSelectedCollections([])}
+                  >
+                    Deselect all...
+                  </Button>
+                </HStack>
+              )}
               {catalogHref && (
                 <NaturalLanguageCollectionSearch
                   collections={collections}
