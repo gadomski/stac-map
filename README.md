@@ -1,6 +1,6 @@
 # stac-map
 
-A map-first STAC visualizer.
+A map-first STAC visualizer, hosted at <http://developmentseed/stac-map>.
 Includes:
 
 - Item search
