@@ -15,3 +15,9 @@ export type StacItemCollection = {
   links?: StacLink[];
   [k: string]: unknown;
 };
+
+export type StacSearch = {
+  collections?: string[];
+  bbox?: number[];
+  limit?: number;
+};

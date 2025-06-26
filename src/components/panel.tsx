@@ -1,8 +1,11 @@
 import {
   Box,
+  Button,
   FileUpload,
+  HStack,
   Icon,
   SimpleGrid,
+  Stack,
   Tabs,
   type UseFileUploadReturn,
 } from "@chakra-ui/react";
@@ -125,14 +128,28 @@ export function Panel({
             <Search
               collections={collections}
               links={searchLinks}
-              setSearch={setSearch}
+              setItemCollection={setSearch}
             ></Search>
             {search && (
-              <ItemCollection
-                itemCollection={search}
-                setLayers={setSearchLayers}
-                setPicked={setPicked}
-              ></ItemCollection>
+              <Stack gap={4}>
+                <ItemCollection
+                  itemCollection={search}
+                  setLayers={setSearchLayers}
+                  setPicked={setPicked}
+                ></ItemCollection>
+                <HStack>
+                  <Button
+                    variant={"surface"}
+                    size={"sm"}
+                    onClick={() => {
+                      setSearch(undefined);
+                      setSearchLayers([]);
+                    }}
+                  >
+                    Clear search results
+                  </Button>
+                </HStack>
+              </Stack>
             )}
           </Tabs.Content>
           <Tabs.Content value="picked">
