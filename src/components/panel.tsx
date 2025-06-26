@@ -125,7 +125,7 @@ export function Panel({
             <Search
               collections={collections}
               links={searchLinks}
-              setSearch={setSearch}
+              setItemCollection={setSearch}
             ></Search>
             {search && (
               <ItemCollection
