@@ -19,7 +19,7 @@ import {
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { LuSearch } from "react-icons/lu";
 import type { StacCollection, StacLink } from "stac-ts";
-import { useMap } from "../map/context";
+import { useMap, useMapDispatch } from "../map/context";
 import { toaster } from "../ui/toaster";
 import { InfoTip } from "../ui/toggle-tip";
 import { useNaturalLanguageCollectionSearch } from "./hooks";
@@ -27,7 +27,7 @@ import type {
   NaturalLanguageCollectionSearchResult,
   StacSearch,
 } from "./types";
-import { filterCollections } from "./utils";
+import { filterCollections, getCollectionExtents } from "./utils";
 
 export default function SearchDialog({
   collections,
@@ -89,6 +89,7 @@ export default function SearchDialog({
               ></CollectionsSelect>
               {catalogHref && (
                 <NaturalLanguageCollectionSearch
+                  collections={collections}
                   catalogHref={catalogHref}
                   setSelectedCollections={setSelectedCollections}
                 ></NaturalLanguageCollectionSearch>
@@ -192,9 +193,11 @@ export default function SearchDialog({
 }
 
 function NaturalLanguageCollectionSearch({
+  collections,
   setSelectedCollections,
   catalogHref,
 }: {
+  collections: StacCollection[];
   setSelectedCollections: Dispatch<SetStateAction<string[]>>;
   catalogHref: string;
 }) {
@@ -204,12 +207,19 @@ function NaturalLanguageCollectionSearch({
     query,
     catalog: catalogHref,
   });
+  const dispatch = useMapDispatch();
 
   useEffect(() => {
     if (results.length > 0) {
-      setSelectedCollections(results.map((result) => result.collection_id));
+      const collectionIds = results.map((result) => result.collection_id);
+      setSelectedCollections(collectionIds);
+      const selectedCollections = collections.filter((collection) =>
+        collectionIds.includes(collection.id),
+      );
+      const { bbox } = getCollectionExtents(selectedCollections);
+      dispatch({ type: "set-fit-bbox", bbox });
     }
-  }, [results, setSelectedCollections]);
+  }, [results, setSelectedCollections, collections, dispatch]);
 
   useEffect(() => {
     if (error) {
