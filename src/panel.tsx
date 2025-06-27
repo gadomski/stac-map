@@ -95,7 +95,13 @@ export default function Panel({
           <LuUpload></LuUpload>
         </Tabs.Trigger>
       </Tabs.List>
-      <Tabs.ContentGroup py={2} px={4} overflow={"scroll"} maxH={"80dvh"}>
+      <Tabs.ContentGroup
+        pt={2}
+        pb={4}
+        px={4}
+        overflow={"scroll"}
+        maxH={"80dvh"}
+      >
         <Tabs.Content value="value">
           {loading && (
             <Center>

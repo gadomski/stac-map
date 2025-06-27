@@ -67,6 +67,11 @@ export default function Value({
           collections={collections}
         ></NaturalLanguageCollectionSearch>
       )}
+      {value.type === "FeatureCollection" && value.features.length > 0 && (
+        <Text>
+          {value.features.length} item{value.features.length > 1 && "s"}
+        </Text>
+      )}
       {collections && (
         <Box mt={4}>
           <Heading size={"md"}>Collections</Heading>

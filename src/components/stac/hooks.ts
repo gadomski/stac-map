@@ -1,9 +1,11 @@
 import type { UseFileUploadReturn } from "@chakra-ui/react";
 import { Layer } from "@deck.gl/core";
+import { GeoArrowPolygonLayer } from "@geoarrow/deck.gl-layers";
 import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState } from "react";
 import type { StacCollection, StacLink } from "stac-ts";
 import { getStacLayers } from "./layers";
+import { getGeometryTable } from "./stac-geoparquet";
 import type {
   NaturalLanguageCollectionSearchResult,
   StacItemCollection,
@@ -195,24 +197,44 @@ export function useStacLayers(
   collections: StacCollection[] | undefined,
   parquetPath: string | undefined,
 ) {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | undefined>();
   const [layers, setLayers] = useState<Layer[]>();
   const { db } = useDuckDb();
 
   useEffect(() => {
     (async () => {
+      setLoading(true);
       if (parquetPath) {
         if (db) {
-          // TODO
+          try {
+            const table = await getGeometryTable(parquetPath, db);
+            const layer = new GeoArrowPolygonLayer({
+              id: "geoarrow-polygons",
+              data: table,
+              stroked: true,
+              filled: true,
+              getFillColor: [207, 63, 2, 25],
+              getLineColor: [207, 63, 2, 50],
+              lineWidthUnits: "pixels",
+              autoHighlight: true,
+            });
+            setLayers([layer]);
+            // eslint-disable-next-line
+          } catch (error: any) {
+            setError(error.toString());
+          }
         } else {
           setLayers([]);
         }
       } else {
         setLayers(getStacLayers(value, collections));
       }
+      setLoading(false);
     })();
   }, [value, collections, parquetPath, db]);
 
-  return { layers };
+  return { layers, loading, error };
 }
 
 export function useStacLayersMultiple(values: StacValue[]) {
