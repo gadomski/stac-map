@@ -1,5 +1,6 @@
 import { Box, Button, HStack, Input, Menu, Portal } from "@chakra-ui/react";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { ColorModeButton } from "./components/ui/color-mode";
 
 const EXAMPLES = [
   ["eoAPI DevSeed", "https://stac.eoapi.dev/"],
@@ -30,6 +31,7 @@ export default function Header({
     <HStack py={4}>
       <HrefInput href={href} setHref={setHref}></HrefInput>
       <Examples setHref={setHref}></Examples>
+      <ColorModeButton></ColorModeButton>
     </HStack>
   );
 }
