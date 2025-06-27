@@ -20,6 +20,25 @@ export default function App() {
     }
   }, [fileUpload.acceptedFiles, setHref]);
 
+  useEffect(() => {
+    if (href) {
+      if (new URLSearchParams(location.search).get("href") != href) {
+        history.pushState(null, "", "?href=" + href);
+      }
+    }
+  }, [href]);
+
+  useEffect(() => {
+    function handlePopState() {
+      setHref(new URLSearchParams(location.search).get("href") ?? "");
+    }
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [setHref]);
+
   return (
     <AppStateProvider>
       <Box zIndex={0} position={"absolute"} top={0} left={0}>
