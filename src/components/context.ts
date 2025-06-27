@@ -4,6 +4,7 @@ import type { StacValue } from "./stac/types";
 
 export type AppState = {
   picked: StacValue | null;
+  selected: StacValue[];
   fitBounds: LngLatBounds | null;
 };
 
@@ -13,7 +14,9 @@ export const AppStateDispatchContext =
 
 export type AppStateAction =
   | {
-      type: "set-picked";
+      type: "pick";
       picked?: StacValue;
     }
-  | { type: "fit-bbox"; bbox: [number, number, number, number] };
+  | { type: "fit-bbox"; bbox: [number, number, number, number] }
+  | { type: "select"; value: StacValue }
+  | { type: "deselect"; value: StacValue };

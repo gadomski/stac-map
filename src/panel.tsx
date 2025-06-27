@@ -19,12 +19,13 @@ export default function Panel({
   const { value, loading, error } = useStacValue(href);
   const [valueLayers, setValueLayers] = useState<Layer[]>([]);
   const [pickedLayers, setPickedLayers] = useState<Layer[]>([]);
-  const { picked } = useAppState();
+  const [selectedLayers, setSelectedLayers] = useState<Layer[]>([]);
+  const { picked, selected } = useAppState();
   const dispatch = useAppStateDispatch();
 
   useEffect(() => {
-    setLayers([...pickedLayers, ...valueLayers]);
-  }, [valueLayers, pickedLayers, setLayers]);
+    setLayers([...pickedLayers, ...selectedLayers, ...valueLayers]);
+  }, [valueLayers, pickedLayers, setLayers, selectedLayers]);
 
   useEffect(() => {
     if (picked) {
@@ -35,6 +36,10 @@ export default function Panel({
       }
     }
   }, [picked, dispatch, setPickedLayers]);
+
+  useEffect(() => {
+    setSelectedLayers(selected.map((value) => getStacLayers(value)).flat());
+  }, [selected, setSelectedLayers]);
 
   useEffect(() => {
     if (error) {

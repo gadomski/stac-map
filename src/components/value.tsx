@@ -1,17 +1,24 @@
 import {
   Card,
   Heading,
+  HStack,
+  IconButton,
+  Image,
   SimpleGrid,
   Spinner,
   Stack,
   Text,
+  type IconButtonProps,
 } from "@chakra-ui/react";
 import type { Layer } from "@deck.gl/core";
 import { useEffect, type Dispatch, type SetStateAction } from "react";
+import { LuEye, LuEyeClosed, LuFocus } from "react-icons/lu";
 import type { StacCollection } from "stac-ts";
+import { useAppStateDispatch, useIsSelected } from "./hooks";
 import { useStacCollections } from "./stac/hooks";
 import { getStacLayers } from "./stac/layers";
 import type { StacValue } from "./stac/types";
+import { sanitizeBbox } from "./stac/utils";
 import { toaster } from "./ui/toaster";
 
 export default function Value({
@@ -62,18 +69,64 @@ function Collections({ collections }: { collections: StacCollection[] }) {
 }
 
 function Collection({ collection }: { collection: StacCollection }) {
+  const thumbnailLink = collection.assets?.thumbnail;
+  const isSelected = useIsSelected(collection);
+  const dispatch = useAppStateDispatch();
+
+  const iconButtonProps: IconButtonProps = {
+    size: "2xs",
+    variant: "subtle",
+  };
+
   return (
-    <Card.Root size={"sm"} _hover={{ bg: "bg.emphasized" }} cursor={"pointer"}>
+    <Card.Root size={"sm"} _hover={{ bg: "bg.emphasized" }}>
       <Card.Header>
-        <Text fontWeight={"lighter"} fontSize={"2xs"}>
-          {collection.id}
-        </Text>
+        {collection.title && (
+          <Text fontWeight={"lighter"} fontSize={"2xs"}>
+            {collection.id}
+          </Text>
+        )}
       </Card.Header>
       <Card.Body>
         <Heading fontSize={"sm"} lineHeight={1.5}>
           {collection.title ?? collection.id}
         </Heading>
       </Card.Body>
+      <Card.Footer>
+        <Stack gap={4}>
+          {thumbnailLink && <Image src={thumbnailLink.href}></Image>}
+          <HStack>
+            {(isSelected && (
+              <IconButton
+                {...iconButtonProps}
+                onClick={() =>
+                  dispatch({ type: "deselect", value: collection })
+                }
+              >
+                <LuEye></LuEye>
+              </IconButton>
+            )) || (
+              <IconButton
+                {...iconButtonProps}
+                onClick={() => dispatch({ type: "select", value: collection })}
+              >
+                <LuEyeClosed></LuEyeClosed>
+              </IconButton>
+            )}
+            <IconButton
+              {...iconButtonProps}
+              onClick={() =>
+                dispatch({
+                  type: "fit-bbox",
+                  bbox: sanitizeBbox(collection.extent.spatial.bbox[0]),
+                })
+              }
+            >
+              <LuFocus></LuFocus>
+            </IconButton>
+          </HStack>
+        </Stack>
+      </Card.Footer>
     </Card.Root>
   );
 }

@@ -1,5 +1,6 @@
 import { Layer, type DeckProps } from "@deck.gl/core";
 import { MapboxOverlay } from "@deck.gl/mapbox";
+import { LngLatBounds } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useRef } from "react";
 import {
@@ -26,7 +27,15 @@ export default function Map({ layers }: { layers: Layer[] }) {
 
   useEffect(() => {
     if (fitBounds && mapRef.current) {
-      mapRef.current.fitBounds(fitBounds, { padding: 200 });
+      // TODO make this work for smaller screens, this is hard-coded to the large display
+      const delta = (fitBounds.getEast() - fitBounds.getWest()) / 3;
+      const expandedBounds = new LngLatBounds([
+        fitBounds.getWest() - delta,
+        fitBounds.getSouth(),
+        fitBounds.getEast(),
+        fitBounds.getNorth(),
+      ]);
+      mapRef.current.fitBounds(expandedBounds, { padding: 200 });
     }
   }, [fitBounds]);
 

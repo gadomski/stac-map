@@ -33,3 +33,7 @@ export function sanitizeBbox(bbox: number[]) {
   }
   return newBbox as [number, number, number, number];
 }
+
+export function valuesMatch(a: StacValue, b: StacValue) {
+  return a.type === b.type && a.id === b.id;
+}

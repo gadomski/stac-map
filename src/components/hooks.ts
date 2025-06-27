@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { AppStateContext, AppStateDispatchContext } from "./context";
 import type { StacValue } from "./stac/types";
+import { valuesMatch } from "./stac/utils";
 
 export function useAppState() {
   const state = useContext(AppStateContext);
@@ -28,11 +29,22 @@ export function useIsPicked(value: StacValue) {
 
   useEffect(() => {
     if (picked) {
-      setIsPicked(value.type === picked.type && value.id === picked.id);
+      setIsPicked(valuesMatch(picked, value));
     } else {
       setIsPicked(false);
     }
-  }, [picked, setIsPicked, value.id, value.type]);
+  }, [picked, setIsPicked, value]);
 
   return isPicked;
+}
+
+export function useIsSelected(value: StacValue) {
+  const { selected } = useAppState();
+  const [isSelected, setIsSelected] = useState(false);
+
+  useEffect(() => {
+    setIsSelected(!!selected.find((selected) => valuesMatch(value, selected)));
+  }, [selected, setIsSelected, value]);
+
+  return isSelected;
 }
