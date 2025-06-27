@@ -136,17 +136,6 @@ function Collection({ collection }: { collection: StacCollection }) {
                 <LuEyeClosed></LuEyeClosed>
               </IconButton>
             )}
-            <IconButton
-              {...iconButtonProps}
-              onClick={() =>
-                dispatch({
-                  type: "fit-bbox",
-                  bbox: sanitizeBbox(collection.extent.spatial.bbox[0]),
-                })
-              }
-            >
-              <LuFocus></LuFocus>
-            </IconButton>
             {(isPicked && (
               <IconButton
                 {...iconButtonProps}
@@ -162,6 +151,17 @@ function Collection({ collection }: { collection: StacCollection }) {
                 <LuMousePointerClick></LuMousePointerClick>
               </IconButton>
             )}
+            <IconButton
+              {...iconButtonProps}
+              onClick={() =>
+                dispatch({
+                  type: "fit-bbox",
+                  bbox: sanitizeBbox(collection.extent.spatial.bbox[0]),
+                })
+              }
+            >
+              <LuFocus></LuFocus>
+            </IconButton>
           </HStack>
         </Stack>
       </Card.Footer>

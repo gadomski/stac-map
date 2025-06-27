@@ -29,8 +29,14 @@ export default function Panel({
   }, [valueLayers, pickedLayers, setLayers, selectedLayers]);
 
   useEffect(() => {
-    setTabValue("value");
-    dispatch({ type: "pick" });
+    if (value) {
+      setTabValue("value");
+      const bbox = getBbox(value);
+      if (bbox) {
+        dispatch({ type: "fit-bbox", bbox });
+      }
+      dispatch({ type: "pick" });
+    }
   }, [value, setTabValue, dispatch]);
 
   useEffect(() => {
