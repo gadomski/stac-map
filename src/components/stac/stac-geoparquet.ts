@@ -39,3 +39,17 @@ export async function getGeometryTable(path: string, db: AsyncDuckDB) {
   );
   return table;
 }
+
+export async function getBbox(path: string, db: AsyncDuckDB) {
+  const connection = await db.connect();
+  const result = await connection.query(
+    `SELECT MIN(bbox.xmin) as xmin, MIN(bbox.ymin) as ymin, MAX(bbox.xmax) as xmax, MAX(bbox.ymax) as ymax FROM read_parquet('${path}')`,
+  );
+  const row = result.toArray().map((row) => row.toJSON())[0];
+  return [row.xmin, row.ymin, row.xmax, row.ymax] as [
+    number,
+    number,
+    number,
+    number,
+  ];
+}

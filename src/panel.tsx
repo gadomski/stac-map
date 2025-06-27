@@ -8,6 +8,7 @@ import {
   type UseFileUploadReturn,
 } from "@chakra-ui/react";
 import type { Layer } from "@deck.gl/core";
+import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import {
   LuInfo,
@@ -38,34 +39,43 @@ export default function Panel({
   const { picked, selected } = useAppState();
   const { layers: selectedLayers } = useStacLayersMultiple(selected);
   const dispatch = useAppStateDispatch();
+  const { db } = useDuckDb();
 
   useEffect(() => {
     setLayers([...pickedLayers, ...selectedLayers, ...valueLayers]);
   }, [valueLayers, pickedLayers, setLayers, selectedLayers]);
 
   useEffect(() => {
-    if (value) {
-      setTabValue("value");
-      const bbox = getBbox(value);
-      if (bbox) {
-        dispatch({ type: "fit-bbox", bbox });
+    (async () => {
+      if (value) {
+        setTabValue("value");
+        if (db) {
+          const bbox = await getBbox(value, parquetPath, db);
+          if (bbox) {
+            dispatch({ type: "fit-bbox", bbox });
+          }
+        }
+        dispatch({ type: "pick" });
       }
-      dispatch({ type: "pick" });
-    }
-  }, [value, setTabValue, dispatch]);
+    })();
+  }, [value, setTabValue, dispatch, parquetPath, db]);
 
   useEffect(() => {
-    if (picked) {
-      const bbox = getBbox(picked);
-      if (bbox) {
-        dispatch({ type: "fit-bbox", bbox });
+    (async () => {
+      if (picked) {
+        if (db) {
+          const bbox = await getBbox(picked, parquetPath, db);
+          if (bbox) {
+            dispatch({ type: "fit-bbox", bbox });
+          }
+        }
+        setTabValue("picked");
+      } else {
+        setTabValue("value");
+        setPickedLayers([]);
       }
-      setTabValue("picked");
-    } else {
-      setTabValue("value");
-      setPickedLayers([]);
-    }
-  }, [picked, dispatch, setPickedLayers, setTabValue]);
+    })();
+  }, [picked, dispatch, setPickedLayers, setTabValue, parquetPath, db]);
 
   useEffect(() => {
     if (error) {

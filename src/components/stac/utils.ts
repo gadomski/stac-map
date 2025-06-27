@@ -1,13 +1,27 @@
+import type { AsyncDuckDB } from "duckdb-wasm-kit";
+import { getBbox as getStacGeoparquetBbox } from "./stac-geoparquet";
 import type { StacValue } from "./types";
 
-export function getBbox(value: StacValue) {
+export async function getBbox(
+  value: StacValue,
+  parquetPath: string | undefined,
+  db: AsyncDuckDB,
+) {
   switch (value.type) {
     case "Collection":
       return sanitizeBbox(value.extent.spatial.bbox[0]);
     case "Feature":
       return (value.bbox && sanitizeBbox(value.bbox)) || null;
+    case "FeatureCollection":
+      if (parquetPath) {
+        return await getStacGeoparquetBbox(parquetPath, db);
+      } else if (value.features.length > 0) {
+        // TODO
+        return null;
+      } else {
+        return null;
+      }
     default:
-      // TODO item collection
       return null;
   }
 }
