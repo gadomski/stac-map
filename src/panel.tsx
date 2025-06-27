@@ -6,8 +6,8 @@ import { useAppState, useAppStateDispatch } from "./components/hooks";
 import { useStacValue } from "./components/stac/hooks";
 import { getStacLayers } from "./components/stac/layers";
 import { getBbox } from "./components/stac/utils";
+import Value from "./components/stac/value";
 import { toaster } from "./components/ui/toaster";
-import Value from "./components/value";
 
 export default function Panel({
   href,

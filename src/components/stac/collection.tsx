@@ -4,14 +4,10 @@ import {
   HStack,
   IconButton,
   Image,
-  SimpleGrid,
-  Spinner,
   Stack,
   Text,
   type IconButtonProps,
 } from "@chakra-ui/react";
-import type { Layer } from "@deck.gl/core";
-import { useEffect, type Dispatch, type SetStateAction } from "react";
 import {
   LuEye,
   LuEyeClosed,
@@ -21,67 +17,10 @@ import {
 } from "react-icons/lu";
 import Markdown from "react-markdown";
 import type { StacCollection } from "stac-ts";
-import { useAppStateDispatch, useIsPicked, useIsSelected } from "./hooks";
-import { useStacCollections } from "./stac/hooks";
-import { getStacLayers } from "./stac/layers";
-import type { StacValue } from "./stac/types";
-import { sanitizeBbox } from "./stac/utils";
-import { Prose } from "./ui/prose";
-import { toaster } from "./ui/toaster";
-
-export default function Value({
-  value,
-  setLayers,
-}: {
-  value: StacValue;
-  setLayers: Dispatch<SetStateAction<Layer[]>>;
-}) {
-  const { collections, loading, error } = useStacCollections(value);
-
-  useEffect(() => {
-    setLayers(getStacLayers(value, collections));
-  }, [value, collections, setLayers]);
-
-  useEffect(() => {
-    if (error) {
-      toaster.create({
-        type: "error",
-        title: "Error while loading collections",
-        description: error,
-      });
-    }
-  }, [error]);
-
-  return (
-    <Stack position={"relative"}>
-      {loading && (
-        <Spinner position={"absolute"} top={0} right={2} size={"sm"}></Spinner>
-      )}
-      <Text fontSize={"xs"} fontWeight={"lighter"}>
-        {value.type}
-      </Text>
-      <Heading>{(value.title as string) ?? value.id ?? ""}</Heading>
-      {(value.description as string) && (
-        <Prose>
-          <Markdown>{value.description as string}</Markdown>
-        </Prose>
-      )}
-      {collections && <Collections collections={collections}></Collections>}
-    </Stack>
-  );
-}
-
-function Collections({ collections }: { collections: StacCollection[] }) {
-  return (
-    <SimpleGrid columns={2} gap={2}>
-      {collections.map((collection) => (
-        <Collection collection={collection} key={collection.id}></Collection>
-      ))}
-    </SimpleGrid>
-  );
-}
-
-function Collection({ collection }: { collection: StacCollection }) {
+import { useAppStateDispatch, useIsPicked, useIsSelected } from "../hooks";
+import { sanitizeBbox } from "../stac/utils";
+import { Prose } from "../ui/prose";
+export function CollectionCard({ collection }: { collection: StacCollection }) {
   const thumbnailLink = collection.assets?.thumbnail;
   const isSelected = useIsSelected(collection);
   const isPicked = useIsPicked(collection);
