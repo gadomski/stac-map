@@ -22,11 +22,11 @@ export default function Value({
 }) {
   const { collections, loading, error } = useStacCollections(value);
 
-  const thumbnailAsset: StacAsset =
+  const thumbnailAsset =
     typeof value.assets === "object" &&
     value.assets &&
     "thumbnail" in value.assets &&
-    value.assets.thumbnail;
+    (value.assets.thumbnail as StacAsset);
 
   useEffect(() => {
     setLayers(getStacLayers(value, collections));
