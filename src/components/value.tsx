@@ -12,13 +12,21 @@ import {
 } from "@chakra-ui/react";
 import type { Layer } from "@deck.gl/core";
 import { useEffect, type Dispatch, type SetStateAction } from "react";
-import { LuEye, LuEyeClosed, LuFocus } from "react-icons/lu";
+import {
+  LuEye,
+  LuEyeClosed,
+  LuFocus,
+  LuMousePointerBan,
+  LuMousePointerClick,
+} from "react-icons/lu";
+import Markdown from "react-markdown";
 import type { StacCollection } from "stac-ts";
-import { useAppStateDispatch, useIsSelected } from "./hooks";
+import { useAppStateDispatch, useIsPicked, useIsSelected } from "./hooks";
 import { useStacCollections } from "./stac/hooks";
 import { getStacLayers } from "./stac/layers";
 import type { StacValue } from "./stac/types";
 import { sanitizeBbox } from "./stac/utils";
+import { Prose } from "./ui/prose";
 import { toaster } from "./ui/toaster";
 
 export default function Value({
@@ -53,6 +61,11 @@ export default function Value({
         {value.type}
       </Text>
       <Heading>{(value.title as string) ?? value.id ?? ""}</Heading>
+      {(value.description as string) && (
+        <Prose>
+          <Markdown>{value.description as string}</Markdown>
+        </Prose>
+      )}
       {collections && <Collections collections={collections}></Collections>}
     </Stack>
   );
@@ -71,6 +84,7 @@ function Collections({ collections }: { collections: StacCollection[] }) {
 function Collection({ collection }: { collection: StacCollection }) {
   const thumbnailLink = collection.assets?.thumbnail;
   const isSelected = useIsSelected(collection);
+  const isPicked = useIsPicked(collection);
   const dispatch = useAppStateDispatch();
 
   const iconButtonProps: IconButtonProps = {
@@ -79,7 +93,11 @@ function Collection({ collection }: { collection: StacCollection }) {
   };
 
   return (
-    <Card.Root size={"sm"} _hover={{ bg: "bg.emphasized" }}>
+    <Card.Root
+      size={"sm"}
+      _hover={{ bg: "bg.emphasized" }}
+      bg={(isPicked && "bg.emphasized") || "bg.panel"}
+    >
       <Card.Header>
         {collection.title && (
           <Text fontWeight={"lighter"} fontSize={"2xs"}>
@@ -91,6 +109,11 @@ function Collection({ collection }: { collection: StacCollection }) {
         <Heading fontSize={"sm"} lineHeight={1.5}>
           {collection.title ?? collection.id}
         </Heading>
+        {collection.description && (
+          <Prose size={"md"} lineClamp={2} fontSize={"xs"}>
+            <Markdown>{collection.description}</Markdown>
+          </Prose>
+        )}
       </Card.Body>
       <Card.Footer>
         <Stack gap={4}>
@@ -124,6 +147,21 @@ function Collection({ collection }: { collection: StacCollection }) {
             >
               <LuFocus></LuFocus>
             </IconButton>
+            {(isPicked && (
+              <IconButton
+                {...iconButtonProps}
+                onClick={() => dispatch({ type: "pick" })}
+              >
+                <LuMousePointerBan></LuMousePointerBan>
+              </IconButton>
+            )) || (
+              <IconButton
+                {...iconButtonProps}
+                onClick={() => dispatch({ type: "pick", value: collection })}
+              >
+                <LuMousePointerClick></LuMousePointerClick>
+              </IconButton>
+            )}
           </HStack>
         </Stack>
       </Card.Footer>

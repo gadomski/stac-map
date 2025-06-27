@@ -26,7 +26,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 function appStateReducer(state: AppState, action: AppStateAction) {
   switch (action.type) {
     case "pick":
-      return { ...state, picked: action.picked || null };
+      return { ...state, picked: action.value || null };
     case "fit-bbox":
       return {
         ...state,

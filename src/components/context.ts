@@ -15,7 +15,7 @@ export const AppStateDispatchContext =
 export type AppStateAction =
   | {
       type: "pick";
-      picked?: StacValue;
+      value?: StacValue;
     }
   | { type: "fit-bbox"; bbox: [number, number, number, number] }
   | { type: "select"; value: StacValue }
