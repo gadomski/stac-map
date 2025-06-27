@@ -10,9 +10,11 @@ import {
   type IconButtonProps,
 } from "@chakra-ui/react";
 import {
+  LuCheck,
   LuFocus,
   LuMousePointerBan,
   LuMousePointerClick,
+  LuX,
 } from "react-icons/lu";
 import Markdown from "react-markdown";
 import type { StacCollection } from "stac-ts";
@@ -76,6 +78,23 @@ export function CollectionCard({ collection }: { collection: StacCollection }) {
         <Stack gap={4}>
           {thumbnailLink && <Image src={thumbnailLink.href}></Image>}
           <HStack>
+            {(isSelected && (
+              <IconButton
+                {...iconButtonProps}
+                onClick={() =>
+                  dispatch({ type: "deselect", value: collection })
+                }
+              >
+                <LuX></LuX>
+              </IconButton>
+            )) || (
+              <IconButton
+                {...iconButtonProps}
+                onClick={() => dispatch({ type: "select", value: collection })}
+              >
+                <LuCheck></LuCheck>
+              </IconButton>
+            )}
             {(isPicked && (
               <IconButton
                 {...iconButtonProps}
