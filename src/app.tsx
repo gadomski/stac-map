@@ -18,7 +18,7 @@ export default function App() {
       </Box>
       <Container zIndex={1} fluid h={"dvh"} pointerEvents={"none"}>
         <Header href={href} setHref={setHref}></Header>
-        <Panel href={href} setHref={setHref} setLayers={setLayers}></Panel>
+        {href && <Panel href={href} setLayers={setLayers}></Panel>}
       </Container>
       <Toaster></Toaster>
     </AppStateProvider>

@@ -1,12 +1,5 @@
-import { Layer } from "@deck.gl/core";
 import { useEffect, useState } from "react";
 import type { StacCollection, StacLink } from "stac-ts";
-import {
-  getCatalogLayers,
-  getCollectionLayers,
-  getItemCollectionLayers,
-  getItemLayers,
-} from "./layers";
 import type { StacValue } from "./types";
 
 export function useStacValue(href: string) {
@@ -16,16 +9,16 @@ export function useStacValue(href: string) {
 
   useEffect(() => {
     (async () => {
-      setLoading(true);
       setError(undefined);
-      // TODO better error handling
+      setValue(undefined);
+      setLoading(true);
       try {
         const url = new URL(href);
         const response = await fetch(url);
         setValue(await response.json());
         // eslint-disable-next-line
       } catch (error: any) {
-        setError(error.toString());
+        setError(href + ": " + error.toString());
       }
       setLoading(false);
     })();
@@ -44,6 +37,7 @@ export function useStacCollections(value: StacValue) {
   useEffect(() => {
     (async () => {
       setLoading(true);
+      setCollections([]);
       setError(undefined);
       const link = value.links?.find((link) => link.rel == "data");
       if (link) {
@@ -76,36 +70,4 @@ export function useStacCollections(value: StacValue) {
   }, [value, setCollections]);
 
   return { collections, loading, error };
-}
-
-export function useStacLayers(
-  value: StacValue,
-  collections?: StacCollection[],
-) {
-  const [layers, setLayers] = useState<Layer[]>([]);
-
-  useEffect(() => {
-    switch (value.type) {
-      case "Catalog":
-        if (collections) {
-          setLayers(getCatalogLayers(value, collections));
-        } else {
-          setLayers([]);
-        }
-        break;
-      case "Collection":
-        setLayers(getCollectionLayers(value));
-        break;
-      case "Feature":
-        setLayers(getItemLayers(value));
-        break;
-      case "FeatureCollection":
-        setLayers(getItemCollectionLayers(value));
-        break;
-      default:
-        setLayers([]);
-    }
-  }, [value, collections, setLayers]);
-
-  return { layers };
 }

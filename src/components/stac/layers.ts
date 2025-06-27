@@ -2,8 +2,30 @@ import { GeoJsonLayer } from "@deck.gl/layers";
 import { bboxPolygon } from "@turf/bbox-polygon";
 import type { BBox } from "geojson";
 import type { StacCatalog, StacCollection, StacItem } from "stac-ts";
-import type { StacItemCollection } from "./types";
+import type { StacItemCollection, StacValue } from "./types";
 import { sanitizeBbox } from "./utils";
+
+export function getStacLayers(
+  value: StacValue,
+  collections?: StacCollection[],
+) {
+  switch (value.type) {
+    case "Catalog":
+      if (collections) {
+        return getCatalogLayers(value, collections);
+      } else {
+        return [];
+      }
+    case "Collection":
+      return getCollectionLayers(value);
+    case "Feature":
+      return getItemLayers(value);
+    case "FeatureCollection":
+      return getItemCollectionLayers(value);
+    default:
+      return [];
+  }
+}
 
 export function getCatalogLayers(
   catalog: StacCatalog,

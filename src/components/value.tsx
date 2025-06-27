@@ -1,24 +1,51 @@
-import { Card, Heading, SimpleGrid, Stack, Text } from "@chakra-ui/react";
+import {
+  Card,
+  Heading,
+  SimpleGrid,
+  Spinner,
+  Stack,
+  Text,
+} from "@chakra-ui/react";
 import type { Layer } from "@deck.gl/core";
-import type { Dispatch, SetStateAction } from "react";
+import { useEffect, type Dispatch, type SetStateAction } from "react";
 import type { StacCollection } from "stac-ts";
+import { useStacCollections } from "./stac/hooks";
+import { getStacLayers } from "./stac/layers";
 import type { StacValue } from "./stac/types";
-import Value from "./stac/value";
+import { toaster } from "./ui/toaster";
 
-export default function Info({
+export default function Value({
   value,
-  collections,
-  setHref,
   setLayers,
 }: {
   value: StacValue;
-  collections: StacCollection[] | undefined;
-  setHref: Dispatch<SetStateAction<string | undefined>>;
   setLayers: Dispatch<SetStateAction<Layer[]>>;
 }) {
+  const { collections, loading, error } = useStacCollections(value);
+
+  useEffect(() => {
+    setLayers(getStacLayers(value, collections));
+  }, [value, collections, setLayers]);
+
+  useEffect(() => {
+    if (error) {
+      toaster.create({
+        type: "error",
+        title: "Error while loading collections",
+        description: error,
+      });
+    }
+  }, [error]);
+
   return (
-    <Stack>
-      <Value value={value}></Value>
+    <Stack position={"relative"}>
+      {loading && (
+        <Spinner position={"absolute"} top={0} right={2} size={"sm"}></Spinner>
+      )}
+      <Text fontSize={"xs"} fontWeight={"lighter"}>
+        {value.type}
+      </Text>
+      <Heading>{(value.title as string) ?? value.id ?? ""}</Heading>
       {collections && <Collections collections={collections}></Collections>}
     </Stack>
   );

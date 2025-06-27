@@ -8,7 +8,10 @@ import {
 } from "./context";
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(appStateReducer, { picked: null });
+  const [state, dispatch] = useReducer(appStateReducer, {
+    picked: null,
+    fitBounds: null,
+  });
   return (
     <AppStateContext value={state}>
       <AppStateDispatchContext value={dispatch}>
