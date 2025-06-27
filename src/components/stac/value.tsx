@@ -1,4 +1,5 @@
 import {
+  Badge,
   Box,
   Button,
   Clipboard,
@@ -129,7 +130,12 @@ export default function Value({
       )}
       {collections && (
         <Box mt={4}>
-          <Heading size={"md"}>Collections</Heading>
+          <Heading size={"md"}>
+            <HStack>
+              <Text>Collections</Text>
+              <Badge>{collections.length}</Badge>
+            </HStack>
+          </Heading>
           <Collections collections={collections}></Collections>
         </Box>
       )}
