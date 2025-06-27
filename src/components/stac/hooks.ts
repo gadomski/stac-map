@@ -1,204 +1,111 @@
-import { useFileUpload } from "@chakra-ui/react";
-import { Table } from "apache-arrow";
-import { useDuckDb } from "duckdb-wasm-kit";
+import { Layer } from "@deck.gl/core";
 import { useEffect, useState } from "react";
-import type {
-  NaturalLanguageCollectionSearchResult,
-  StacItemCollection,
-  StacValue,
-} from "./types";
-import { isUrl } from "./utils";
+import type { StacCollection, StacLink } from "stac-ts";
+import {
+  getCatalogLayers,
+  getCollectionLayers,
+  getItemCollectionLayers,
+  getItemLayers,
+} from "./layers";
+import type { StacValue } from "./types";
 
-export function useStacValue(initialHref: string) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | undefined>();
+export function useStacValue(href: string) {
+  const [loading, setLoading] = useState(true);
   const [value, setValue] = useState<StacValue | undefined>();
-  const [href, setHref] = useState(initialHref);
-  const [stacGeoparquetPath, setStacGeoparquetPath] = useState<
-    string | undefined
-  >();
-  const fileUpload = useFileUpload();
-  const { db } = useDuckDb();
-
-  useEffect(() => {
-    if (isUrl(href)) {
-      setLoading(true);
-      // TODO allow this to be forced, somehow
-      if (href.endsWith(".parquet")) {
-        setValue(getStacGeoparquetItemCollection(href));
-        setStacGeoparquetPath(href);
-      } else {
-        setStacGeoparquetPath(undefined);
-        (async () => {
-          const response = await fetch(href);
-          if (response.ok) {
-            const data = await response.json();
-            // TODO do we want to do some validation here?
-            setValue(data);
-          } else {
-            setError(
-              `Could not GET ${href} (${
-                response.status
-              }): ${await response.text()}`,
-            );
-          }
-        })();
-      }
-      setLoading(false);
-    }
-  }, [href]);
-
-  useEffect(() => {
-    if (fileUpload.acceptedFiles.length >= 1 && db) {
-      setLoading(true);
-      const file = fileUpload.acceptedFiles[0];
-      setHref(file.name);
-      (async () => {
-        // TODO allow this to be forced, somehow
-        if (file.name.endsWith(".parquet")) {
-          const buffer = await file.arrayBuffer();
-          db.registerFileBuffer(file.name, new Uint8Array(buffer));
-          setValue(getStacGeoparquetItemCollection(file.name));
-          setStacGeoparquetPath(file.name);
-        } else {
-          const text = await file.text();
-          try {
-            setValue(JSON.parse(text));
-          } catch (error) {
-            setError(`${file} is not JSON: ${error}`);
-          }
-        }
-      })();
-      setLoading(false);
-    }
-  }, [fileUpload.acceptedFiles, db]);
-
-  return {
-    loading,
-    error,
-    value,
-    href,
-    setHref,
-    fileUpload,
-    stacGeoparquetPath,
-  };
-}
-
-function getStacGeoparquetItemCollection(href: string): StacItemCollection {
-  return {
-    type: "FeatureCollection",
-    features: [],
-    title: href.split("/").pop(),
-    description: "A stac-geoparquet file",
-  };
-}
-
-export function useDuckDbQuery({
-  path,
-  select,
-  customFunction,
-  where,
-}: {
-  path: string;
-  select: string;
-  customFunction?: string;
-  where?: string;
-}) {
-  const { db, loading: duckDbLoading, error: duckDbError } = useDuckDb();
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
-  const [table, setTable] = useState<Table | undefined>();
-
-  // TODO what do we do about union by name issues with globs?
-  const from =
-    (customFunction && `${customFunction}('${path}')`) ||
-    `read_parquet('${path}', union_by_name=true)`;
-
-  useEffect(() => {
-    if (db) {
-      setLoading(true);
-      (async () => {
-        try {
-          const connection = await db.connect();
-          connection.query("LOAD spatial;");
-          let query = `SELECT ${select} FROM ${from}`;
-          if (where) {
-            query += " WHERE " + where;
-          }
-          const table = await connection.query(query);
-          // @ts-expect-error Don't know why the tables aren't recognized
-          setTable(table);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (e: any) {
-          setError(`DuckDB query error: ${e.toString()}`);
-        }
-      })();
-      setLoading(false);
-    }
-  }, [db, setError, setLoading, setTable, select, from, where]);
-
-  useEffect(() => {
-    if (duckDbLoading) {
-      setLoading(duckDbLoading);
-    }
-  }, [duckDbLoading, setLoading]);
-
-  useEffect(() => {
-    if (duckDbError) {
-      setError(`DuckDB Error: ${duckDbError.toString()}`);
-    }
-  }, [duckDbError, setError]);
-
-  return { table, loading, error };
-}
-
-export function useNaturalLanguageCollectionSearch({
-  query,
-  catalog,
-}: {
-  query: string | undefined;
-  catalog: string;
-}) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | undefined>();
-  const [results, setResults] = useState<
-    NaturalLanguageCollectionSearchResult[]
-  >([]);
 
   useEffect(() => {
     (async () => {
-      if (query) {
-        setResults([]);
-        setLoading(true);
-        const body = JSON.stringify({
-          query,
-          catalog_url: catalog,
-        });
-        const url = new URL(
-          "search",
-          import.meta.env.VITE_STAC_NATURAL_QUERY_API,
-        );
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body,
-        });
-        if (response.ok) {
-          setResults((await response.json()).results);
-        } else {
-          setError(
-            "Error while making a natural language query: " +
-              (await response.text()),
-          );
-        }
-        setLoading(false);
-      } else {
-        setResults([]);
+      setLoading(true);
+      setError(undefined);
+      // TODO better error handling
+      try {
+        const url = new URL(href);
+        const response = await fetch(url);
+        setValue(await response.json());
+        // eslint-disable-next-line
+      } catch (error: any) {
+        setError(error.toString());
       }
+      setLoading(false);
     })();
-  }, [query, catalog, setLoading, setError, setResults]);
+  }, [href, setValue]);
 
-  return { loading, error, results };
+  return { value, loading, error };
+}
+
+export function useStacCollections(value: StacValue) {
+  const [loading, setLoading] = useState(true);
+  const [collections, setCollections] = useState<
+    StacCollection[] | undefined
+  >();
+  const [error, setError] = useState<string | undefined>();
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      setError(undefined);
+      const link = value.links?.find((link) => link.rel == "data");
+      if (link) {
+        try {
+          let url = new URL(link.href);
+          let collections: StacCollection[] = [];
+          while (true) {
+            // TODO better error handling
+            const response = await fetch(url);
+            const data: { collections: StacCollection[]; links: StacLink[] } =
+              await response.json();
+            collections = [...collections, ...data.collections];
+            setCollections(collections);
+            const nextLink = data.links.find((link) => link.rel == "next");
+            if (nextLink) {
+              url = new URL(nextLink.href);
+            } else {
+              break;
+            }
+          }
+          // eslint-disable-next-line
+        } catch (error: any) {
+          setError(error.toString());
+        }
+      } else {
+        setCollections(undefined);
+      }
+      setLoading(false);
+    })();
+  }, [value, setCollections]);
+
+  return { collections, loading, error };
+}
+
+export function useStacLayers(
+  value: StacValue,
+  collections?: StacCollection[],
+) {
+  const [layers, setLayers] = useState<Layer[]>([]);
+
+  useEffect(() => {
+    switch (value.type) {
+      case "Catalog":
+        if (collections) {
+          setLayers(getCatalogLayers(value, collections));
+        } else {
+          setLayers([]);
+        }
+        break;
+      case "Collection":
+        setLayers(getCollectionLayers(value));
+        break;
+      case "Feature":
+        setLayers(getItemLayers(value));
+        break;
+      case "FeatureCollection":
+        setLayers(getItemCollectionLayers(value));
+        break;
+      default:
+        setLayers([]);
+    }
+  }, [value, collections, setLayers]);
+
+  return { layers };
 }
