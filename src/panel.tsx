@@ -18,6 +18,7 @@ import {
 } from "react-icons/lu";
 import { useAppState, useAppStateDispatch } from "./components/hooks";
 import { useStacLayersMultiple, useStacValue } from "./components/stac/hooks";
+import { getItem } from "./components/stac/stac-geoparquet";
 import { getBbox } from "./components/stac/utils";
 import Value from "./components/stac/value";
 import { toaster } from "./components/ui/toaster";
@@ -36,7 +37,7 @@ export default function Panel({
   const [tabValue, setTabValue] = useState("value");
   const [valueLayers, setValueLayers] = useState<Layer[]>([]);
   const [pickedLayers, setPickedLayers] = useState<Layer[]>([]);
-  const { picked, selected } = useAppState();
+  const { picked, selected, pickedId } = useAppState();
   const { layers: selectedLayers } = useStacLayersMultiple(selected);
   const dispatch = useAppStateDispatch();
   const { db } = useDuckDb();
@@ -76,6 +77,15 @@ export default function Panel({
       }
     })();
   }, [picked, dispatch, setPickedLayers, setTabValue, parquetPath, db]);
+
+  useEffect(() => {
+    (async () => {
+      if (pickedId && db && parquetPath) {
+        const item = await getItem(pickedId, parquetPath, db);
+        dispatch({ type: "pick", value: item });
+      }
+    })();
+  }, [pickedId, dispatch, db, parquetPath]);
 
   useEffect(() => {
     if (error) {
@@ -129,7 +139,7 @@ export default function Panel({
         </Tabs.Content>
         <Tabs.Content value="picked">
           {picked && (
-            <Stack>
+            <Stack gap={6}>
               <Value
                 href={href}
                 value={picked}

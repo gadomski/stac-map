@@ -8,6 +8,7 @@ import {
   vectorFromArray,
 } from "apache-arrow";
 import type { AsyncDuckDB } from "duckdb-wasm-kit";
+import * as stacWasm from "../../stac-wasm";
 
 export async function getGeometryTable(path: string, db: AsyncDuckDB) {
   const connection = await db.connect();
@@ -52,4 +53,12 @@ export async function getBbox(path: string, db: AsyncDuckDB) {
     number,
     number,
   ];
+}
+
+export async function getItem(id: string, path: string, db: AsyncDuckDB) {
+  const connection = await db.connect();
+  const result = await connection.query(
+    `SELECT * EXCLUDE geometry FROM read_parquet('${path}') WHERE id = '${id}'`,
+  );
+  return stacWasm.arrowToStacJson(result)[0];
 }

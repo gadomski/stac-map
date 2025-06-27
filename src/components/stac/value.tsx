@@ -1,6 +1,18 @@
-import { Box, Heading, Image, Spinner, Stack, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Clipboard,
+  Heading,
+  HStack,
+  IconButton,
+  Image,
+  Spinner,
+  Stack,
+  Text,
+} from "@chakra-ui/react";
 import type { Layer } from "@deck.gl/core";
 import { useEffect, type Dispatch, type SetStateAction } from "react";
+import { LuExternalLink } from "react-icons/lu";
 import Markdown from "react-markdown";
 import type { StacAsset } from "stac-ts";
 import { useStacCollections, useStacLayers } from "../stac/hooks";
@@ -32,6 +44,8 @@ export default function Value({
     "thumbnail" in value.assets &&
     (value.assets.thumbnail as StacAsset);
 
+  const selfLink = value.links?.find((link) => link.rel == "self");
+
   useEffect(() => {
     if (layers) {
       setLayers(layers);
@@ -49,20 +63,60 @@ export default function Value({
   }, [error]);
 
   return (
-    <Stack position={"relative"}>
-      {loading && (
-        <Spinner position={"absolute"} top={0} right={2} size={"sm"}></Spinner>
-      )}
-      <Text fontSize={"xs"} fontWeight={"lighter"}>
-        {value.type}
-      </Text>
-      <Heading>{(value.title as string) ?? value.id ?? ""}</Heading>
-      {thumbnailAsset && <Image src={thumbnailAsset.href}></Image>}
-      {(value.description as string) && (
-        <Prose>
-          <Markdown>{value.description as string}</Markdown>
-        </Prose>
-      )}
+    <Stack position={"relative"} gap={8}>
+      <Stack>
+        {loading && (
+          <Spinner
+            position={"absolute"}
+            top={0}
+            right={2}
+            size={"sm"}
+          ></Spinner>
+        )}
+        <Text fontSize={"xs"} fontWeight={"lighter"}>
+          {value.type}
+        </Text>
+        <Heading>{(value.title as string) ?? value.id ?? ""}</Heading>
+        {thumbnailAsset && (
+          <Image
+            src={thumbnailAsset.href}
+            height={200}
+            fit={"scale-down"}
+          ></Image>
+        )}
+        {(value.description as string) && (
+          <Prose>
+            <Markdown>{value.description as string}</Markdown>
+          </Prose>
+        )}
+        {selfLink && (
+          <HStack>
+            <Clipboard.Root value={selfLink.href}>
+              <Clipboard.Trigger asChild>
+                <IconButton variant="surface" size="xs">
+                  <Clipboard.Indicator />
+                </IconButton>
+              </Clipboard.Trigger>
+            </Clipboard.Root>
+            <Button asChild variant={"surface"} size={"xs"}>
+              <a href={selfLink.href} target="_blank">
+                Open <LuExternalLink></LuExternalLink>
+              </a>
+            </Button>
+            <Button asChild variant={"surface"} size={"xs"}>
+              <a
+                href={
+                  "https://radiantearth.github.io/stac-browser/#/external/" +
+                  selfLink.href.replace(/^(https?:\/\/)/, "")
+                }
+                target="_blank"
+              >
+                STAC Browser <LuExternalLink></LuExternalLink>
+              </a>
+            </Button>
+          </HStack>
+        )}
+      </Stack>
       {value.type === "Feature" && <Item item={value}></Item>}
       {value.type === "FeatureCollection" && (
         <ItemCollection itemCollection={value}></ItemCollection>

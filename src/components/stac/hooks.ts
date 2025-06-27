@@ -4,6 +4,7 @@ import { GeoArrowPolygonLayer } from "@geoarrow/deck.gl-layers";
 import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState } from "react";
 import type { StacCollection, StacLink } from "stac-ts";
+import { useAppStateDispatch } from "../hooks";
 import { getStacLayers } from "./layers";
 import { getGeometryTable } from "./stac-geoparquet";
 import type {
@@ -201,6 +202,7 @@ export function useStacLayers(
   const [error, setError] = useState<string | undefined>();
   const [layers, setLayers] = useState<Layer[]>();
   const { db } = useDuckDb();
+  const dispatch = useAppStateDispatch();
 
   useEffect(() => {
     (async () => {
@@ -214,6 +216,13 @@ export function useStacLayers(
               data: table,
               stroked: true,
               filled: true,
+              pickable: true,
+              onClick: (info) => {
+                const id = table.getChild("id")?.get(info.index);
+                if (typeof id === "string") {
+                  dispatch({ type: "pick-id", id });
+                }
+              },
               getFillColor: [207, 63, 2, 25],
               getLineColor: [207, 63, 2, 50],
               lineWidthUnits: "pixels",
@@ -228,11 +237,11 @@ export function useStacLayers(
           setLayers([]);
         }
       } else {
-        setLayers(getStacLayers(value, collections));
+        setLayers(getStacLayers(value, collections, dispatch));
       }
       setLoading(false);
     })();
-  }, [value, collections, parquetPath, db]);
+  }, [value, collections, parquetPath, db, dispatch]);
 
   return { layers, loading, error };
 }
@@ -241,7 +250,9 @@ export function useStacLayersMultiple(values: StacValue[]) {
   const [layers, setLayers] = useState<Layer[]>([]);
 
   useEffect(() => {
-    setLayers(values.flatMap((value) => getStacLayers(value, undefined)));
+    setLayers(
+      values.flatMap((value) => getStacLayers(value, undefined, undefined)),
+    );
   }, [values]);
 
   return { layers };

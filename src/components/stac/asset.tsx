@@ -1,4 +1,5 @@
 import {
+  Box,
   Card,
   Center,
   HStack,
@@ -8,7 +9,7 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LuDownload, LuImageMinus } from "react-icons/lu";
 import type { StacAsset } from "stac-ts";
 
@@ -19,12 +20,16 @@ export function AssetCard({
   assetKey: string;
   asset: StacAsset;
 }) {
-  const [showImage, setShowImage] = useState(true);
+  const [showImage, setShowImage] = useState(false);
 
   const iconButtonProps: IconButtonProps = {
     size: "2xs",
     variant: "subtle",
   };
+
+  useEffect(() => {
+    setShowImage(["image/jpeg", "image/png"].includes(asset.type || ""));
+  }, [asset, setShowImage]);
 
   return (
     <Card.Root size={"sm"}>
@@ -37,8 +42,10 @@ export function AssetCard({
         {(showImage && (
           <Image src={asset.href} onError={() => setShowImage(false)}></Image>
         )) || (
-          <Center>
-            <LuImageMinus></LuImageMinus>
+          <Center h={"100%"}>
+            <Box>
+              <LuImageMinus></LuImageMinus>
+            </Box>
           </Center>
         )}
       </Card.Body>

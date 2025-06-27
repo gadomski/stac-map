@@ -11,6 +11,7 @@ import { valuesMatch } from "./stac/utils";
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appStateReducer, {
     picked: null,
+    pickedId: null,
     fitBounds: null,
     selected: [],
   });
@@ -27,6 +28,8 @@ function appStateReducer(state: AppState, action: AppStateAction) {
   switch (action.type) {
     case "pick":
       return { ...state, picked: action.value || null };
+    case "pick-id":
+      return { ...state, pickedId: action.id };
     case "fit-bbox":
       return {
         ...state,
