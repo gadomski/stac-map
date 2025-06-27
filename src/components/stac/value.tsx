@@ -7,6 +7,8 @@ import { useStacCollections, useStacLayers } from "../stac/hooks";
 import { Prose } from "../ui/prose";
 import { toaster } from "../ui/toaster";
 import { Collections } from "./collection";
+import Item from "./item";
+import ItemCollection from "./item-collection";
 import { NaturalLanguageCollectionSearch } from "./natural-language";
 import type { StacValue } from "./types";
 
@@ -61,16 +63,15 @@ export default function Value({
           <Markdown>{value.description as string}</Markdown>
         </Prose>
       )}
+      {value.type === "Feature" && <Item item={value}></Item>}
+      {value.type === "FeatureCollection" && (
+        <ItemCollection itemCollection={value}></ItemCollection>
+      )}
       {value.type === "Catalog" && collections && (
         <NaturalLanguageCollectionSearch
           href={href}
           collections={collections}
         ></NaturalLanguageCollectionSearch>
-      )}
-      {value.type === "FeatureCollection" && value.features.length > 0 && (
-        <Text>
-          {value.features.length} item{value.features.length > 1 && "s"}
-        </Text>
       )}
       {collections && (
         <Box mt={4}>
