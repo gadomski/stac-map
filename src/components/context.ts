@@ -7,6 +7,7 @@ export type AppState = {
   pickedId: string | null;
   selected: StacValue[];
   fitBounds: LngLatBounds | null;
+  bounds: LngLatBounds | null;
 };
 
 export const AppStateContext = createContext<AppState | null>(null);
@@ -22,4 +23,5 @@ export type AppStateAction =
   | { type: "fit-bbox"; bbox: [number, number, number, number] }
   | { type: "select"; value: StacValue }
   | { type: "deselect"; value: StacValue }
-  | { type: "deselect-all" };
+  | { type: "deselect-all" }
+  | { type: "move-end"; bounds: LngLatBounds | undefined };

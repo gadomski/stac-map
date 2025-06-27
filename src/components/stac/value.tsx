@@ -1,7 +1,7 @@
 import {
   Badge,
-  Box,
   Button,
+  Checkbox,
   Clipboard,
   Heading,
   HStack,
@@ -12,10 +12,11 @@ import {
   Text,
 } from "@chakra-ui/react";
 import type { Layer } from "@deck.gl/core";
-import { useEffect, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { LuExternalLink } from "react-icons/lu";
 import Markdown from "react-markdown";
 import type { StacAsset } from "stac-ts";
+import { useAppState } from "../hooks";
 import { useStacCollections, useStacLayers } from "../stac/hooks";
 import { Prose } from "../ui/prose";
 import { toaster } from "../ui/toaster";
@@ -24,6 +25,7 @@ import Item from "./item";
 import ItemCollection from "./item-collection";
 import { NaturalLanguageCollectionSearch } from "./natural-language";
 import type { StacValue } from "./types";
+import { isCollectionWithinBounds } from "./utils";
 
 export default function Value({
   href,
@@ -38,6 +40,10 @@ export default function Value({
 }) {
   const { collections, loading, error } = useStacCollections(value);
   const { layers } = useStacLayers(value, collections, parquetPath);
+  const { bounds } = useAppState();
+  const [filterCollectionsByBounds, setFilterCollectionsByBounds] =
+    useState(true);
+  const [filteredCollections, setFilteredCollections] = useState(collections);
 
   const thumbnailAsset =
     typeof value.assets === "object" &&
@@ -62,6 +68,18 @@ export default function Value({
       });
     }
   }, [error]);
+
+  useEffect(() => {
+    if (bounds && collections && filterCollectionsByBounds) {
+      setFilteredCollections(
+        collections.filter((collection) =>
+          isCollectionWithinBounds(collection, bounds),
+        ),
+      );
+    } else {
+      setFilteredCollections(collections);
+    }
+  }, [bounds, collections, filterCollectionsByBounds, setFilteredCollections]);
 
   return (
     <Stack position={"relative"} gap={8}>
@@ -128,16 +146,30 @@ export default function Value({
           collections={collections}
         ></NaturalLanguageCollectionSearch>
       )}
-      {collections && (
-        <Box mt={4}>
+      {collections && filteredCollections && (
+        <Stack mt={4}>
           <Heading size={"md"}>
             <HStack>
               <Text>Collections</Text>
-              <Badge>{collections.length}</Badge>
+              <Badge>
+                {filteredCollections.length} / {collections.length}
+              </Badge>
             </HStack>
           </Heading>
-          <Collections collections={collections}></Collections>
-        </Box>
+          <Checkbox.Root
+            checked={filterCollectionsByBounds}
+            onCheckedChange={(e) => setFilterCollectionsByBounds(!!e.checked)}
+            size={"xs"}
+            variant={"subtle"}
+          >
+            <Checkbox.HiddenInput></Checkbox.HiddenInput>
+            <Checkbox.Control></Checkbox.Control>
+            <Checkbox.Label fontWeight={"light"}>
+              Filter collections by map bounds
+            </Checkbox.Label>
+          </Checkbox.Root>
+          <Collections collections={filteredCollections}></Collections>
+        </Stack>
       )}
     </Stack>
   );

@@ -13,6 +13,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     picked: null,
     pickedId: null,
     fitBounds: null,
+    bounds: null,
     selected: [],
   });
   return (
@@ -49,6 +50,11 @@ function appStateReducer(state: AppState, action: AppStateAction) {
       };
     case "deselect-all":
       return { ...state, selected: [] };
+    case "move-end":
+      return {
+        ...state,
+        bounds: action.bounds ?? null,
+      };
     default:
       return state;
   }

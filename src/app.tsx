@@ -9,7 +9,7 @@ import Map from "./map";
 import Panel from "./panel";
 
 export default function App() {
-  const [href, setHref] = useState<string | undefined>();
+  const [href, setHref] = useState<string | undefined>(getInitialHref());
   const [layers, setLayers] = useState<Layer[]>([]);
   const fileUpload = useFileUpload({ maxFiles: 1 });
 
@@ -63,4 +63,13 @@ export default function App() {
       <Toaster></Toaster>
     </AppStateProvider>
   );
+}
+function getInitialHref() {
+  const href = new URLSearchParams(location.search).get("href") || "";
+  try {
+    new URL(href);
+  } catch {
+    return undefined;
+  }
+  return href;
 }

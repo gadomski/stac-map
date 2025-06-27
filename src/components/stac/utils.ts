@@ -1,4 +1,6 @@
 import type { AsyncDuckDB } from "duckdb-wasm-kit";
+import { LngLatBounds } from "maplibre-gl";
+import type { StacCollection } from "stac-ts";
 import { getBbox as getStacGeoparquetBbox } from "./stac-geoparquet";
 import type { StacValue } from "./types";
 
@@ -50,4 +52,28 @@ export function sanitizeBbox(bbox: number[]) {
 
 export function valuesMatch(a: StacValue, b: StacValue) {
   return a.type === b.type && a.id === b.id;
+}
+
+export function isCollectionWithinBounds(
+  collection: StacCollection,
+  bounds: LngLatBounds,
+) {
+  const bbox = collection.extent.spatial.bbox[0];
+  let collectionBounds;
+  if (bbox.length == 4) {
+    collectionBounds = [bbox[0], bbox[1], bbox[2], bbox[3]];
+  } else {
+    // assume 6
+    collectionBounds = [bbox[0], bbox[1], bbox[3], bbox[4]];
+  }
+  return (
+    collectionBounds[0] <= bounds.getEast() &&
+    collectionBounds[2] >= bounds.getWest() &&
+    collectionBounds[1] <= bounds.getNorth() &&
+    collectionBounds[3] >= bounds.getSouth() &&
+    (collectionBounds[0] >= bounds.getWest() ||
+      collectionBounds[1] >= bounds.getSouth() ||
+      collectionBounds[2] <= bounds.getEast() ||
+      collectionBounds[3] <= bounds.getNorth())
+  );
 }
