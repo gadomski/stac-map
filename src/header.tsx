@@ -27,7 +27,7 @@ export default function Header({
   setHref: Dispatch<SetStateAction<string | undefined>>;
 }) {
   return (
-    <HStack pointerEvents={"auto"} py={4}>
+    <HStack py={4}>
       <HrefInput href={href} setHref={setHref}></HrefInput>
       <Examples setHref={setHref}></Examples>
     </HStack>
@@ -76,7 +76,9 @@ function Examples({
   return (
     <Menu.Root onSelect={(details) => setHref(details.value)}>
       <Menu.Trigger asChild>
-        <Button variant={"surface"}>Examples</Button>
+        <Button variant={"surface"} bg={"bg.muted/60"}>
+          Examples
+        </Button>
       </Menu.Trigger>
       <Portal>
         <Menu.Positioner>

@@ -1,27 +1,42 @@
-import { Center, SimpleGrid, Spinner, Tabs } from "@chakra-ui/react";
+import {
+  Center,
+  HStack,
+  IconButton,
+  Spinner,
+  Stack,
+  Tabs,
+  type UseFileUploadReturn,
+} from "@chakra-ui/react";
 import type { Layer } from "@deck.gl/core";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
-import { LuInfo, LuMousePointerClick } from "react-icons/lu";
+import {
+  LuInfo,
+  LuMousePointerBan,
+  LuMousePointerClick,
+  LuUpload,
+} from "react-icons/lu";
 import { useAppState, useAppStateDispatch } from "./components/hooks";
-import { useStacValue } from "./components/stac/hooks";
-import { getStacLayers } from "./components/stac/layers";
+import { useStacLayersMultiple, useStacValue } from "./components/stac/hooks";
 import { getBbox } from "./components/stac/utils";
 import Value from "./components/stac/value";
 import { toaster } from "./components/ui/toaster";
+import Upload from "./components/upload";
 
 export default function Panel({
   href,
   setLayers,
+  fileUpload,
 }: {
   href: string;
   setLayers: Dispatch<SetStateAction<Layer[]>>;
+  fileUpload: UseFileUploadReturn;
 }) {
-  const { value, loading, error } = useStacValue(href);
+  const { value, loading, error } = useStacValue(href, fileUpload);
   const [tabValue, setTabValue] = useState("value");
   const [valueLayers, setValueLayers] = useState<Layer[]>([]);
   const [pickedLayers, setPickedLayers] = useState<Layer[]>([]);
-  const [selectedLayers, setSelectedLayers] = useState<Layer[]>([]);
   const { picked, selected } = useAppState();
+  const { layers: selectedLayers } = useStacLayersMultiple(selected);
   const dispatch = useAppStateDispatch();
 
   useEffect(() => {
@@ -41,20 +56,16 @@ export default function Panel({
 
   useEffect(() => {
     if (picked) {
-      setPickedLayers(getStacLayers(picked));
       const bbox = getBbox(picked);
       if (bbox) {
         dispatch({ type: "fit-bbox", bbox });
       }
       setTabValue("picked");
     } else {
+      setTabValue("value");
       setPickedLayers([]);
     }
   }, [picked, dispatch, setPickedLayers, setTabValue]);
-
-  useEffect(() => {
-    setSelectedLayers(selected.map((value) => getStacLayers(value)).flat());
-  }, [selected, setSelectedLayers]);
 
   useEffect(() => {
     if (error) {
@@ -67,50 +78,57 @@ export default function Panel({
   }, [error]);
 
   return (
-    <SimpleGrid columns={3} gap={4}>
-      <Tabs.Root
-        bg={"bg.muted"}
-        rounded={4}
-        value={tabValue}
-        onValueChange={(e) => setTabValue(e.value)}
-        pointerEvents={"auto"}
-        overflow={"scroll"}
-        maxH={"80dvh"}
-      >
-        <Tabs.List>
-          <Tabs.Trigger value="value">
-            <LuInfo></LuInfo>
-          </Tabs.Trigger>
-          <Tabs.Trigger value="picked" disabled={!picked}>
-            <LuMousePointerClick></LuMousePointerClick>
-          </Tabs.Trigger>
-        </Tabs.List>
-        <Tabs.ContentGroup py={2} px={4}>
-          <Tabs.Content value="value">
-            {loading && (
-              <Center>
-                <Spinner></Spinner>
-              </Center>
-            )}
-            {value && (
-              <Value
-                href={href}
-                value={value}
-                setLayers={setValueLayers}
-              ></Value>
-            )}
-          </Tabs.Content>
-          <Tabs.Content value="picked">
-            {picked && (
+    <Tabs.Root
+      value={tabValue}
+      onValueChange={(e) => setTabValue(e.value)}
+      bg={"bg.muted"}
+      rounded={4}
+    >
+      <Tabs.List>
+        <Tabs.Trigger value="value">
+          <LuInfo></LuInfo>
+        </Tabs.Trigger>
+        <Tabs.Trigger value="picked" disabled={!picked}>
+          <LuMousePointerClick></LuMousePointerClick>
+        </Tabs.Trigger>
+        <Tabs.Trigger value="upload">
+          <LuUpload></LuUpload>
+        </Tabs.Trigger>
+      </Tabs.List>
+      <Tabs.ContentGroup py={2} px={4} overflow={"scroll"} maxH={"80dvh"}>
+        <Tabs.Content value="value">
+          {loading && (
+            <Center>
+              <Spinner></Spinner>
+            </Center>
+          )}
+          {value && (
+            <Value href={href} value={value} setLayers={setValueLayers}></Value>
+          )}
+        </Tabs.Content>
+        <Tabs.Content value="picked">
+          {picked && (
+            <Stack>
               <Value
                 href={href}
                 value={picked}
                 setLayers={setPickedLayers}
               ></Value>
-            )}
-          </Tabs.Content>
-        </Tabs.ContentGroup>
-      </Tabs.Root>
-    </SimpleGrid>
+              <HStack>
+                <IconButton
+                  variant={"surface"}
+                  onClick={() => dispatch({ type: "pick" })}
+                >
+                  <LuMousePointerBan></LuMousePointerBan>
+                </IconButton>
+              </HStack>
+            </Stack>
+          )}
+        </Tabs.Content>
+        <Tabs.Content value="upload">
+          <Upload fileUpload={fileUpload}></Upload>
+        </Tabs.Content>
+      </Tabs.ContentGroup>
+    </Tabs.Root>
   );
 }

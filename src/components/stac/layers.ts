@@ -1,3 +1,4 @@
+import { Layer } from "@deck.gl/core";
 import { GeoJsonLayer } from "@deck.gl/layers";
 import { bboxPolygon } from "@turf/bbox-polygon";
 import type { BBox } from "geojson";
@@ -8,7 +9,7 @@ import { sanitizeBbox } from "./utils";
 export function getStacLayers(
   value: StacValue,
   collections?: StacCollection[],
-) {
+): Layer[] {
   switch (value.type) {
     case "Catalog":
       if (collections) {
@@ -50,7 +51,7 @@ export function getCollectionLayers(collection: StacCollection) {
   const polygon = bboxPolygon(bbox as BBox);
   return [
     new GeoJsonLayer({
-      id: "collection",
+      id: `collection-${collection.id}`,
       data: polygon,
       stroked: false,
       filled: true,
@@ -60,8 +61,17 @@ export function getCollectionLayers(collection: StacCollection) {
 }
 
 export function getItemLayers(item: StacItem) {
-  return [];
+  return [
+    new GeoJsonLayer({
+      id: `item-${item.id}`,
+      // @ts-expect-error Don't want to bother typing this one.
+      data: item,
+      filled: true,
+      getFillColor: [207, 63, 2, 100],
+    }),
+  ];
 }
+
 export function getItemCollectionLayers(itemCollection: StacItemCollection) {
   return [];
 }

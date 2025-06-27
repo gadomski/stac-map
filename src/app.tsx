@@ -1,8 +1,9 @@
-import { Box, Container } from "@chakra-ui/react";
+import { Box, Container, SimpleGrid, useFileUpload } from "@chakra-ui/react";
 import { Layer } from "@deck.gl/core";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppStateProvider } from "./components/provider";
 import { Toaster } from "./components/ui/toaster";
+import Upload from "./components/upload";
 import Header from "./header";
 import Map from "./map";
 import Panel from "./panel";
@@ -10,6 +11,14 @@ import Panel from "./panel";
 export default function App() {
   const [href, setHref] = useState<string | undefined>();
   const [layers, setLayers] = useState<Layer[]>([]);
+  const fileUpload = useFileUpload({ maxFiles: 1 });
+
+  useEffect(() => {
+    // It should never be more than 1.
+    if (fileUpload.acceptedFiles.length == 1) {
+      setHref(fileUpload.acceptedFiles[0].name);
+    }
+  }, [fileUpload.acceptedFiles, setHref]);
 
   return (
     <AppStateProvider>
@@ -17,8 +26,20 @@ export default function App() {
         <Map layers={layers}></Map>
       </Box>
       <Container zIndex={1} fluid h={"dvh"} pointerEvents={"none"}>
-        <Header href={href} setHref={setHref}></Header>
-        {href && <Panel href={href} setLayers={setLayers}></Panel>}
+        <Box pointerEvents={"auto"}>
+          <Header href={href} setHref={setHref}></Header>
+        </Box>
+        <SimpleGrid columns={3} gap={4}>
+          <Box pointerEvents={"auto"}>
+            {(href && (
+              <Panel
+                href={href}
+                setLayers={setLayers}
+                fileUpload={fileUpload}
+              ></Panel>
+            )) || <Upload fileUpload={fileUpload}></Upload>}
+          </Box>
+        </SimpleGrid>
       </Container>
       <Toaster></Toaster>
     </AppStateProvider>

@@ -3,11 +3,10 @@ import type { Layer } from "@deck.gl/core";
 import { useEffect, type Dispatch, type SetStateAction } from "react";
 import Markdown from "react-markdown";
 import type { StacAsset } from "stac-ts";
-import { useStacCollections } from "../stac/hooks";
+import { useStacCollections, useStacLayers } from "../stac/hooks";
 import { Prose } from "../ui/prose";
 import { toaster } from "../ui/toaster";
 import { Collections } from "./collection";
-import { getStacLayers } from "./layers";
 import { NaturalLanguageCollectionSearch } from "./natural-language";
 import type { StacValue } from "./types";
 
@@ -21,6 +20,7 @@ export default function Value({
   setLayers: Dispatch<SetStateAction<Layer[]>>;
 }) {
   const { collections, loading, error } = useStacCollections(value);
+  const { layers } = useStacLayers(value, collections);
 
   const thumbnailAsset =
     typeof value.assets === "object" &&
@@ -29,8 +29,10 @@ export default function Value({
     (value.assets.thumbnail as StacAsset);
 
   useEffect(() => {
-    setLayers(getStacLayers(value, collections));
-  }, [value, collections, setLayers]);
+    if (layers) {
+      setLayers(layers);
+    }
+  }, [layers, setLayers]);
 
   useEffect(() => {
     if (error) {
@@ -64,7 +66,7 @@ export default function Value({
         ></NaturalLanguageCollectionSearch>
       )}
       {collections && (
-        <Box my={4}>
+        <Box mt={4}>
           <Heading size={"md"}>Collections</Heading>
           <Collections collections={collections}></Collections>
         </Box>

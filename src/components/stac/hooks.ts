@@ -1,30 +1,95 @@
+import type { UseFileUploadReturn } from "@chakra-ui/react";
+import { Layer } from "@deck.gl/core";
+import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState } from "react";
 import type { StacCollection, StacLink } from "stac-ts";
-import type { NaturalLanguageCollectionSearchResult, StacValue } from "./types";
+import { getStacLayers } from "./layers";
+import type {
+  NaturalLanguageCollectionSearchResult,
+  StacItemCollection,
+  StacValue,
+} from "./types";
 
-export function useStacValue(href: string) {
+export function useStacValue(href: string, fileUpload: UseFileUploadReturn) {
   const [loading, setLoading] = useState(true);
-  const [value, setValue] = useState<StacValue | undefined>();
   const [error, setError] = useState<string | undefined>();
+  const [value, setValue] = useState<StacValue | undefined>();
+  const [parquetPath, setParquetPath] = useState<string | undefined>();
+  const [buffer, setBuffer] = useState<ArrayBuffer | undefined>();
+  const { db } = useDuckDb();
 
   useEffect(() => {
+    let url;
+    try {
+      url = new URL(href);
+    } catch {
+      return;
+    }
+
     (async () => {
       setError(undefined);
       setValue(undefined);
       setLoading(true);
+
       try {
-        const url = new URL(href);
         const response = await fetch(url);
-        setValue(await response.json());
+        if (href.endsWith(".parquet")) {
+          setParquetPath(href);
+          setValue(getStacGeoparquetValue(href));
+        } else {
+          setValue(await response.json());
+        }
         // eslint-disable-next-line
       } catch (error: any) {
         setError(href + ": " + error.toString());
       }
+
       setLoading(false);
     })();
-  }, [href, setValue]);
+  }, [href]);
 
-  return { value, loading, error };
+  useEffect(() => {
+    try {
+      // Only continue if it's a local path (from an uploaded file).
+      new URL(href);
+      return;
+    } catch {
+      // pass
+    }
+
+    (async () => {
+      setError(undefined);
+      setValue(undefined);
+      setLoading(true);
+
+      if (fileUpload.acceptedFiles.length == 1) {
+        const file = fileUpload.acceptedFiles[0];
+        try {
+          if (href.endsWith(".parquet")) {
+            setParquetPath(href);
+            setValue(getStacGeoparquetValue(href));
+            setBuffer(await file.arrayBuffer());
+          } else {
+            const text = await file.text();
+            setValue(JSON.parse(text));
+          }
+          // eslint-disable-next-line
+        } catch (error: any) {
+          setError(error.toString());
+        }
+      }
+
+      setLoading(false);
+    })();
+  }, [href, fileUpload]);
+
+  useEffect(() => {
+    if (db && buffer) {
+      db.registerFileBuffer(href, new Uint8Array(buffer));
+    }
+  }, [href, buffer, db]);
+
+  return { value, parquetPath, loading, error };
 }
 
 export function useStacCollections(value: StacValue) {
@@ -114,4 +179,35 @@ export function useNaturalLanguageCollectionSearch(
   }, [query, href, setLoading, setError, setResults]);
 
   return { results, loading, error };
+}
+
+function getStacGeoparquetValue(href: string): StacItemCollection {
+  return {
+    type: "FeatureCollection",
+    features: [],
+    title: href.split("/").pop(),
+    description: "A stac-geoparquet file",
+  };
+}
+
+export function useStacLayers(
+  value: StacValue,
+  collections?: StacCollection[],
+) {
+  const [layers, setLayers] = useState<Layer[]>();
+
+  useEffect(() => {
+    setLayers(getStacLayers(value, collections));
+  }, [value, collections]);
+  return { layers };
+}
+
+export function useStacLayersMultiple(values: StacValue[]) {
+  const [layers, setLayers] = useState<Layer[]>([]);
+
+  useEffect(() => {
+    setLayers(values.flatMap((value) => getStacLayers(value)));
+  }, [values]);
+
+  return { layers };
 }
