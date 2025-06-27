@@ -15,7 +15,6 @@ export function useStacValue(href: string, fileUpload: UseFileUploadReturn) {
   const [error, setError] = useState<string | undefined>();
   const [value, setValue] = useState<StacValue | undefined>();
   const [parquetPath, setParquetPath] = useState<string | undefined>();
-  const [buffer, setBuffer] = useState<ArrayBuffer | undefined>();
   const { db } = useDuckDb();
 
   useEffect(() => {
@@ -37,6 +36,7 @@ export function useStacValue(href: string, fileUpload: UseFileUploadReturn) {
           setParquetPath(href);
           setValue(getStacGeoparquetValue(href));
         } else {
+          setParquetPath(undefined);
           setValue(await response.json());
         }
         // eslint-disable-next-line
@@ -59,19 +59,25 @@ export function useStacValue(href: string, fileUpload: UseFileUploadReturn) {
 
     (async () => {
       setError(undefined);
-      setValue(undefined);
       setLoading(true);
 
-      if (fileUpload.acceptedFiles.length == 1) {
+      if (fileUpload.acceptedFiles.length == 1 && db) {
         const file = fileUpload.acceptedFiles[0];
         try {
           if (href.endsWith(".parquet")) {
             setParquetPath(href);
             setValue(getStacGeoparquetValue(href));
-            setBuffer(await file.arrayBuffer());
+            db.registerFileBuffer(
+              href,
+              new Uint8Array(await file.arrayBuffer()),
+            );
           } else {
-            const text = await file.text();
-            setValue(JSON.parse(text));
+            setParquetPath(undefined);
+            const value = JSON.parse(await file.text());
+            if (!value.id) {
+              value.id = href;
+            }
+            setValue(value);
           }
           // eslint-disable-next-line
         } catch (error: any) {
@@ -81,13 +87,7 @@ export function useStacValue(href: string, fileUpload: UseFileUploadReturn) {
 
       setLoading(false);
     })();
-  }, [href, fileUpload]);
-
-  useEffect(() => {
-    if (db && buffer) {
-      db.registerFileBuffer(href, new Uint8Array(buffer));
-    }
-  }, [href, buffer, db]);
+  }, [href, fileUpload.acceptedFiles, db]);
 
   return { value, parquetPath, loading, error };
 }
@@ -192,13 +192,26 @@ function getStacGeoparquetValue(href: string): StacItemCollection {
 
 export function useStacLayers(
   value: StacValue,
-  collections?: StacCollection[],
+  collections: StacCollection[] | undefined,
+  parquetPath: string | undefined,
 ) {
   const [layers, setLayers] = useState<Layer[]>();
+  const { db } = useDuckDb();
 
   useEffect(() => {
-    setLayers(getStacLayers(value, collections));
-  }, [value, collections]);
+    (async () => {
+      if (parquetPath) {
+        if (db) {
+          // TODO
+        } else {
+          setLayers([]);
+        }
+      } else {
+        setLayers(getStacLayers(value, collections));
+      }
+    })();
+  }, [value, collections, parquetPath, db]);
+
   return { layers };
 }
 
@@ -206,7 +219,7 @@ export function useStacLayersMultiple(values: StacValue[]) {
   const [layers, setLayers] = useState<Layer[]>([]);
 
   useEffect(() => {
-    setLayers(values.flatMap((value) => getStacLayers(value)));
+    setLayers(values.flatMap((value) => getStacLayers(value, undefined)));
   }, [values]);
 
   return { layers };

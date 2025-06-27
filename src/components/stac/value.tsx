@@ -14,13 +14,15 @@ export default function Value({
   href,
   value,
   setLayers,
+  parquetPath,
 }: {
   href: string;
   value: StacValue;
   setLayers: Dispatch<SetStateAction<Layer[]>>;
+  parquetPath: string | undefined;
 }) {
   const { collections, loading, error } = useStacCollections(value);
-  const { layers } = useStacLayers(value, collections);
+  const { layers } = useStacLayers(value, collections, parquetPath);
 
   const thumbnailAsset =
     typeof value.assets === "object" &&

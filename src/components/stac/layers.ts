@@ -8,7 +8,7 @@ import { sanitizeBbox } from "./utils";
 
 export function getStacLayers(
   value: StacValue,
-  collections?: StacCollection[],
+  collections: StacCollection[] | undefined,
 ): Layer[] {
   switch (value.type) {
     case "Catalog":
@@ -73,5 +73,16 @@ export function getItemLayers(item: StacItem) {
 }
 
 export function getItemCollectionLayers(itemCollection: StacItemCollection) {
-  return [];
+  return [
+    new GeoJsonLayer({
+      id: `item-collection`,
+      // @ts-expect-error Don't want to bother typing this one.
+      data: itemCollection,
+      stroked: true,
+      filled: true,
+      getLineColor: [207, 63, 2, 100],
+      getFillColor: [207, 63, 2, 50],
+      lineWidthUnits: "pixels",
+    }),
+  ];
 }

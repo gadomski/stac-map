@@ -31,7 +31,7 @@ export default function Panel({
   setLayers: Dispatch<SetStateAction<Layer[]>>;
   fileUpload: UseFileUploadReturn;
 }) {
-  const { value, loading, error } = useStacValue(href, fileUpload);
+  const { value, parquetPath, loading, error } = useStacValue(href, fileUpload);
   const [tabValue, setTabValue] = useState("value");
   const [valueLayers, setValueLayers] = useState<Layer[]>([]);
   const [pickedLayers, setPickedLayers] = useState<Layer[]>([]);
@@ -103,7 +103,12 @@ export default function Panel({
             </Center>
           )}
           {value && (
-            <Value href={href} value={value} setLayers={setValueLayers}></Value>
+            <Value
+              href={href}
+              value={value}
+              setLayers={setValueLayers}
+              parquetPath={parquetPath}
+            ></Value>
           )}
         </Tabs.Content>
         <Tabs.Content value="picked">
@@ -113,6 +118,7 @@ export default function Panel({
                 href={href}
                 value={picked}
                 setLayers={setPickedLayers}
+                parquetPath={parquetPath}
               ></Value>
               <HStack>
                 <IconButton
