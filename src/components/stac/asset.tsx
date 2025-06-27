@@ -1,19 +1,17 @@
 import {
-  Badge,
+  Box,
   Card,
+  Center,
   HStack,
   IconButton,
+  type IconButtonProps,
   Image,
   Stack,
   Text,
-  useClipboard,
 } from "@chakra-ui/react";
-import { LuCopy, LuCopyCheck, LuDownload } from "react-icons/lu";
+import { useEffect, useState } from "react";
+import { LuDownload, LuImageMinus } from "react-icons/lu";
 import type { StacAsset } from "stac-ts";
-import { RawJsonDialogButton } from "../json";
-import { Tooltip } from "../ui/tooltip";
-
-const PREVIEW_MEDIA_TYPES = ["image/jpeg", "image/png"];
 
 export function AssetCard({
   assetKey,
@@ -22,55 +20,44 @@ export function AssetCard({
   assetKey: string;
   asset: StacAsset;
 }) {
-  const clipboard = useClipboard({ value: asset.href });
-  const preview = asset.type && PREVIEW_MEDIA_TYPES.includes(asset.type);
+  const [showImage, setShowImage] = useState(false);
+
+  const iconButtonProps: IconButtonProps = {
+    size: "2xs",
+    variant: "subtle",
+  };
+
+  useEffect(() => {
+    setShowImage(["image/jpeg", "image/png"].includes(asset.type || ""));
+  }, [asset, setShowImage]);
 
   return (
     <Card.Root size={"sm"}>
-      <Card.Header>{asset.title || assetKey}</Card.Header>
+      <Card.Header>
+        <Text fontWeight={"lighter"} fontSize={"2xs"}>
+          {assetKey}
+        </Text>
+      </Card.Header>
       <Card.Body>
-        {(preview && <Image src={asset.href}></Image>) || (
-          <Text fontSize={"xs"} fontWeight={"lighter"}>
-            {asset.type}
-          </Text>
+        {(showImage && (
+          <Image src={asset.href} onError={() => setShowImage(false)}></Image>
+        )) || (
+          <Center h={"100%"}>
+            <Box>
+              <LuImageMinus></LuImageMinus>
+            </Box>
+          </Center>
         )}
       </Card.Body>
       <Card.Footer>
-        <Stack>
-          <Tooltip content="Asset roles">
-            <HStack>
-              {asset.roles?.map((role) => (
-                <Badge key={"role:" + role}>{role}</Badge>
-              ))}
-            </HStack>
-          </Tooltip>
+        <Stack gap={4}>
+          <Text fontSize={"2xs"}>{asset.type}</Text>
           <HStack>
-            <Tooltip content="Copy the asset href to your clipboard">
-              <IconButton
-                variant={"surface"}
-                size={"xs"}
-                onClick={clipboard.copy}
-              >
-                {clipboard.copied ? (
-                  <LuCopyCheck></LuCopyCheck>
-                ) : (
-                  <LuCopy></LuCopy>
-                )}
-              </IconButton>
-            </Tooltip>
-            <Tooltip content="Download the asset">
-              <IconButton asChild variant={"surface"} size={"xs"}>
-                <a href={asset.href}>
-                  <LuDownload></LuDownload>
-                </a>
-              </IconButton>
-            </Tooltip>
-            <RawJsonDialogButton
-              title={assetKey}
-              value={asset}
-              variant={"surface"}
-              size={"xs"}
-            ></RawJsonDialogButton>
+            <IconButton {...iconButtonProps} asChild>
+              <a href={asset.href}>
+                <LuDownload></LuDownload>
+              </a>
+            </IconButton>
           </HStack>
         </Stack>
       </Card.Footer>

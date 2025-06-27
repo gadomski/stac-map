@@ -1,0 +1,27 @@
+import type { LngLatBounds } from "maplibre-gl";
+import { createContext, type Dispatch } from "react";
+import type { StacValue } from "./stac/types";
+
+export type AppState = {
+  picked: StacValue | null;
+  pickedId: string | null;
+  selected: StacValue[];
+  fitBounds: LngLatBounds | null;
+  bounds: LngLatBounds | null;
+};
+
+export const AppStateContext = createContext<AppState | null>(null);
+export const AppStateDispatchContext =
+  createContext<Dispatch<AppStateAction> | null>(null);
+
+export type AppStateAction =
+  | {
+      type: "pick";
+      value?: StacValue;
+    }
+  | { type: "pick-id"; id: string }
+  | { type: "fit-bbox"; bbox: [number, number, number, number] }
+  | { type: "select"; value: StacValue }
+  | { type: "deselect"; value: StacValue }
+  | { type: "deselect-all" }
+  | { type: "move-end"; bounds: LngLatBounds | undefined };

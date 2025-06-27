@@ -1,0 +1,166 @@
+import {
+  Center,
+  HStack,
+  IconButton,
+  Spinner,
+  Stack,
+  Tabs,
+  type UseFileUploadReturn,
+} from "@chakra-ui/react";
+import type { Layer } from "@deck.gl/core";
+import { useDuckDb } from "duckdb-wasm-kit";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import {
+  LuInfo,
+  LuMousePointerBan,
+  LuMousePointerClick,
+  LuUpload,
+} from "react-icons/lu";
+import { useAppState, useAppStateDispatch } from "./components/hooks";
+import { useStacLayersMultiple, useStacValue } from "./components/stac/hooks";
+import { getItem } from "./components/stac/stac-geoparquet";
+import { getBbox } from "./components/stac/utils";
+import Value from "./components/stac/value";
+import { toaster } from "./components/ui/toaster";
+import Upload from "./components/upload";
+
+export default function Panel({
+  href,
+  setLayers,
+  fileUpload,
+}: {
+  href: string;
+  setLayers: Dispatch<SetStateAction<Layer[]>>;
+  fileUpload: UseFileUploadReturn;
+}) {
+  const { value, parquetPath, loading, error } = useStacValue(href, fileUpload);
+  const [tabValue, setTabValue] = useState("value");
+  const [valueLayers, setValueLayers] = useState<Layer[]>([]);
+  const [pickedLayers, setPickedLayers] = useState<Layer[]>([]);
+  const { picked, selected, pickedId } = useAppState();
+  const { layers: selectedLayers } = useStacLayersMultiple(selected);
+  const dispatch = useAppStateDispatch();
+  const { db } = useDuckDb();
+
+  useEffect(() => {
+    setLayers([...pickedLayers, ...selectedLayers, ...valueLayers]);
+  }, [valueLayers, pickedLayers, setLayers, selectedLayers]);
+
+  useEffect(() => {
+    (async () => {
+      if (value) {
+        setTabValue("value");
+        if (db) {
+          const bbox = await getBbox(value, parquetPath, db);
+          if (bbox) {
+            dispatch({ type: "fit-bbox", bbox });
+          }
+        }
+        dispatch({ type: "pick" });
+      }
+    })();
+  }, [value, setTabValue, dispatch, parquetPath, db]);
+
+  useEffect(() => {
+    (async () => {
+      if (picked) {
+        if (db) {
+          const bbox = await getBbox(picked, parquetPath, db);
+          if (bbox) {
+            dispatch({ type: "fit-bbox", bbox });
+          }
+        }
+        setTabValue("picked");
+      } else {
+        setTabValue("value");
+        setPickedLayers([]);
+      }
+    })();
+  }, [picked, dispatch, setPickedLayers, setTabValue, parquetPath, db]);
+
+  useEffect(() => {
+    (async () => {
+      if (pickedId && db && parquetPath) {
+        const item = await getItem(pickedId, parquetPath, db);
+        dispatch({ type: "pick", value: item });
+      }
+    })();
+  }, [pickedId, dispatch, db, parquetPath]);
+
+  useEffect(() => {
+    if (error) {
+      toaster.create({
+        type: "error",
+        title: "Error while loading STAC value",
+        description: error,
+      });
+    }
+  }, [error]);
+
+  return (
+    <Tabs.Root
+      value={tabValue}
+      onValueChange={(e) => setTabValue(e.value)}
+      bg={"bg.muted"}
+      rounded={4}
+    >
+      <Tabs.List>
+        <Tabs.Trigger value="value">
+          <LuInfo></LuInfo>
+        </Tabs.Trigger>
+        <Tabs.Trigger value="picked" disabled={!picked}>
+          <LuMousePointerClick></LuMousePointerClick>
+        </Tabs.Trigger>
+        <Tabs.Trigger value="upload">
+          <LuUpload></LuUpload>
+        </Tabs.Trigger>
+      </Tabs.List>
+      <Tabs.ContentGroup
+        pt={2}
+        pb={4}
+        px={4}
+        overflow={"scroll"}
+        maxH={"80dvh"}
+      >
+        <Tabs.Content value="value">
+          {loading && (
+            <Center>
+              <Spinner></Spinner>
+            </Center>
+          )}
+          {value && (
+            <Value
+              href={href}
+              value={value}
+              setLayers={setValueLayers}
+              parquetPath={parquetPath}
+            ></Value>
+          )}
+        </Tabs.Content>
+        <Tabs.Content value="picked">
+          {picked && (
+            <Stack gap={6}>
+              <Value
+                href={href}
+                value={picked}
+                setLayers={setPickedLayers}
+                parquetPath={parquetPath}
+              ></Value>
+              <HStack>
+                <IconButton
+                  variant={"surface"}
+                  onClick={() => dispatch({ type: "pick" })}
+                >
+                  <LuMousePointerBan></LuMousePointerBan>
+                </IconButton>
+              </HStack>
+            </Stack>
+          )}
+        </Tabs.Content>
+        <Tabs.Content value="upload">
+          <Upload fileUpload={fileUpload}></Upload>
+        </Tabs.Content>
+      </Tabs.ContentGroup>
+    </Tabs.Root>
+  );
+}
