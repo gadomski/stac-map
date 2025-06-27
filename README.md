@@ -3,7 +3,6 @@
 A map-first STAC visualizer, hosted at <http://developmentseed/stac-map>.
 Includes:
 
-- Item search
 - Natural language collection search
 - **stac-geoparquet** visualization
 - Upload and view a file from your local filesystem
