@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { StacCollection, StacLink } from "stac-ts";
-import type { StacValue } from "./types";
+import type { NaturalLanguageCollectionSearchResult, StacValue } from "./types";
 
 export function useStacValue(href: string) {
   const [loading, setLoading] = useState(true);
@@ -70,4 +70,48 @@ export function useStacCollections(value: StacValue) {
   }, [value, setCollections]);
 
   return { collections, loading, error };
+}
+
+export function useNaturalLanguageCollectionSearch(
+  query: string,
+  href: string,
+) {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | undefined>();
+  const [results, setResults] = useState<
+    NaturalLanguageCollectionSearchResult[] | undefined
+  >();
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      setResults(undefined);
+      setError(undefined);
+      const body = JSON.stringify({
+        query,
+        catalog_url: href,
+      });
+      try {
+        const url = new URL(
+          "search",
+          import.meta.env.VITE_STAC_NATURAL_QUERY_API,
+        );
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body,
+        });
+        const data = await response.json();
+        setResults(data.results);
+        // eslint-disable-next-line
+      } catch (error: any) {
+        setError(error.toString());
+      }
+      setLoading(false);
+    })();
+  }, [query, href, setLoading, setError, setResults]);
+
+  return { results, loading, error };
 }

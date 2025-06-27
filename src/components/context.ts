@@ -19,4 +19,5 @@ export type AppStateAction =
     }
   | { type: "fit-bbox"; bbox: [number, number, number, number] }
   | { type: "select"; value: StacValue }
-  | { type: "deselect"; value: StacValue };
+  | { type: "deselect"; value: StacValue }
+  | { type: "deselect-all" };

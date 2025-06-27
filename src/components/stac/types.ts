@@ -21,3 +21,8 @@ export type StacSearch = {
   bbox?: number[];
   limit?: number;
 };
+
+export type NaturalLanguageCollectionSearchResult = {
+  collection_id: string;
+  explanation: string;
+};

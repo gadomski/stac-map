@@ -92,11 +92,21 @@ export default function Panel({
                 <Spinner></Spinner>
               </Center>
             )}
-            {value && <Value value={value} setLayers={setValueLayers}></Value>}
+            {value && (
+              <Value
+                href={href}
+                value={value}
+                setLayers={setValueLayers}
+              ></Value>
+            )}
           </Tabs.Content>
           <Tabs.Content value="picked">
             {picked && (
-              <Value value={picked} setLayers={setPickedLayers}></Value>
+              <Value
+                href={href}
+                value={picked}
+                setLayers={setPickedLayers}
+              ></Value>
             )}
           </Tabs.Content>
         </Tabs.ContentGroup>

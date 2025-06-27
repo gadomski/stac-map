@@ -4,13 +4,12 @@ import {
   HStack,
   IconButton,
   Image,
+  SimpleGrid,
   Stack,
   Text,
   type IconButtonProps,
 } from "@chakra-ui/react";
 import {
-  LuEye,
-  LuEyeClosed,
   LuFocus,
   LuMousePointerBan,
   LuMousePointerClick,
@@ -20,6 +19,24 @@ import type { StacCollection } from "stac-ts";
 import { useAppStateDispatch, useIsPicked, useIsSelected } from "../hooks";
 import { sanitizeBbox } from "../stac/utils";
 import { Prose } from "../ui/prose";
+
+export function Collections({
+  collections,
+}: {
+  collections: StacCollection[];
+}) {
+  return (
+    <SimpleGrid columns={2} gap={2} my={4}>
+      {collections.map((collection) => (
+        <CollectionCard
+          collection={collection}
+          key={collection.id}
+        ></CollectionCard>
+      ))}
+    </SimpleGrid>
+  );
+}
+
 export function CollectionCard({ collection }: { collection: StacCollection }) {
   const thumbnailLink = collection.assets?.thumbnail;
   const isSelected = useIsSelected(collection);
@@ -36,6 +53,7 @@ export function CollectionCard({ collection }: { collection: StacCollection }) {
       size={"sm"}
       _hover={{ bg: "bg.emphasized" }}
       bg={(isPicked && "bg.emphasized") || "bg.panel"}
+      borderColor={(isSelected && "orange.600/50") || "gray.200"}
     >
       <Card.Header>
         {collection.title && (
@@ -58,23 +76,6 @@ export function CollectionCard({ collection }: { collection: StacCollection }) {
         <Stack gap={4}>
           {thumbnailLink && <Image src={thumbnailLink.href}></Image>}
           <HStack>
-            {(isSelected && (
-              <IconButton
-                {...iconButtonProps}
-                onClick={() =>
-                  dispatch({ type: "deselect", value: collection })
-                }
-              >
-                <LuEye></LuEye>
-              </IconButton>
-            )) || (
-              <IconButton
-                {...iconButtonProps}
-                onClick={() => dispatch({ type: "select", value: collection })}
-              >
-                <LuEyeClosed></LuEyeClosed>
-              </IconButton>
-            )}
             {(isPicked && (
               <IconButton
                 {...iconButtonProps}

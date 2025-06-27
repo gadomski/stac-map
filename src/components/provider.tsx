@@ -44,6 +44,8 @@ function appStateReducer(state: AppState, action: AppStateAction) {
           (value) => !valuesMatch(value, action.value),
         ),
       };
+    case "deselect-all":
+      return { ...state, selected: [] };
     default:
       return state;
   }

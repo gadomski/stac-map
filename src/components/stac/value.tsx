@@ -1,23 +1,32 @@
-import { Heading, SimpleGrid, Spinner, Stack, Text } from "@chakra-ui/react";
+import { Box, Heading, Image, Spinner, Stack, Text } from "@chakra-ui/react";
 import type { Layer } from "@deck.gl/core";
 import { useEffect, type Dispatch, type SetStateAction } from "react";
 import Markdown from "react-markdown";
-import type { StacCollection } from "stac-ts";
+import type { StacAsset } from "stac-ts";
 import { useStacCollections } from "../stac/hooks";
 import { Prose } from "../ui/prose";
 import { toaster } from "../ui/toaster";
-import { CollectionCard } from "./collection";
+import { Collections } from "./collection";
 import { getStacLayers } from "./layers";
+import { NaturalLanguageCollectionSearch } from "./natural-language";
 import type { StacValue } from "./types";
 
 export default function Value({
+  href,
   value,
   setLayers,
 }: {
+  href: string;
   value: StacValue;
   setLayers: Dispatch<SetStateAction<Layer[]>>;
 }) {
   const { collections, loading, error } = useStacCollections(value);
+
+  const thumbnailAsset: StacAsset =
+    typeof value.assets === "object" &&
+    value.assets &&
+    "thumbnail" in value.assets &&
+    value.assets.thumbnail;
 
   useEffect(() => {
     setLayers(getStacLayers(value, collections));
@@ -42,25 +51,24 @@ export default function Value({
         {value.type}
       </Text>
       <Heading>{(value.title as string) ?? value.id ?? ""}</Heading>
+      {thumbnailAsset && <Image src={thumbnailAsset.href}></Image>}
       {(value.description as string) && (
         <Prose>
           <Markdown>{value.description as string}</Markdown>
         </Prose>
       )}
-      {collections && <Collections collections={collections}></Collections>}
+      {value.type === "Catalog" && collections && (
+        <NaturalLanguageCollectionSearch
+          href={href}
+          collections={collections}
+        ></NaturalLanguageCollectionSearch>
+      )}
+      {collections && (
+        <Box my={4}>
+          <Heading size={"md"}>Collections</Heading>
+          <Collections collections={collections}></Collections>
+        </Box>
+      )}
     </Stack>
-  );
-}
-
-function Collections({ collections }: { collections: StacCollection[] }) {
-  return (
-    <SimpleGrid columns={2} gap={2}>
-      {collections.map((collection) => (
-        <CollectionCard
-          collection={collection}
-          key={collection.id}
-        ></CollectionCard>
-      ))}
-    </SimpleGrid>
   );
 }
