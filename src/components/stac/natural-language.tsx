@@ -1,37 +1,24 @@
 import {
   Center,
   CloseButton,
-  Collapsible,
   DataList,
   Field,
   Heading,
-  HStack,
   Input,
   InputGroup,
   Spinner,
   Stack,
-  Text,
 } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { LuSearch } from "react-icons/lu";
-import type { StacCollection } from "stac-ts";
-import { useAppStateDispatch } from "../hooks";
+import { useSelectedDispatch } from "../../hooks";
 import { toaster } from "../ui/toaster";
-import { Collections } from "./collection";
 import { useNaturalLanguageCollectionSearch } from "./hooks";
-import { sanitizeBbox } from "./utils";
 
-export function NaturalLanguageCollectionSearch({
-  href,
-  collections,
-}: {
-  href: string;
-  collections: StacCollection[];
-}) {
+export function NaturalLanguageCollectionSearch({ href }: { href: string }) {
   const [query, setQuery] = useState<string | undefined>();
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const dispatch = useAppStateDispatch();
 
   const endElement = value ? (
     <CloseButton
@@ -39,7 +26,6 @@ export function NaturalLanguageCollectionSearch({
       onClick={() => {
         setValue("");
         setQuery(undefined);
-        dispatch({ type: "deselect-all" });
         inputRef.current?.focus();
       }}
       me="-2"
@@ -55,7 +41,6 @@ export function NaturalLanguageCollectionSearch({
         }}
       >
         <Field.Root>
-          <Field.Label>Natural language collection search</Field.Label>
           <InputGroup
             startElement={<LuSearch></LuSearch>}
             endElement={endElement}
@@ -73,30 +58,17 @@ export function NaturalLanguageCollectionSearch({
           </Field.HelperText>
         </Field.Root>
       </form>
-      {query && (
-        <Results query={query} href={href} collections={collections}></Results>
-      )}
+      {query && <Results query={query} href={href}></Results>}
     </Stack>
   );
 }
 
-function Results({
-  query,
-  href,
-  collections,
-}: {
-  query: string;
-  href: string;
-  collections: StacCollection[];
-}) {
+function Results({ query, href }: { query: string; href: string }) {
   const { results, loading, error } = useNaturalLanguageCollectionSearch(
     query,
     href,
   );
-  const dispatch = useAppStateDispatch();
-  const [searchedCollections, setSearchedCollections] = useState<
-    StacCollection[] | undefined
-  >();
+  const dispatch = useSelectedDispatch();
 
   useEffect(() => {
     if (error) {
@@ -110,25 +82,13 @@ function Results({
 
   useEffect(() => {
     if (results) {
-      const collectionIds = results?.map((result) => result.collection_id);
-      const searchedCollections: StacCollection[] = [];
-      collections.forEach((collection) => {
-        if (collectionIds.includes(collection.id)) {
-          dispatch({ type: "select", value: collection });
-          searchedCollections.push(collection);
-        } else {
-          dispatch({ type: "deselect", value: collection });
-        }
-      });
-      setSearchedCollections(searchedCollections);
-      if (searchedCollections.length == 1) {
-        dispatch({
-          type: "fit-bbox",
-          bbox: sanitizeBbox(searchedCollections[0].extent.spatial.bbox[0]),
-        });
-      }
+      results.forEach((result) =>
+        dispatch({ type: "select-collection", id: result.collection_id }),
+      );
+    } else {
+      dispatch({ type: "deselect-all-collections" });
     }
-  }, [results, collections, dispatch]);
+  }, [results, dispatch]);
 
   if (loading) {
     return (
@@ -139,32 +99,17 @@ function Results({
   } else if (results) {
     return (
       <Stack>
-        <Heading size={"md"}>Search results</Heading>
-        <Collapsible.Root>
-          <Collapsible.Trigger>
-            <HStack>
-              <Text fontSize={"sm"} fontWeight={"light"}>
-                {results.length} collection{results.length > 1 && "s"} found...
-              </Text>
-            </HStack>
-          </Collapsible.Trigger>
-          <Collapsible.Content>
-            <DataList.Root size={"sm"} mt={4}>
-              {results.map((result) => (
-                <DataList.Item key={result.collection_id}>
-                  <DataList.ItemLabel>
-                    {result.collection_id}
-                  </DataList.ItemLabel>
-                  <DataList.ItemValue>{result.explanation}</DataList.ItemValue>
-                </DataList.Item>
-              ))}
-            </DataList.Root>
-          </Collapsible.Content>
-        </Collapsible.Root>
-
-        {searchedCollections && (
-          <Collections collections={searchedCollections}></Collections>
-        )}
+        <Heading size={"md"}>
+          Found {results.length} result{results.length > 1 && "s"}
+        </Heading>
+        <DataList.Root size={"sm"}>
+          {results.map((result) => (
+            <DataList.Item key={result.collection_id}>
+              <DataList.ItemLabel>{result.collection_id}</DataList.ItemLabel>
+              <DataList.ItemValue>{result.explanation}</DataList.ItemValue>
+            </DataList.Item>
+          ))}
+        </DataList.Root>
       </Stack>
     );
   }

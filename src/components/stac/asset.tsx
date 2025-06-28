@@ -1,7 +1,6 @@
 import {
-  Box,
   Card,
-  Center,
+  EmptyState,
   HStack,
   IconButton,
   type IconButtonProps,
@@ -21,6 +20,9 @@ export function AssetCard({
   asset: StacAsset;
 }) {
   const [showImage, setShowImage] = useState(false);
+  const [description, setDescription] = useState(
+    "Asset is not JPEG or PNG media type",
+  );
 
   const iconButtonProps: IconButtonProps = {
     size: "2xs",
@@ -40,13 +42,23 @@ export function AssetCard({
       </Card.Header>
       <Card.Body>
         {(showImage && (
-          <Image src={asset.href} onError={() => setShowImage(false)}></Image>
+          <Image
+            src={asset.href}
+            onError={() => {
+              setDescription("Image failed to load");
+              setShowImage(false);
+            }}
+          ></Image>
         )) || (
-          <Center h={"100%"}>
-            <Box>
-              <LuImageMinus></LuImageMinus>
-            </Box>
-          </Center>
+          <EmptyState.Root>
+            <EmptyState.Content>
+              <EmptyState.Indicator>
+                <LuImageMinus></LuImageMinus>
+              </EmptyState.Indicator>
+              <EmptyState.Title>Cannot display</EmptyState.Title>
+              <EmptyState.Description>{description}</EmptyState.Description>
+            </EmptyState.Content>
+          </EmptyState.Root>
         )}
       </Card.Body>
       <Card.Footer>

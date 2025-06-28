@@ -1,32 +1,5 @@
-import type { AsyncDuckDB } from "duckdb-wasm-kit";
 import { LngLatBounds } from "maplibre-gl";
 import type { StacCollection } from "stac-ts";
-import { getBbox as getStacGeoparquetBbox } from "./stac-geoparquet";
-import type { StacValue } from "./types";
-
-export async function getBbox(
-  value: StacValue,
-  parquetPath: string | undefined,
-  db: AsyncDuckDB,
-) {
-  switch (value.type) {
-    case "Collection":
-      return sanitizeBbox(value.extent.spatial.bbox[0]);
-    case "Feature":
-      return (value.bbox && sanitizeBbox(value.bbox)) || null;
-    case "FeatureCollection":
-      if (parquetPath) {
-        return await getStacGeoparquetBbox(parquetPath, db);
-      } else if (value.features.length > 0) {
-        // TODO
-        return null;
-      } else {
-        return null;
-      }
-    default:
-      return null;
-  }
-}
 
 export function sanitizeBbox(bbox: number[]) {
   const newBbox = (bbox.length == 6 && [
@@ -35,23 +8,19 @@ export function sanitizeBbox(bbox: number[]) {
     bbox[3],
     bbox[4],
   ]) || [bbox[0], bbox[1], bbox[2], bbox[3]];
-  if (bbox[0] < -180) {
-    bbox[0] = -180;
+  if (newBbox[0] < -180) {
+    newBbox[0] = -180;
   }
-  if (bbox[1] < -90) {
-    bbox[1] = -90;
+  if (newBbox[1] < -90) {
+    newBbox[1] = -90;
   }
-  if (bbox[2] > 180) {
-    bbox[2] = 180;
+  if (newBbox[2] > 180) {
+    newBbox[2] = 180;
   }
-  if (bbox[3] > 90) {
-    bbox[3] = 90;
+  if (newBbox[3] > 90) {
+    newBbox[3] = 90;
   }
   return newBbox as [number, number, number, number];
-}
-
-export function valuesMatch(a: StacValue, b: StacValue) {
-  return a.type === b.type && a.id === b.id;
 }
 
 export function isCollectionWithinBounds(
@@ -76,4 +45,27 @@ export function isCollectionWithinBounds(
       collectionBounds[2] <= bounds.getEast() ||
       collectionBounds[3] <= bounds.getNorth())
   );
+}
+
+export function getCollectionsExtent(collections: StacCollection[]) {
+  if (collections.length == 0) {
+    return [-180, -90, 180, 90];
+  }
+  const bbox = [180, 90, -180, -90];
+  collections.forEach((collection) => {
+    const sanitizedBbox = sanitizeBbox(collection.extent.spatial.bbox[0]);
+    if (sanitizedBbox[0] < bbox[0]) {
+      bbox[0] = sanitizedBbox[0];
+    }
+    if (sanitizedBbox[1] < bbox[1]) {
+      bbox[1] = sanitizedBbox[1];
+    }
+    if (sanitizedBbox[2] > bbox[2]) {
+      bbox[2] = sanitizedBbox[2];
+    }
+    if (sanitizedBbox[3] > bbox[3]) {
+      bbox[3] = sanitizedBbox[3];
+    }
+  });
+  return bbox;
 }
