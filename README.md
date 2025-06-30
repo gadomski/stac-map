@@ -1,6 +1,7 @@
 # stac-map
 
-A map-first STAC visualizer, hosted at <http://developmentseed/stac-map>.
+A map-first STAC visualizer, hosted at https://developmentseed.org/stac-map/.
+
 Includes:
 
 - Natural language collection search
