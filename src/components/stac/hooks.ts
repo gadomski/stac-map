@@ -1,12 +1,7 @@
 import type { UseFileUploadReturn } from "@chakra-ui/react";
-import { Layer } from "@deck.gl/core";
-import { GeoArrowPolygonLayer } from "@geoarrow/deck.gl-layers";
 import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState } from "react";
-import type { StacCollection, StacLink } from "stac-ts";
-import { useAppStateDispatch } from "../hooks";
-import { getStacLayers } from "./layers";
-import { getGeometryTable } from "./stac-geoparquet";
+import type { StacCatalog, StacCollection, StacLink } from "stac-ts";
 import type {
   NaturalLanguageCollectionSearchResult,
   StacItemCollection,
@@ -95,7 +90,7 @@ export function useStacValue(href: string, fileUpload: UseFileUploadReturn) {
   return { value, parquetPath, loading, error };
 }
 
-export function useStacCollections(value: StacValue) {
+export function useStacCollections(catalog: StacCatalog) {
   const [loading, setLoading] = useState(true);
   const [collections, setCollections] = useState<
     StacCollection[] | undefined
@@ -105,9 +100,9 @@ export function useStacCollections(value: StacValue) {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      setCollections([]);
+      setCollections(undefined);
       setError(undefined);
-      const link = value.links?.find((link) => link.rel == "data");
+      const link = catalog.links?.find((link) => link.rel == "data");
       if (link) {
         try {
           let url = new URL(link.href);
@@ -135,7 +130,7 @@ export function useStacCollections(value: StacValue) {
       }
       setLoading(false);
     })();
-  }, [value, setCollections]);
+  }, [catalog, setCollections]);
 
   return { collections, loading, error };
 }
@@ -191,69 +186,4 @@ function getStacGeoparquetValue(href: string): StacItemCollection {
     title: href.split("/").pop(),
     description: "A stac-geoparquet file",
   };
-}
-
-export function useStacLayers(
-  value: StacValue,
-  collections: StacCollection[] | undefined,
-  parquetPath: string | undefined,
-) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | undefined>();
-  const [layers, setLayers] = useState<Layer[]>();
-  const { db } = useDuckDb();
-  const dispatch = useAppStateDispatch();
-
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      if (parquetPath) {
-        if (db) {
-          try {
-            const table = await getGeometryTable(parquetPath, db);
-            const layer = new GeoArrowPolygonLayer({
-              id: "geoarrow-polygons",
-              data: table,
-              stroked: true,
-              filled: true,
-              pickable: true,
-              onClick: (info) => {
-                const id = table.getChild("id")?.get(info.index);
-                if (typeof id === "string") {
-                  dispatch({ type: "pick-id", id });
-                }
-              },
-              getFillColor: [207, 63, 2, 25],
-              getLineColor: [207, 63, 2, 50],
-              lineWidthUnits: "pixels",
-              autoHighlight: true,
-            });
-            setLayers([layer]);
-            // eslint-disable-next-line
-          } catch (error: any) {
-            setError(error.toString());
-          }
-        } else {
-          setLayers([]);
-        }
-      } else {
-        setLayers(getStacLayers(value, collections, dispatch));
-      }
-      setLoading(false);
-    })();
-  }, [value, collections, parquetPath, db, dispatch]);
-
-  return { layers, loading, error };
-}
-
-export function useStacLayersMultiple(values: StacValue[]) {
-  const [layers, setLayers] = useState<Layer[]>([]);
-
-  useEffect(() => {
-    setLayers(
-      values.flatMap((value) => getStacLayers(value, undefined, undefined)),
-    );
-  }, [values]);
-
-  return { layers };
 }

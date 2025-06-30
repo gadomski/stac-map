@@ -1,16 +1,17 @@
 import { Box, Container, SimpleGrid, useFileUpload } from "@chakra-ui/react";
 import { Layer } from "@deck.gl/core";
 import { useEffect, useState } from "react";
-import { AppStateProvider } from "./components/provider";
+import { MapProvider } from "react-map-gl/maplibre";
 import { Toaster } from "./components/ui/toaster";
 import Upload from "./components/upload";
 import Header from "./header";
 import Map from "./map";
 import Panel from "./panel";
+import { LayersProvider, SelectedProvider } from "./providers";
 
 export default function App() {
-  const [href, setHref] = useState<string | undefined>(getInitialHref());
   const [layers, setLayers] = useState<Layer[]>([]);
+  const [href, setHref] = useState<string | undefined>(getInitialHref());
   const fileUpload = useFileUpload({ maxFiles: 1 });
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export default function App() {
   }, [setHref]);
 
   return (
-    <AppStateProvider>
+    <MapProvider>
       <Box zIndex={0} position={"absolute"} top={0} left={0}>
         <Map layers={layers}></Map>
       </Box>
@@ -48,22 +49,23 @@ export default function App() {
         <Box pointerEvents={"auto"}>
           <Header href={href} setHref={setHref}></Header>
         </Box>
-        <SimpleGrid columns={3} gap={4}>
+        <SimpleGrid columns={3}>
           <Box pointerEvents={"auto"}>
             {(href && (
-              <Panel
-                href={href}
-                setLayers={setLayers}
-                fileUpload={fileUpload}
-              ></Panel>
+              <LayersProvider setLayers={setLayers}>
+                <SelectedProvider>
+                  <Panel href={href} fileUpload={fileUpload}></Panel>
+                </SelectedProvider>
+              </LayersProvider>
             )) || <Upload fileUpload={fileUpload}></Upload>}
           </Box>
         </SimpleGrid>
       </Container>
       <Toaster></Toaster>
-    </AppStateProvider>
+    </MapProvider>
   );
 }
+
 function getInitialHref() {
   const href = new URLSearchParams(location.search).get("href") || "";
   try {
