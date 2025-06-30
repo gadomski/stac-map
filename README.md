@@ -1,6 +1,6 @@
 # stac-map
 
-A map-first STAC visualizer, hosted at https://developmentseed.org/stac-map/.
+A map-first STAC visualizer, hosted at <https://developmentseed.org/stac-map>.
 
 Includes:
 
