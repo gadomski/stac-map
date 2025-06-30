@@ -28,6 +28,10 @@ export function isCollectionWithinBounds(
   collection: StacCollection,
   bounds: LngLatBounds,
 ) {
+  if (!collection.extent?.spatial?.bbox?.[0]) {
+    return false;
+  }
+  
   const bbox = collection.extent.spatial.bbox[0];
   let collectionBounds;
   if (bbox.length == 4) {
@@ -49,11 +53,16 @@ export function isCollectionWithinBounds(
 }
 
 export function getCollectionsExtent(collections: StacCollection[]) {
-  if (collections.length == 0) {
+  const validCollections = collections.filter(
+    (collection) => collection.extent?.spatial?.bbox?.[0]
+  );
+  
+  if (validCollections.length == 0) {
     return [-180, -90, 180, 90];
   }
+  
   const bbox = [180, 90, -180, -90];
-  collections.forEach((collection) => {
+  validCollections.forEach((collection) => {
     const sanitizedBbox = sanitizeBbox(collection.extent.spatial.bbox[0]);
     if (sanitizedBbox[0] < bbox[0]) {
       bbox[0] = sanitizedBbox[0];
