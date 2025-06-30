@@ -25,8 +25,15 @@ export default function Panel({
     layersDispatch({ type: "set-value", layer: null });
     layersDispatch({ type: "set-selected", layer: null });
     selectedDispatch({ type: "deselect-all-collections" });
+    selectedDispatch({ type: "select-item", item: null });
     selectedDispatch({ type: "select-stac-geoparquet-id", id: null });
   }, [layersDispatch, selectedDispatch, href]);
+
+  useEffect(() => {
+    if (value) {
+      setTabValue("value");
+    }
+  }, [value, setTabValue]);
 
   useEffect(() => {
     if (error) {

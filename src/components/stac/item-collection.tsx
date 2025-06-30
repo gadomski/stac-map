@@ -10,16 +10,23 @@ import {
 } from "@chakra-ui/react";
 import { useEffect } from "react";
 import { LuEyeOff } from "react-icons/lu";
-import { useFitBbox, useLayersDispatch, useSelected } from "../../hooks";
+import {
+  useFitBbox,
+  useLayersDispatch,
+  useSelected,
+  useSelectedDispatch,
+} from "../../hooks";
 import { LayersProvider } from "../../providers";
 import Loading from "../loading";
 import { toaster } from "../ui/toaster";
+import { getItemCollectionLayer } from "./layers";
 import {
   useStacGeoparquet,
   useStacGeoparquetItem,
   type StacGeoparquetMetadata,
 } from "./stac-geoparquet";
 import type { StacItemCollection } from "./types";
+import { getItemCollectionExtent } from "./utils";
 import Value from "./value";
 
 export default function ItemCollection({
@@ -47,8 +54,39 @@ function JsonItemCollection({
 }: {
   itemCollection: StacItemCollection;
 }) {
-  // TODO render
-  return null;
+  const layersDispatch = useLayersDispatch();
+  const selectedDispatch = useSelectedDispatch();
+  const { item } = useSelected();
+  const fitBbox = useFitBbox();
+
+  useEffect(() => {
+    layersDispatch({
+      type: "set-value",
+      layer: getItemCollectionLayer(itemCollection, selectedDispatch),
+    });
+    layersDispatch({
+      type: "set-selected",
+      layer: null,
+    });
+  }, [layersDispatch, selectedDispatch, itemCollection]);
+
+  useEffect(() => {
+    const bbox = getItemCollectionExtent(itemCollection);
+    fitBbox(bbox);
+  }, [fitBbox, itemCollection]);
+
+  return (
+    item && (
+      <Card.Root>
+        <Card.Header>Selected item</Card.Header>
+        <Card.Body>
+          <LayersProvider setLayers={undefined}>
+            <Value value={item}></Value>
+          </LayersProvider>
+        </Card.Body>
+      </Card.Root>
+    )
+  );
 }
 
 function StacGeoparquetItemCollection({ path }: { path: string }) {

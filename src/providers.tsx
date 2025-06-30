@@ -17,6 +17,7 @@ import {
 export function SelectedProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(selectedReducer, {
     collectionIds: new Set<string>(),
+    item: null,
     stacGeoparquetId: null,
   });
 

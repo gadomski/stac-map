@@ -1,8 +1,10 @@
 import { Layer } from "@deck.gl/core";
 import { createContext, type Dispatch } from "react";
+import type { StacItem } from "stac-ts";
 
 interface SelectedState {
   collectionIds: Set<string>;
+  item: StacItem | null;
   stacGeoparquetId: string | null;
 }
 
@@ -13,7 +15,8 @@ export type SelectedAction =
     }
   | { type: "deselect-collection"; id: string }
   | { type: "deselect-all-collections" }
-  | { type: "select-stac-geoparquet-id"; id: string | null };
+  | { type: "select-stac-geoparquet-id"; id: string | null }
+  | { type: "select-item"; item: StacItem | null };
 
 export const SelectedContext = createContext<SelectedState | null>(null);
 
@@ -37,6 +40,8 @@ export function selectedReducer(state: SelectedState, action: SelectedAction) {
       return { ...state, collectionIds: new Set<string>() };
     case "select-stac-geoparquet-id":
       return { ...state, stacGeoparquetId: action.id };
+    case "select-item":
+      return { ...state, item: action.item };
   }
 }
 
