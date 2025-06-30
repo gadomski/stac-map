@@ -224,7 +224,11 @@ function CollectionCard({ collection }: { collection: StacCollection }) {
           <Heading fontSize={"sm"} lineHeight={1.5}>
             {collection.title ?? collection.id}
           </Heading>
-          <Text fontSize={"xs"} fontWeight={"lighter"} color={dateInterval ? "inherit" : "fg.muted"}>
+          <Text
+            fontSize={"xs"}
+            fontWeight={"lighter"}
+            color={dateInterval ? "inherit" : "fg.muted"}
+          >
             {dateInterval || "Invalid collection metadata"}
           </Text>
         </Stack>
@@ -339,7 +343,7 @@ function getCollectionDateInterval(collection: StacCollection): string | null {
   if (!collection.extent?.temporal?.interval?.[0]) {
     return null;
   }
-  
+
   const temporalExtents = collection.extent.temporal.interval[0];
   let start = "";
   let end = "";

@@ -31,7 +31,7 @@ export function isCollectionWithinBounds(
   if (!collection.extent?.spatial?.bbox?.[0]) {
     return false;
   }
-  
+
   const bbox = collection.extent.spatial.bbox[0];
   let collectionBounds;
   if (bbox.length == 4) {
@@ -54,13 +54,13 @@ export function isCollectionWithinBounds(
 
 export function getCollectionsExtent(collections: StacCollection[]) {
   const validCollections = collections.filter(
-    (collection) => collection.extent?.spatial?.bbox?.[0]
+    (collection) => collection.extent?.spatial?.bbox?.[0],
   );
-  
+
   if (validCollections.length == 0) {
     return [-180, -90, 180, 90];
   }
-  
+
   const bbox = [180, 90, -180, -90];
   validCollections.forEach((collection) => {
     const sanitizedBbox = sanitizeBbox(collection.extent.spatial.bbox[0]);
