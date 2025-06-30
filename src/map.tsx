@@ -1,5 +1,6 @@
 import { Layer, type DeckProps } from "@deck.gl/core";
 import { MapboxOverlay } from "@deck.gl/mapbox";
+import { LngLatBounds } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useRef } from "react";
 import {
@@ -7,8 +8,8 @@ import {
   useControl,
   type MapRef,
 } from "react-map-gl/maplibre";
-import { useMap, useMapDispatch } from "./map/context";
-import { useColorModeValue } from "./ui/color-mode";
+import { useAppState, useAppStateDispatch } from "./components/hooks";
+import { useColorModeValue } from "./components/ui/color-mode";
 
 function DeckGLOverlay(props: DeckProps) {
   const control = useControl<MapboxOverlay>(() => new MapboxOverlay({}));
@@ -16,18 +17,26 @@ function DeckGLOverlay(props: DeckProps) {
   return <></>;
 }
 
-export function Map({ layers }: { layers: Layer[] }) {
+export default function Map({ layers }: { layers: Layer[] }) {
   const mapRef = useRef<MapRef>(null);
   const mapStyle = useColorModeValue(
     "positron-gl-style",
     "dark-matter-gl-style",
   );
-  const { fitBounds } = useMap();
-  const dispatch = useMapDispatch();
+  const { fitBounds } = useAppState();
+  const dispatch = useAppStateDispatch();
 
   useEffect(() => {
     if (fitBounds && mapRef.current) {
-      mapRef.current.fitBounds(fitBounds, { padding: 200 });
+      // TODO make this work for smaller screens, this is hard-coded to the large display
+      const delta = (fitBounds.getEast() - fitBounds.getWest()) / 3;
+      const expandedBounds = new LngLatBounds([
+        fitBounds.getWest() - delta,
+        fitBounds.getSouth(),
+        fitBounds.getEast(),
+        fitBounds.getNorth(),
+      ]);
+      mapRef.current.fitBounds(expandedBounds, { padding: 200 });
     }
   }, [fitBounds]);
 
@@ -45,8 +54,7 @@ export function Map({ layers }: { layers: Layer[] }) {
       }}
       mapStyle={`https://basemaps.cartocdn.com/gl/${mapStyle}/style.json`}
       onMoveEnd={() =>
-        mapRef.current &&
-        dispatch({ type: "set-bounds", bounds: mapRef.current?.getBounds() })
+        dispatch({ type: "move-end", bounds: mapRef.current?.getBounds() })
       }
     >
       <DeckGLOverlay layers={layers}></DeckGLOverlay>

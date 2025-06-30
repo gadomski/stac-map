@@ -1,9 +1,9 @@
 # stac-map
 
 A map-first STAC visualizer, hosted at <https://developmentseed.org/stac-map>.
+
 Includes:
 
-- Item search
 - Natural language collection search
 - **stac-geoparquet** visualization
 - Upload and view a file from your local filesystem

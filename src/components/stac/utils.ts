@@ -1,60 +1,60 @@
-import { GeoJsonLayer } from "@deck.gl/layers";
-import { bboxPolygon } from "@turf/bbox-polygon";
-import type { BBox } from "geojson";
-import type { LngLatBounds } from "maplibre-gl";
+import type { AsyncDuckDB } from "duckdb-wasm-kit";
+import { LngLatBounds } from "maplibre-gl";
 import type { StacCollection } from "stac-ts";
+import { getBbox as getStacGeoparquetBbox } from "./stac-geoparquet";
 import type { StacValue } from "./types";
 
-export function getSelfHref(value: StacValue) {
-  return value.links?.find((link) => link.rel == "self")?.href;
+export async function getBbox(
+  value: StacValue,
+  parquetPath: string | undefined,
+  db: AsyncDuckDB,
+) {
+  switch (value.type) {
+    case "Collection":
+      return sanitizeBbox(value.extent.spatial.bbox[0]);
+    case "Feature":
+      return (value.bbox && sanitizeBbox(value.bbox)) || null;
+    case "FeatureCollection":
+      if (parquetPath) {
+        return await getStacGeoparquetBbox(parquetPath, db);
+      } else if (value.features.length > 0) {
+        // TODO
+        return null;
+      } else {
+        return null;
+      }
+    default:
+      return null;
+  }
 }
 
 export function sanitizeBbox(bbox: number[]) {
+  const newBbox = (bbox.length == 6 && [
+    bbox[0],
+    bbox[1],
+    bbox[3],
+    bbox[4],
+  ]) || [bbox[0], bbox[1], bbox[2], bbox[3]];
   if (bbox[0] < -180) {
     bbox[0] = -180;
   }
   if (bbox[1] < -90) {
     bbox[1] = -90;
   }
-  const [i0, i1] = bbox.length == 6 ? [3, 4] : [2, 3];
-  if (bbox[i0] > 180) {
-    bbox[i0] = 180;
+  if (bbox[2] > 180) {
+    bbox[2] = 180;
   }
-  if (bbox[i1] > 90) {
-    bbox[i1] = 90;
+  if (bbox[3] > 90) {
+    bbox[3] = 90;
   }
-  return bbox;
+  return newBbox as [number, number, number, number];
 }
 
-export function isUrl(href: string) {
-  try {
-    new URL(href);
-  } catch {
-    return false;
-  }
-  return true;
+export function valuesMatch(a: StacValue, b: StacValue) {
+  return a.type === b.type && a.id === b.id;
 }
 
-export function filterCollections(
-  collections: StacCollection[],
-  bounds: LngLatBounds | undefined,
-  includeGlobalCollections: boolean,
-) {
-  if (bounds) {
-    return collections.filter(
-      (collection) =>
-        isCollectionWithinBounds(collection, bounds) &&
-        (includeGlobalCollections || !isGlobalCollection(collection)),
-    );
-  } else {
-    return collections.filter(
-      (collection) =>
-        includeGlobalCollections || !isGlobalCollection(collection),
-    );
-  }
-}
-
-function isCollectionWithinBounds(
+export function isCollectionWithinBounds(
   collection: StacCollection,
   bounds: LngLatBounds,
 ) {
@@ -70,45 +70,10 @@ function isCollectionWithinBounds(
     collectionBounds[0] <= bounds.getEast() &&
     collectionBounds[2] >= bounds.getWest() &&
     collectionBounds[1] <= bounds.getNorth() &&
-    collectionBounds[3] >= bounds.getSouth()
+    collectionBounds[3] >= bounds.getSouth() &&
+    (collectionBounds[0] >= bounds.getWest() ||
+      collectionBounds[1] >= bounds.getSouth() ||
+      collectionBounds[2] <= bounds.getEast() ||
+      collectionBounds[3] <= bounds.getNorth())
   );
-}
-
-function isGlobalCollection(collection: StacCollection) {
-  // We don't check the poles because a lot of "global" products don't go all the way up/down there
-  // TODO do we want to check w/i some tolerances?
-  const bbox = collection.extent.spatial.bbox[0];
-  if (bbox.length == 4) {
-    return bbox[0] == -180 && bbox[2] == 180;
-  } else {
-    // Assume length 6
-    return bbox[0] == -180 && bbox[3] == 180;
-  }
-}
-
-export function getCollectionExtents(
-  collections: StacCollection[],
-  id?: string,
-) {
-  const combinedBbox = [180, 90, -180, -90];
-  const polygons = collections.map((collection) => {
-    const bbox = sanitizeBbox(collection.extent.spatial.bbox[0]);
-    combinedBbox[0] = Math.min(combinedBbox[0], bbox[0]);
-    combinedBbox[1] = Math.min(combinedBbox[1], bbox[1]);
-    combinedBbox[2] = Math.max(combinedBbox[2], bbox[2]);
-    combinedBbox[3] = Math.max(combinedBbox[3], bbox[3]);
-    return bboxPolygon(bbox as BBox);
-  });
-  let layer;
-  if (id) {
-    layer = new GeoJsonLayer({
-      id,
-      data: polygons,
-      stroked: true,
-      filled: false,
-      getLineColor: [207, 63, 2],
-      lineWidthUnits: "pixels",
-    });
-  }
-  return { layer, bbox: combinedBbox };
 }
