@@ -94,6 +94,16 @@ function ValueHeader({ value }: { value: StacValue }) {
               STAC Browser <LuExternalLink></LuExternalLink>
             </a>
           </Button>
+          {value.type == "Feature" && (
+            <Button asChild variant={"surface"} size={"xs"}>
+              <a
+                href={"https://titiler.xyz/stac/viewer?url=" + selfLink.href}
+                target="_blank"
+              >
+                TiTiler <LuExternalLink></LuExternalLink>
+              </a>
+            </Button>
+          )}
         </HStack>
       )}
     </Stack>
