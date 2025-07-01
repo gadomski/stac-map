@@ -163,23 +163,26 @@ function CollectionList({ collections }: CollectionsProps) {
   return (
     <List.Root variant={"plain"} gap={2}>
       <For each={collections}>
-        {(collection) => (
-          <List.Item key={collection.id}>
-            <Stack gap={0}>
-              <Text>{collection.title || collection.id}</Text>
-              <Text ml={4} fontSize={"xs"} fontWeight={"lighter"}>
-                {getCollectionDateInterval(collection)}
-              </Text>
-            </Stack>
-            <HStack gap={0} marginLeft={"auto"}>
-              <CollectionButtons
-                collection={collection}
-                size={"2xs"}
-                variant={"plain"}
-              ></CollectionButtons>
-            </HStack>
-          </List.Item>
-        )}
+        {(collection) => {
+          const dateInterval = getCollectionDateInterval(collection);
+          return (
+            <List.Item key={collection.id}>
+              <Stack gap={0}>
+                <Text>{collection.title || collection.id}</Text>
+                <Text ml={4} fontSize={"xs"} fontWeight={"lighter"}>
+                  {dateInterval || "Invalid temporal extent"}
+                </Text>
+              </Stack>
+              <HStack gap={0} marginLeft={"auto"}>
+                <CollectionButtons
+                  collection={collection}
+                  size={"2xs"}
+                  variant={"plain"}
+                ></CollectionButtons>
+              </HStack>
+            </List.Item>
+          );
+        }}
       </For>
     </List.Root>
   );
@@ -201,6 +204,7 @@ function CollectionCards({ collections }: CollectionsProps) {
 function CollectionCard({ collection }: { collection: StacCollection }) {
   const thumbnailLink = collection.assets?.thumbnail;
   const isCollectionSelected = useIsCollectionSelected(collection);
+  const dateInterval = getCollectionDateInterval(collection);
 
   return (
     <Card.Root
@@ -220,8 +224,12 @@ function CollectionCard({ collection }: { collection: StacCollection }) {
           <Heading fontSize={"sm"} lineHeight={1.5}>
             {collection.title ?? collection.id}
           </Heading>
-          <Text fontSize={"xs"} fontWeight={"lighter"}>
-            {getCollectionDateInterval(collection)}
+          <Text
+            fontSize={"xs"}
+            fontWeight={"lighter"}
+            color={dateInterval ? "inherit" : "fg.muted"}
+          >
+            {dateInterval || "Invalid collection metadata"}
           </Text>
         </Stack>
         {collection.description && (
@@ -273,7 +281,12 @@ function CollectionButtons({ collection, ...rest }: CollectionButtonProps) {
       </IconButton>
       <IconButton
         {...rest}
-        onClick={() => setFitBbox(collection.extent.spatial.bbox[0])}
+        onClick={() => {
+          if (collection.extent?.spatial?.bbox?.[0]) {
+            setFitBbox(collection.extent.spatial.bbox[0]);
+          }
+        }}
+        disabled={!collection.extent?.spatial?.bbox?.[0]}
       >
         <LuFocus></LuFocus>
       </IconButton>
@@ -326,7 +339,11 @@ function CollectionButtons({ collection, ...rest }: CollectionButtonProps) {
   );
 }
 
-function getCollectionDateInterval(collection: StacCollection) {
+function getCollectionDateInterval(collection: StacCollection): string | null {
+  if (!collection.extent?.temporal?.interval?.[0]) {
+    return null;
+  }
+
   const temporalExtents = collection.extent.temporal.interval[0];
   let start = "";
   let end = "";
@@ -434,7 +451,9 @@ export default function Collection({
   }, [collection, dispatch]);
 
   useEffect(() => {
-    fitBbox(sanitizeBbox(collection.extent.spatial.bbox[0]));
+    if (collection.extent?.spatial?.bbox?.[0]) {
+      fitBbox(sanitizeBbox(collection.extent.spatial.bbox[0]));
+    }
   }, [collection, fitBbox]);
 
   return null;

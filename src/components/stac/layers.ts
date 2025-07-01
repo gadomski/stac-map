@@ -14,8 +14,12 @@ export function getCollectionsLayer(
   collections: StacCollection[],
   filled: boolean,
 ) {
+  const validCollections = collections.filter(
+    (collection) => collection.extent?.spatial?.bbox?.[0],
+  );
+
   return new GeoJsonLayer({
-    data: collections.map((collection) =>
+    data: validCollections.map((collection) =>
       bboxPolygon(sanitizeBbox(collection.extent.spatial.bbox[0]) as BBox),
     ),
     stroked: true,
@@ -28,6 +32,10 @@ export function getCollectionsLayer(
 }
 
 export function getCollectionLayer(collection: StacCollection) {
+  if (!collection.extent?.spatial?.bbox?.[0]) {
+    return null;
+  }
+
   return new GeoJsonLayer({
     data: bboxPolygon(sanitizeBbox(collection.extent.spatial.bbox[0]) as BBox),
     stroked: true,
