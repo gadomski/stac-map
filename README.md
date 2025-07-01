@@ -5,6 +5,8 @@
 
 The map-first STAC visualizer at <https://developmentseed.org/stac-map>.
 
+![stac-map](./img/stac-map.png)
+
 Includes:
 
 - Natural language collection search
