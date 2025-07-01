@@ -26,7 +26,8 @@ yarn install
 yarn dev
 ```
 
-This will open a development server at <http://localhost:5173/stac-map/>
+This will open a development server at <http://localhost:5173/stac-map/>.
+
 We have some code quality checks/tools:
 
 ```shell
