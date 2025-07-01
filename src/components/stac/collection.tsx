@@ -170,7 +170,7 @@ function CollectionList({ collections }: CollectionsProps) {
               <Stack gap={0}>
                 <Text>{collection.title || collection.id}</Text>
                 <Text ml={4} fontSize={"xs"} fontWeight={"lighter"}>
-                  {dateInterval || "Invalid collection metadata"}
+                  {dateInterval || "Invalid temporal extent"}
                 </Text>
               </Stack>
               <HStack gap={0} marginLeft={"auto"}>
