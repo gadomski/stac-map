@@ -60,7 +60,7 @@ export function Collections({
     return collections.filter((collection) => collectionIds.has(collection.id));
   }, [collectionIds, collections]);
   const [filteredCollections, setFilteredCollections] = useState(collections);
-  const [filterToMapBounds, setFilterToMapBounds] = useState(true);
+  const [filterToMapBounds, setFilterToMapBounds] = useState(false);
   const [bounds, setBounds] = useState<LngLatBounds>();
   const { map } = useMap();
 
@@ -456,5 +456,5 @@ export default function Collection({
     }
   }, [collection, fitBbox]);
 
-  return null;
+  return <Value value={collection}></Value>;
 }
