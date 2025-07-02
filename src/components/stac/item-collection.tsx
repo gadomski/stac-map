@@ -19,6 +19,7 @@ import {
 import { LayersProvider } from "../../providers";
 import Loading from "../loading";
 import { toaster } from "../ui/toaster";
+import Item from "./item";
 import { getItemCollectionLayer } from "./layers";
 import {
   useStacGeoparquet,
@@ -36,17 +37,20 @@ export default function ItemCollection({
   itemCollection: StacItemCollection;
   parquetPath: string | undefined;
 }) {
-  if (parquetPath) {
-    return (
-      <StacGeoparquetItemCollection
-        path={parquetPath}
-      ></StacGeoparquetItemCollection>
-    );
-  } else {
-    return (
-      <JsonItemCollection itemCollection={itemCollection}></JsonItemCollection>
-    );
-  }
+  return (
+    <Stack gap={8}>
+      <Value value={itemCollection}></Value>
+      {(parquetPath && (
+        <StacGeoparquetItemCollection
+          path={parquetPath}
+        ></StacGeoparquetItemCollection>
+      )) || (
+        <JsonItemCollection
+          itemCollection={itemCollection}
+        ></JsonItemCollection>
+      )}
+    </Stack>
+  );
 }
 
 function JsonItemCollection({
@@ -81,7 +85,7 @@ function JsonItemCollection({
         <Card.Header>Selected item</Card.Header>
         <Card.Body>
           <LayersProvider setLayers={undefined}>
-            <Value value={item}></Value>
+            <Item item={item}></Item>
           </LayersProvider>
         </Card.Body>
       </Card.Root>
@@ -250,7 +254,7 @@ function StacGeoparquetItem({ path, id }: { path: string; id: string }) {
         <Card.Root>
           <Card.Header>Selected item</Card.Header>
           <Card.Body>
-            <Value value={item}></Value>
+            <Item item={item}></Item>
           </Card.Body>
         </Card.Root>
       </LayersProvider>

@@ -1,10 +1,11 @@
-import { Tabs, type UseFileUploadReturn } from "@chakra-ui/react";
+import { Alert, Tabs, type UseFileUploadReturn } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { LuInfo, LuSearch, LuUpload } from "react-icons/lu";
 import Loading from "./components/loading";
 import { useStacValue } from "./components/stac/hooks";
 import Search from "./components/stac/search";
-import Value from "./components/stac/value";
+import type { StacValue } from "./components/stac/types";
+import { getValue } from "./components/stac/utils";
 import { toaster } from "./components/ui/toaster";
 import Upload from "./components/upload";
 import { useLayersDispatch, useSelectedDispatch } from "./hooks";
@@ -66,7 +67,10 @@ export default function Panel({
       <Tabs.ContentGroup overflow={"scroll"} maxH={"80dvh"} px={4} pb={4}>
         <Tabs.Content value="value">
           {(loading && <Loading></Loading>) ||
-            (value && <Value value={value} parquetPath={parquetPath}></Value>)}
+            (value &&
+              (getValue(value, parquetPath) || (
+                <InvalidStacValue href={href} value={value}></InvalidStacValue>
+              )))}
         </Tabs.Content>
         <Tabs.Content value="search">
           {value && <Search href={href} value={value}></Search>}
@@ -76,5 +80,19 @@ export default function Panel({
         </Tabs.Content>
       </Tabs.ContentGroup>
     </Tabs.Root>
+  );
+}
+
+function InvalidStacValue({ href, value }: { href: string; value: StacValue }) {
+  return (
+    <Alert.Root status={"error"}>
+      <Alert.Indicator></Alert.Indicator>
+      <Alert.Content>
+        <Alert.Title>Invalid STAC value</Alert.Title>
+        <Alert.Description>
+          STAC value at {href} has an invalid type field: {value.type}
+        </Alert.Description>
+      </Alert.Content>
+    </Alert.Root>
   );
 }
