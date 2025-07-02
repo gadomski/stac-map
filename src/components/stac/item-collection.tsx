@@ -1,6 +1,5 @@
 import {
   Button,
-  Card,
   CloseButton,
   DataList,
   Drawer,
@@ -10,20 +9,12 @@ import {
 } from "@chakra-ui/react";
 import { useEffect } from "react";
 import { LuEyeOff } from "react-icons/lu";
-import {
-  useFitBbox,
-  useLayersDispatch,
-  useSelected,
-  useSelectedDispatch,
-} from "../../hooks";
-import { LayersProvider } from "../../providers";
+import { useAppDispatch, useFitBbox } from "../../hooks";
 import Loading from "../loading";
 import { toaster } from "../ui/toaster";
-import Item from "./item";
 import { getItemCollectionLayer } from "./layers";
 import {
   useStacGeoparquet,
-  useStacGeoparquetItem,
   type StacGeoparquetMetadata,
 } from "./stac-geoparquet";
 import type { StacItemCollection } from "./types";
@@ -58,45 +49,33 @@ function JsonItemCollection({
 }: {
   itemCollection: StacItemCollection;
 }) {
-  const layersDispatch = useLayersDispatch();
-  const selectedDispatch = useSelectedDispatch();
-  const { item } = useSelected();
   const fitBbox = useFitBbox();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
-    layersDispatch({
-      type: "set-value",
-      layer: getItemCollectionLayer(itemCollection, selectedDispatch),
+    dispatch({
+      type: "set-layer",
+      layer: getItemCollectionLayer(itemCollection),
     });
-    layersDispatch({
-      type: "set-selected",
-      layer: null,
-    });
-  }, [layersDispatch, selectedDispatch, itemCollection]);
+  }, [itemCollection, dispatch]);
 
   useEffect(() => {
     const bbox = getItemCollectionExtent(itemCollection);
     fitBbox(bbox);
   }, [fitBbox, itemCollection]);
 
-  return (
-    item && (
-      <Card.Root>
-        <Card.Header>Selected item</Card.Header>
-        <Card.Body>
-          <LayersProvider setLayers={undefined}>
-            <Item item={item}></Item>
-          </LayersProvider>
-        </Card.Body>
-      </Card.Root>
-    )
-  );
+  return null;
 }
 
 function StacGeoparquetItemCollection({ path }: { path: string }) {
   const { layer, metadata, loading, error } = useStacGeoparquet(path);
-  const dispatch = useLayersDispatch();
-  const { stacGeoparquetId } = useSelected();
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (layer) {
+      dispatch({ type: "set-layer", layer });
+    }
+  }, [dispatch, layer]);
 
   useEffect(() => {
     if (error) {
@@ -108,27 +87,12 @@ function StacGeoparquetItemCollection({ path }: { path: string }) {
     }
   }, [error]);
 
-  useEffect(() => {
-    if (layer) {
-      dispatch({ type: "set-value", layer });
-    } else {
-      dispatch({ type: "set-value", layer: null });
-    }
-    dispatch({ type: "set-selected", layer: null });
-  }, [layer, dispatch]);
-
   if (loading) {
     return <Loading></Loading>;
   } else {
     return (
       <Stack gap={8}>
         {metadata && <Metadata metadata={metadata}></Metadata>}
-        {stacGeoparquetId && (
-          <StacGeoparquetItem
-            path={path}
-            id={stacGeoparquetId}
-          ></StacGeoparquetItem>
-        )}
       </Stack>
     );
   }
@@ -230,34 +194,5 @@ function MetadataValue({
           </EmptyState.Indicator>
         </EmptyState.Root>
       );
-  }
-}
-
-function StacGeoparquetItem({ path, id }: { path: string; id: string }) {
-  const { item, loading, error } = useStacGeoparquetItem(id, path);
-
-  useEffect(() => {
-    if (error) {
-      toaster.create({
-        type: "error",
-        title: "Error reading item from stac-geoparquet",
-        description: error,
-      });
-    }
-  }, [error]);
-
-  if (loading) {
-    return <Loading></Loading>;
-  } else if (item) {
-    return (
-      <LayersProvider setLayers={undefined}>
-        <Card.Root>
-          <Card.Header>Selected item</Card.Header>
-          <Card.Body>
-            <Item item={item}></Item>
-          </Card.Body>
-        </Card.Root>
-      </LayersProvider>
-    );
   }
 }

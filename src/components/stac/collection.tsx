@@ -1,12 +1,9 @@
 import {
-  ActionBar,
   Badge,
-  Button,
   Card,
   Checkbox,
   CloseButton,
   Dialog,
-  Drawer,
   For,
   Heading,
   HStack,
@@ -22,19 +19,12 @@ import {
   type IconButtonProps,
 } from "@chakra-ui/react";
 import { LngLatBounds } from "maplibre-gl";
-import { useEffect, useMemo, useState } from "react";
-import { LuFocus, LuInfo, LuList, LuTable, LuX } from "react-icons/lu";
+import { useEffect, useState } from "react";
+import { LuFocus, LuInfo, LuList, LuTable } from "react-icons/lu";
 import { useMap } from "react-map-gl/maplibre";
 import { MarkdownHooks } from "react-markdown";
 import type { StacCollection } from "stac-ts";
-import {
-  useFitBbox,
-  useIsCollectionSelected,
-  useLayersDispatch,
-  useSelected,
-  useSelectedDispatch,
-} from "../../hooks";
-import { LayersProvider } from "../../providers";
+import { useAppDispatch, useCollectionSelected, useFitBbox } from "../../hooks";
 import { Prose } from "../ui/prose";
 import { getCollectionLayer, getCollectionsLayer } from "./layers";
 import {
@@ -54,29 +44,27 @@ export function Collections({
     { value: "list", label: <LuList></LuList> },
     { value: "cards", label: <LuTable></LuTable> },
   ];
-  const dispatch = useLayersDispatch();
-  const { collectionIds } = useSelected();
-  const selectedCollections = useMemo(() => {
-    return collections.filter((collection) => collectionIds.has(collection.id));
-  }, [collectionIds, collections]);
   const [filteredCollections, setFilteredCollections] = useState(collections);
   const [filterToMapBounds, setFilterToMapBounds] = useState(false);
   const [bounds, setBounds] = useState<LngLatBounds>();
   const { map } = useMap();
+  const dispatch = useAppDispatch();
+  const fitBbox = useFitBbox();
 
   useEffect(() => {
     dispatch({
-      type: "set-value",
+      type: "set-layer",
       layer: getCollectionsLayer(collections, false),
     });
-  }, [collections, dispatch]);
+    dispatch({
+      type: "set-collections",
+      collections,
+    });
+  }, [dispatch, collections]);
 
   useEffect(() => {
-    dispatch({
-      type: "set-selected",
-      layer: getCollectionsLayer(selectedCollections, true),
-    });
-  }, [selectedCollections, dispatch]);
+    fitBbox(getCollectionsExtent(collections));
+  }, [collections, fitBbox]);
 
   useEffect(() => {
     if (filterToMapBounds && bounds) {
@@ -148,9 +136,6 @@ export function Collections({
           <CollectionCards collections={filteredCollections}></CollectionCards>
         )}
       </Stack>
-      <SelectedCollectionsActionBar
-        collections={selectedCollections}
-      ></SelectedCollectionsActionBar>
     </>
   );
 }
@@ -203,15 +188,10 @@ function CollectionCards({ collections }: CollectionsProps) {
 
 function CollectionCard({ collection }: { collection: StacCollection }) {
   const thumbnailLink = collection.assets?.thumbnail;
-  const isCollectionSelected = useIsCollectionSelected(collection);
   const dateInterval = getCollectionDateInterval(collection);
 
   return (
-    <Card.Root
-      size={"sm"}
-      variant={"elevated"}
-      borderColor={(isCollectionSelected && "fg.muted") || "fg.subtle"}
-    >
+    <Card.Root size={"sm"} variant={"elevated"}>
       <Card.Header>
         {collection.title && (
           <Text fontWeight={"lighter"} fontSize={"2xs"}>
@@ -261,18 +241,25 @@ interface CollectionButtonProps extends IconButtonProps {
 function CollectionButtons({ collection, ...rest }: CollectionButtonProps) {
   const [open, setOpen] = useState(false);
   const setFitBbox = useFitBbox();
-  const isCollectionSelected = useIsCollectionSelected(collection);
-  const [checked, setChecked] = useState(isCollectionSelected);
+  const [checked, setChecked] = useState(false);
   const [disabled, setDisabled] = useState(false);
-  const dispatch = useSelectedDispatch();
+  const dispatch = useAppDispatch();
+  const selected = useCollectionSelected(collection.id);
 
   useEffect(() => {
-    if (disabled && isCollectionSelected === checked) {
-      setDisabled(false);
+    setChecked(selected);
+  }, [selected]);
+
+  useEffect(() => {
+    if (disabled) {
+      if (selected == checked) {
+        setChecked(selected);
+        setDisabled(false);
+      }
     } else {
-      setChecked(isCollectionSelected);
+      setChecked(selected);
     }
-  }, [isCollectionSelected, checked, setChecked, setDisabled, disabled]);
+  }, [collection, selected, disabled, checked]);
 
   return (
     <>
@@ -293,9 +280,6 @@ function CollectionButtons({ collection, ...rest }: CollectionButtonProps) {
       <Span flex={"1"}></Span>
 
       <Checkbox.Root
-        ml={1}
-        variant={"subtle"}
-        size={"md"}
         checked={checked}
         disabled={disabled}
         onCheckedChange={(e) => {
@@ -323,9 +307,10 @@ function CollectionButtons({ collection, ...rest }: CollectionButtonProps) {
             <Dialog.Content>
               <Dialog.Header></Dialog.Header>
               <Dialog.Body>
-                <LayersProvider setLayers={undefined}>
-                  <Value value={collection}></Value>
-                </LayersProvider>
+                <Collection
+                  collection={collection}
+                  display={false}
+                ></Collection>
               </Dialog.Body>
               <Dialog.Footer></Dialog.Footer>
               <Dialog.CloseTrigger asChild>
@@ -356,105 +341,28 @@ function getCollectionDateInterval(collection: StacCollection): string | null {
   return `${start} - ${end}`;
 }
 
-function SelectedCollectionsActionBar({
-  collections,
-}: {
-  collections: StacCollection[];
-}) {
-  const [open, setOpen] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const dispatch = useSelectedDispatch();
-  const setFitBbox = useFitBbox();
-
-  useEffect(() => {
-    if (collections.length > 0) {
-      setOpen(true);
-    } else {
-      setOpen(false);
-    }
-  }, [collections]);
-
-  return (
-    <>
-      <ActionBar.Root open={open}>
-        <Portal>
-          <ActionBar.Positioner>
-            <ActionBar.Content>
-              <ActionBar.SelectionTrigger>
-                {collections.length} collection
-                {collections.length > 1 && "s"} selected
-              </ActionBar.SelectionTrigger>
-              <ActionBar.Separator></ActionBar.Separator>
-              <Button
-                variant={"outline"}
-                size={"sm"}
-                onClick={() => dispatch({ type: "deselect-all-collections" })}
-              >
-                <LuX></LuX>
-                Deselect all
-              </Button>
-              <IconButton
-                variant={"outline"}
-                size={"sm"}
-                onClick={() => setFitBbox(getCollectionsExtent(collections))}
-              >
-                <LuFocus></LuFocus>
-              </IconButton>
-              <IconButton
-                variant={"outline"}
-                size={"sm"}
-                onClick={() => setDrawerOpen(true)}
-              >
-                <LuInfo></LuInfo>
-              </IconButton>
-            </ActionBar.Content>
-          </ActionBar.Positioner>
-        </Portal>
-      </ActionBar.Root>
-      <Drawer.Root
-        open={drawerOpen}
-        onOpenChange={(e) => setDrawerOpen(e.open)}
-        size={"lg"}
-      >
-        <Portal>
-          <Drawer.Backdrop></Drawer.Backdrop>
-          <Drawer.Positioner>
-            <Drawer.Content>
-              <Drawer.Header>
-                <Drawer.Title>Selected collections</Drawer.Title>
-              </Drawer.Header>
-              <Drawer.Content h={"full"} p={4}>
-                <CollectionList collections={collections}></CollectionList>
-              </Drawer.Content>
-              <Drawer.CloseTrigger asChild>
-                <CloseButton size="sm" />
-              </Drawer.CloseTrigger>
-            </Drawer.Content>
-          </Drawer.Positioner>
-        </Portal>
-      </Drawer.Root>
-    </>
-  );
-}
-
 export default function Collection({
   collection,
+  display,
 }: {
   collection: StacCollection;
+  display?: boolean;
 }) {
-  const dispatch = useLayersDispatch();
   const fitBbox = useFitBbox();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
-    dispatch({ type: "set-value", layer: getCollectionLayer(collection) });
-    dispatch({ type: "set-selected", layer: null });
-  }, [collection, dispatch]);
+    const layer = getCollectionLayer(collection);
+    if (display && layer) {
+      dispatch({ type: "set-layer", layer });
+    }
+  }, [dispatch, collection, display]);
 
   useEffect(() => {
-    if (collection.extent?.spatial?.bbox?.[0]) {
+    if (display && collection.extent?.spatial?.bbox?.[0]) {
       fitBbox(sanitizeBbox(collection.extent.spatial.bbox[0]));
     }
-  }, [collection, fitBbox]);
+  }, [collection, fitBbox, display]);
 
   return <Value value={collection}></Value>;
 }

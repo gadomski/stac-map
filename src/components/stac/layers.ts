@@ -4,9 +4,7 @@ import { GeoArrowPolygonLayer } from "@geoarrow/deck.gl-layers";
 import { bboxPolygon } from "@turf/bbox-polygon";
 import type { Table } from "apache-arrow";
 import type { BBox } from "geojson";
-import type { Dispatch } from "react";
 import type { StacCollection, StacItem } from "stac-ts";
-import type { SelectedAction } from "../../context";
 import type { StacItemCollection } from "./types";
 import { sanitizeBbox } from "./utils";
 
@@ -60,21 +58,13 @@ export function getItemLayer(item: StacItem) {
   });
 }
 
-export function getItemCollectionLayer(
-  itemCollection: StacItemCollection,
-  dispatch?: Dispatch<SelectedAction>,
-) {
+export function getItemCollectionLayer(itemCollection: StacItemCollection) {
   return new GeoJsonLayer({
     // @ts-expect-error Don't want to bother typing correctly
     data: itemCollection,
     stroked: true,
     filled: true,
     pickable: true,
-    onClick: (info) => {
-      if (dispatch) {
-        dispatch({ type: "select-item", item: info.object });
-      }
-    },
     getLineColor: [207, 63, 2, 100],
     getFillColor: [207, 63, 2, 50],
     lineWidthUnits: "pixels",
@@ -82,10 +72,7 @@ export function getItemCollectionLayer(
   });
 }
 
-export function getStacGeoparquetLayer(
-  table: Table,
-  dispatch?: Dispatch<SelectedAction>,
-) {
+export function getStacGeoparquetLayer(table: Table) {
   const props: Omit<GeoArrowPolygonLayerProps, "id"> = {
     data: table,
     stroked: true,
@@ -95,12 +82,5 @@ export function getStacGeoparquetLayer(
     lineWidthUnits: "pixels",
     autoHighlight: true,
   };
-  if (dispatch) {
-    props.pickable = true;
-    props.onClick = (info) => {
-      const id = table.getChild("id")?.get(info.index);
-      dispatch({ type: "select-stac-geoparquet-id", id });
-    };
-  }
   return new GeoArrowPolygonLayer(props);
 }

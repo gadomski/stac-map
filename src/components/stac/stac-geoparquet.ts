@@ -12,7 +12,6 @@ import {
 import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState } from "react";
 import type { StacItem } from "stac-ts";
-import { useSelectedDispatch } from "../../hooks";
 import * as stacWasm from "../../stac-wasm";
 import { getStacGeoparquetLayer } from "./layers";
 
@@ -57,7 +56,6 @@ export function useStacGeoparquet(path: string) {
   const [metadata, setMetadata] = useState<
     StacGeoparquetMetadata | undefined
   >();
-  const dispatch = useSelectedDispatch();
 
   useEffect(() => {
     if (duckDbError) {
@@ -72,14 +70,14 @@ export function useStacGeoparquet(path: string) {
         setLayer(undefined);
         try {
           const table = await getGeometryTable(path, connection);
-          setLayer(getStacGeoparquetLayer(table, dispatch));
+          setLayer(getStacGeoparquetLayer(table));
           // eslint-disable-next-line
         } catch (error: any) {
           setError(error.toString());
         }
       }
     })();
-  }, [connection, path, dispatch]);
+  }, [connection, path]);
 
   useEffect(() => {
     (async () => {
