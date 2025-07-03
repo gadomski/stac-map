@@ -343,26 +343,26 @@ function getCollectionDateInterval(collection: StacCollection): string | null {
 
 export default function Collection({
   collection,
-  display,
+  map,
 }: {
   collection: StacCollection;
-  display?: boolean;
+  map?: boolean;
 }) {
   const fitBbox = useFitBbox();
   const dispatch = useAppDispatch();
 
   useEffect(() => {
     const layer = getCollectionLayer(collection);
-    if (display && layer) {
+    if (map && layer) {
       dispatch({ type: "set-layer", layer });
     }
-  }, [dispatch, collection, display]);
+  }, [dispatch, collection, map]);
 
   useEffect(() => {
-    if (display && collection.extent?.spatial?.bbox?.[0]) {
+    if (map && collection.extent?.spatial?.bbox?.[0]) {
       fitBbox(sanitizeBbox(collection.extent.spatial.bbox[0]));
     }
-  }, [collection, fitBbox, display]);
+  }, [collection, fitBbox, map]);
 
   return <Value value={collection}></Value>;
 }
