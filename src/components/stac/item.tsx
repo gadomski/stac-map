@@ -16,7 +16,7 @@ export default function Item({
   map = true,
 }: {
   item: StacItem;
-  map: boolean;
+  map?: boolean;
 }) {
   const fitBbox = useFitBbox();
   const dispatch = useAppDispatch();

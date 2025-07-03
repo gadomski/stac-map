@@ -343,7 +343,7 @@ export default function Collection({
   map = true,
 }: {
   collection: StacCollection;
-  map: boolean;
+  map?: boolean;
 }) {
   const fitBbox = useFitBbox();
   const dispatch = useAppDispatch();
