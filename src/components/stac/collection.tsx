@@ -340,10 +340,10 @@ function getCollectionDateInterval(collection: StacCollection): string | null {
 
 export default function Collection({
   collection,
-  map,
+  map = true,
 }: {
   collection: StacCollection;
-  map?: boolean;
+  map: boolean;
 }) {
   const fitBbox = useFitBbox();
   const dispatch = useAppDispatch();

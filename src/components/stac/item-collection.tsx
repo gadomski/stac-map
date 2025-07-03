@@ -1,18 +1,22 @@
 import {
   Button,
+  Card,
   CloseButton,
   DataList,
   Drawer,
   EmptyState,
+  Heading,
   Portal,
   Stack,
 } from "@chakra-ui/react";
+import type { Table } from "apache-arrow";
 import { useEffect } from "react";
 import { LuEyeOff } from "react-icons/lu";
 import { useAppDispatch, useFitBbox } from "../../hooks";
 import Loading from "../loading";
 import { toaster } from "../ui/toaster";
-import { getItemCollectionLayer } from "./layers";
+import Item from "./item";
+import { getItemCollectionLayer, useStacGeoparquetLayer } from "./layers";
 import {
   useStacGeoparquet,
   type StacGeoparquetMetadata,
@@ -29,8 +33,8 @@ export default function ItemCollection({
   parquetPath: string | undefined;
 }) {
   return (
-    <Stack gap={8}>
-      <Value value={itemCollection}></Value>
+    <Stack>
+      <Value value={itemCollection} type="Item collection"></Value>
       {(parquetPath && (
         <StacGeoparquetItemCollection
           path={parquetPath}
@@ -68,14 +72,7 @@ function JsonItemCollection({
 }
 
 function StacGeoparquetItemCollection({ path }: { path: string }) {
-  const { layer, metadata, loading, error } = useStacGeoparquet(path);
-  const dispatch = useAppDispatch();
-
-  useEffect(() => {
-    if (layer) {
-      dispatch({ type: "set-layer", layer });
-    }
-  }, [dispatch, layer]);
+  const { table, metadata, loading, error } = useStacGeoparquet(path);
 
   useEffect(() => {
     if (error) {
@@ -91,9 +88,53 @@ function StacGeoparquetItemCollection({ path }: { path: string }) {
     return <Loading></Loading>;
   } else {
     return (
-      <Stack gap={8}>
-        {metadata && <Metadata metadata={metadata}></Metadata>}
-      </Stack>
+      <>
+        <Stack>
+          {metadata && <Metadata metadata={metadata}></Metadata>}
+          {table && (
+            <LayerWithItemPicker
+              path={path}
+              table={table}
+            ></LayerWithItemPicker>
+          )}
+        </Stack>
+      </>
+    );
+  }
+}
+
+function LayerWithItemPicker({ table, path }: { table: Table; path: string }) {
+  const dispatch = useAppDispatch();
+  const { layer, item, error } = useStacGeoparquetLayer(table, path);
+
+  useEffect(() => {
+    if (error) {
+      toaster.create({
+        type: "error",
+        title: "Error creating the stac-geoparquet layer",
+        description: error,
+      });
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (layer) {
+      dispatch({ type: "set-layer", layer });
+    }
+  }, [layer, dispatch]);
+
+  if (item) {
+    return (
+      <>
+        <Heading size={"sm"} mt={4}>
+          Picked item
+        </Heading>
+        <Card.Root size={"sm"}>
+          <Card.Body>
+            <Item item={item} map={false}></Item>;
+          </Card.Body>
+        </Card.Root>
+      </>
     );
   }
 }

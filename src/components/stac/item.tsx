@@ -11,21 +11,27 @@ import Value, {
   type SelfLinkButtonsProps,
 } from "./value";
 
-export default function Item({ item }: { item: StacItem }) {
+export default function Item({
+  item,
+  map = true,
+}: {
+  item: StacItem;
+  map: boolean;
+}) {
   const fitBbox = useFitBbox();
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    if (item) {
+    if (item && map) {
       dispatch({ type: "set-layer", layer: getItemLayer(item) });
     }
-  }, [item, dispatch]);
+  }, [item, dispatch, map]);
 
   useEffect(() => {
-    if (item.bbox) {
+    if (item.bbox && map) {
       fitBbox(sanitizeBbox(item.bbox));
     }
-  }, [item.bbox, fitBbox]);
+  }, [item.bbox, fitBbox, map]);
 
   return (
     <Stack>
