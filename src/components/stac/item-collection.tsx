@@ -5,13 +5,16 @@ import {
   DataList,
   Drawer,
   EmptyState,
+  FormatNumber,
   Heading,
+  HStack,
   Portal,
   Stack,
+  Stat,
 } from "@chakra-ui/react";
 import type { Table } from "apache-arrow";
 import { useEffect } from "react";
-import { LuEyeOff } from "react-icons/lu";
+import { LuEyeOff, LuFileJson } from "react-icons/lu";
 import { useAppDispatch, useFitBbox } from "../../hooks";
 import Loading from "../loading";
 import { toaster } from "../ui/toaster";
@@ -165,29 +168,26 @@ function Metadata({ metadata }: { metadata: StacGeoparquetMetadata }) {
   }, [metadata.bbox, fitBbox]);
 
   return (
-    <DataList.Root orientation={"horizontal"}>
-      <DataList.Item>
-        <DataList.ItemLabel>Number of items</DataList.ItemLabel>
-        <DataList.ItemValue>
-          {metadata.count} item{metadata.count > 1 && "s"}
-        </DataList.ItemValue>
-      </DataList.Item>
-      <DataList.Item>
-        <DataList.ItemLabel>Metadata</DataList.ItemLabel>
-        <DataList.ItemValue>
-          <MetadataDrawer metadata={metadata}></MetadataDrawer>
-        </DataList.ItemValue>
-      </DataList.Item>
-    </DataList.Root>
+    <Stack gap={4}>
+      <Stat.Root>
+        <Stat.Label>Number of items</Stat.Label>
+        <Stat.ValueText>
+          <FormatNumber value={metadata.count}></FormatNumber>
+        </Stat.ValueText>
+      </Stat.Root>
+      <HStack>
+        <MetadataDrawer metadata={metadata}></MetadataDrawer>
+      </HStack>
+    </Stack>
   );
 }
 
 function MetadataDrawer({ metadata }: { metadata: StacGeoparquetMetadata }) {
   return (
-    <Drawer.Root>
+    <Drawer.Root size={"md"}>
       <Drawer.Trigger asChild>
-        <Button variant={"subtle"} size={"xs"}>
-          View
+        <Button variant={"surface"} size={"md"}>
+          View metadata <LuFileJson></LuFileJson>
         </Button>
       </Drawer.Trigger>
       <Portal>
@@ -198,7 +198,7 @@ function MetadataDrawer({ metadata }: { metadata: StacGeoparquetMetadata }) {
               <Drawer.Title>stac-geoparquet metadata</Drawer.Title>
             </Drawer.Header>
             <Drawer.Content h={"full"} overflow={"scroll"}>
-              <DataList.Root p={2}>
+              <DataList.Root p={4}>
                 {metadata.keyValue.map((kv) => {
                   return (
                     <DataList.Item key={kv.key}>
@@ -234,7 +234,7 @@ function MetadataValue({
       return Number(value.toFixed(4)).toString();
     case "object":
       return (
-        <DataList.Root px={2}>
+        <DataList.Root px={4}>
           {Object.entries(value).map(([k, v]) => (
             <DataList.Item key={key + k}>
               <DataList.ItemLabel>{k}</DataList.ItemLabel>
