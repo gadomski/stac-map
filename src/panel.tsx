@@ -47,14 +47,10 @@ export default function Panel({
   const [tabValue, setTabValue] = useState("value");
   const [state, dispatch] = useReducer(appReducer, {
     layer: null,
+    pickedLayer: null,
     collections: [],
     selectedCollectionIds: new Set<string>(),
   });
-
-  useEffect(() => {
-    dispatch({ type: "set-collections", collections: [] });
-    dispatch({ type: "deselect-all-collections" });
-  }, [value]);
 
   useEffect(() => {
     if (value) {
@@ -74,6 +70,10 @@ export default function Panel({
 
   useEffect(() => {
     const layers = [];
+    if (state.pickedLayer) {
+      console.log("layer");
+      layers.push(state.pickedLayer.clone({ id: "picked" }));
+    }
     const selectedCollections = state.collections.filter((collection) =>
       state.selectedCollectionIds.has(collection.id),
     );
@@ -85,7 +85,13 @@ export default function Panel({
       layers.push(state.layer.clone({ id: "layer" }));
     }
     setLayers(layers);
-  }, [state.layer, state.collections, state.selectedCollectionIds, setLayers]);
+  }, [
+    state.layer,
+    state.pickedLayer,
+    state.collections,
+    state.selectedCollectionIds,
+    setLayers,
+  ]);
 
   return (
     <Provider state={state} dispatch={dispatch}>

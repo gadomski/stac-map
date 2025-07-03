@@ -4,12 +4,14 @@ import type { StacCollection } from "stac-ts";
 
 export interface AppState {
   layer: Layer | null;
+  pickedLayer: Layer | null;
   collections: StacCollection[];
   selectedCollectionIds: Set<string>;
 }
 
 export type AppAction =
   | { type: "set-layer"; layer: Layer }
+  | { type: "set-picked-layer"; layer: Layer | null }
   | { type: "set-collections"; collections: StacCollection[] }
   | { type: "select-collection"; id: string }
   | { type: "deselect-collection"; id: string }
@@ -24,6 +26,8 @@ export function appReducer(state: AppState, action: AppAction) {
   switch (action.type) {
     case "set-layer":
       return { ...state, layer: action.layer };
+    case "set-picked-layer":
+      return { ...state, pickedLayer: action.layer };
     case "set-collections":
       return { ...state, collections: action.collections };
     case "select-collection":

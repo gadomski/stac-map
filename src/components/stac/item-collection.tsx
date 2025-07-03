@@ -16,7 +16,11 @@ import { useAppDispatch, useFitBbox } from "../../hooks";
 import Loading from "../loading";
 import { toaster } from "../ui/toaster";
 import Item from "./item";
-import { getItemCollectionLayer, useStacGeoparquetLayer } from "./layers";
+import {
+  getItemCollectionLayer,
+  getItemLayer,
+  useStacGeoparquetLayer,
+} from "./layers";
 import {
   useStacGeoparquet,
   type StacGeoparquetMetadata,
@@ -122,6 +126,20 @@ function LayerWithItemPicker({ table, path }: { table: Table; path: string }) {
       dispatch({ type: "set-layer", layer });
     }
   }, [layer, dispatch]);
+
+  useEffect(() => {
+    if (item?.geometry) {
+      dispatch({
+        type: "set-picked-layer",
+        layer: getItemLayer(item).clone({
+          getFillColor: [48, 192, 253, 100],
+          getLineColor: [48, 192, 253, 200],
+        }),
+      });
+    } else {
+      dispatch({ type: "set-picked-layer", layer: null });
+    }
+  }, [item, dispatch]);
 
   if (item) {
     return (

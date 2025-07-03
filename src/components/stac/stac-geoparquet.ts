@@ -174,7 +174,9 @@ export async function getStacGeoparquetItem(
   connection: AsyncDuckDBConnection,
 ) {
   const result = await connection.query(
-    `SELECT * EXCLUDE geometry FROM read_parquet('${path}') WHERE id = '${id}'`,
+    `SELECT * REPLACE ST_AsGeoJSON(geometry) as geometry FROM read_parquet('${path}') WHERE id = '${id}'`,
   );
-  return stacWasm.arrowToStacJson(result)[0];
+  const item = stacWasm.arrowToStacJson(result)[0];
+  item.geometry = JSON.parse(item.geometry);
+  return item;
 }
