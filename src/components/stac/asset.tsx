@@ -5,12 +5,23 @@ import {
   IconButton,
   type IconButtonProps,
   Image,
+  SimpleGrid,
   Stack,
   Text,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { LuDownload, LuImageMinus } from "react-icons/lu";
 import type { StacAsset } from "stac-ts";
+
+export function Assets({ assets }: { assets: { [k: string]: StacAsset } }) {
+  return (
+    <SimpleGrid columns={2} gap={2} my={2}>
+      {Object.entries(assets).map(([key, asset]) => (
+        <AssetCard key={asset.href} assetKey={key} asset={asset}></AssetCard>
+      ))}
+    </SimpleGrid>
+  );
+}
 
 export function AssetCard({
   assetKey,
@@ -50,13 +61,17 @@ export function AssetCard({
             }}
           ></Image>
         )) || (
-          <EmptyState.Root>
+          <EmptyState.Root size={"sm"}>
             <EmptyState.Content>
               <EmptyState.Indicator>
                 <LuImageMinus></LuImageMinus>
               </EmptyState.Indicator>
-              <EmptyState.Title>Cannot display</EmptyState.Title>
-              <EmptyState.Description>{description}</EmptyState.Description>
+              <EmptyState.Title fontSize={"sm"}>
+                Cannot display
+              </EmptyState.Title>
+              <EmptyState.Description fontSize={"xs"}>
+                {description}
+              </EmptyState.Description>
             </EmptyState.Content>
           </EmptyState.Root>
         )}

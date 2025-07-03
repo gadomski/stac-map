@@ -1,9 +1,9 @@
-import { Button, SimpleGrid, Stack } from "@chakra-ui/react";
+import { Button, Heading, Stack } from "@chakra-ui/react";
 import { useEffect } from "react";
 import { LuExternalLink } from "react-icons/lu";
 import type { StacItem } from "stac-ts";
 import { useAppDispatch, useFitBbox } from "../../hooks";
-import { AssetCard } from "./asset";
+import { Assets } from "./asset";
 import { getItemLayer } from "./layers";
 import { sanitizeBbox } from "./utils";
 import Value, {
@@ -35,15 +35,10 @@ export default function Item({ item }: { item: StacItem }) {
         selfLinkButtonsType={SelfLinkButtons}
       ></Value>
 
-      <SimpleGrid columns={2} gap={2} my={2}>
-        {Object.entries(item.assets).map(([key, asset]) => (
-          <AssetCard
-            key={item.id + key}
-            assetKey={key}
-            asset={asset}
-          ></AssetCard>
-        ))}
-      </SimpleGrid>
+      <Heading size={"md"} mt={4}>
+        Assets
+      </Heading>
+      <Assets assets={item.assets}></Assets>
     </Stack>
   );
 }
