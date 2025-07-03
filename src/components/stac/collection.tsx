@@ -307,10 +307,7 @@ function CollectionButtons({ collection, ...rest }: CollectionButtonProps) {
             <Dialog.Content>
               <Dialog.Header></Dialog.Header>
               <Dialog.Body>
-                <Collection
-                  collection={collection}
-                  display={false}
-                ></Collection>
+                <Collection collection={collection} map={false}></Collection>
               </Dialog.Body>
               <Dialog.Footer></Dialog.Footer>
               <Dialog.CloseTrigger asChild>
