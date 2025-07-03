@@ -1,67 +1,50 @@
-import { Layer } from "@deck.gl/core";
+import type { Layer } from "@deck.gl/core";
 import { createContext, type Dispatch } from "react";
-import type { StacItem } from "stac-ts";
+import type { StacCollection } from "stac-ts";
 
-interface SelectedState {
-  collectionIds: Set<string>;
-  item: StacItem | null;
-  stacGeoparquetId: string | null;
+export interface AppState {
+  layer: Layer | null;
+  pickedLayer: Layer | null;
+  collections: StacCollection[];
+  selectedCollectionIds: Set<string>;
 }
 
-export type SelectedAction =
-  | {
-      type: "select-collection";
-      id: string;
-    }
+export type AppAction =
+  | { type: "set-layer"; layer: Layer }
+  | { type: "set-picked-layer"; layer: Layer | null }
+  | { type: "set-collections"; collections: StacCollection[] }
+  | { type: "select-collection"; id: string }
   | { type: "deselect-collection"; id: string }
-  | { type: "deselect-all-collections" }
-  | { type: "select-stac-geoparquet-id"; id: string | null }
-  | { type: "select-item"; item: StacItem | null };
+  | { type: "deselect-all-collections" };
 
-export const SelectedContext = createContext<SelectedState | null>(null);
+export const AppContext = createContext<AppState | null>(null);
+export const AppDispatchContext = createContext<Dispatch<AppAction> | null>(
+  null,
+);
 
-export const SelectedDispatchContext =
-  createContext<Dispatch<SelectedAction> | null>(null);
-
-export function selectedReducer(state: SelectedState, action: SelectedAction) {
+export function appReducer(state: AppState, action: AppAction) {
   switch (action.type) {
+    case "set-layer":
+      return { ...state, layer: action.layer };
+    case "set-picked-layer":
+      return { ...state, pickedLayer: action.layer };
+    case "set-collections":
+      return { ...state, collections: action.collections };
     case "select-collection":
       return {
         ...state,
-        collectionIds: new Set([...state.collectionIds, action.id]),
+        selectedCollectionIds: new Set([
+          ...state.selectedCollectionIds,
+          action.id,
+        ]),
       };
     case "deselect-collection":
-      state.collectionIds.delete(action.id);
+      state.selectedCollectionIds.delete(action.id);
       return {
         ...state,
-        collectionIds: new Set([...state.collectionIds]),
+        selectedCollectionIds: new Set([...state.selectedCollectionIds]),
       };
     case "deselect-all-collections":
-      return { ...state, collectionIds: new Set<string>() };
-    case "select-stac-geoparquet-id":
-      return { ...state, stacGeoparquetId: action.id };
-    case "select-item":
-      return { ...state, item: action.item };
-  }
-}
-
-interface LayersState {
-  value: Layer | null;
-  selected: Layer | null;
-}
-
-export type LayersAction =
-  | { type: "set-value"; layer: Layer | null }
-  | { type: "set-selected"; layer: Layer | null };
-
-export const LayersDispatchContext =
-  createContext<Dispatch<LayersAction> | null>(null);
-
-export function layersReducer(state: LayersState, action: LayersAction) {
-  switch (action.type) {
-    case "set-value":
-      return { ...state, value: action.layer };
-    case "set-selected":
-      return { ...state, selected: action.layer };
+      return { ...state, selectedCollectionIds: new Set<string>() };
   }
 }

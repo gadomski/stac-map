@@ -7,7 +7,6 @@ import Upload from "./components/upload";
 import Header from "./header";
 import Map from "./map";
 import Panel from "./panel";
-import { LayersProvider, SelectedProvider } from "./providers";
 
 export default function App() {
   const [layers, setLayers] = useState<Layer[]>([]);
@@ -40,6 +39,10 @@ export default function App() {
     };
   }, [setHref]);
 
+  useEffect(() => {
+    setLayers([]);
+  }, [href]);
+
   return (
     <MapProvider>
       <Box zIndex={0} position={"absolute"} top={0} left={0}>
@@ -52,11 +55,11 @@ export default function App() {
         <SimpleGrid columns={3}>
           <Box pointerEvents={"auto"}>
             {(href && (
-              <LayersProvider setLayers={setLayers}>
-                <SelectedProvider>
-                  <Panel href={href} fileUpload={fileUpload}></Panel>
-                </SelectedProvider>
-              </LayersProvider>
+              <Panel
+                href={href}
+                fileUpload={fileUpload}
+                setLayers={setLayers}
+              ></Panel>
             )) || <Upload fileUpload={fileUpload}></Upload>}
           </Box>
         </SimpleGrid>

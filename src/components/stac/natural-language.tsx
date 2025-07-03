@@ -11,7 +11,6 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { LuSearch } from "react-icons/lu";
-import { useSelectedDispatch } from "../../hooks";
 import { toaster } from "../ui/toaster";
 import { useNaturalLanguageCollectionSearch } from "./hooks";
 
@@ -68,7 +67,6 @@ function Results({ query, href }: { query: string; href: string }) {
     query,
     href,
   );
-  const dispatch = useSelectedDispatch();
 
   useEffect(() => {
     if (error) {
@@ -79,16 +77,6 @@ function Results({ query, href }: { query: string; href: string }) {
       });
     }
   }, [error]);
-
-  useEffect(() => {
-    if (results) {
-      results.forEach((result) =>
-        dispatch({ type: "select-collection", id: result.collection_id }),
-      );
-    } else {
-      dispatch({ type: "deselect-all-collections" });
-    }
-  }, [results, dispatch]);
 
   if (loading) {
     return (

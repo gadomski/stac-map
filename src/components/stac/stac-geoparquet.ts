@@ -1,4 +1,3 @@
-import type { Layer } from "@deck.gl/core";
 import { AsyncDuckDBConnection } from "@duckdb/duckdb-wasm";
 import { io } from "@geoarrow/geoarrow-js";
 import {
@@ -11,10 +10,7 @@ import {
 } from "apache-arrow";
 import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState } from "react";
-import type { StacItem } from "stac-ts";
-import { useSelectedDispatch } from "../../hooks";
 import * as stacWasm from "../../stac-wasm";
-import { getStacGeoparquetLayer } from "./layers";
 
 export interface StacGeoparquetMetadata {
   count: number;
@@ -28,7 +24,7 @@ interface KeyValueMetadata {
   value: any;
 }
 
-function useDuckDbConnection() {
+export function useDuckDbConnection() {
   const { db, error } = useDuckDb();
   const [connection, setConnection] = useState<
     AsyncDuckDBConnection | undefined
@@ -53,11 +49,10 @@ export function useStacGeoparquet(path: string) {
   const { connection, duckDbError } = useDuckDbConnection();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | undefined>();
-  const [layer, setLayer] = useState<Layer | undefined>();
+  const [table, setTable] = useState<Table | undefined>();
   const [metadata, setMetadata] = useState<
     StacGeoparquetMetadata | undefined
   >();
-  const dispatch = useSelectedDispatch();
 
   useEffect(() => {
     if (duckDbError) {
@@ -69,17 +64,17 @@ export function useStacGeoparquet(path: string) {
     (async () => {
       if (connection) {
         setLoading(true);
-        setLayer(undefined);
+        setTable(undefined);
         try {
           const table = await getGeometryTable(path, connection);
-          setLayer(getStacGeoparquetLayer(table, dispatch));
+          setTable(table);
           // eslint-disable-next-line
         } catch (error: any) {
           setError(error.toString());
         }
       }
     })();
-  }, [connection, path, dispatch]);
+  }, [connection, path]);
 
   useEffect(() => {
     (async () => {
@@ -98,45 +93,12 @@ export function useStacGeoparquet(path: string) {
   }, [connection, path]);
 
   useEffect(() => {
-    if (layer && metadata) {
+    if (table && metadata) {
       setLoading(false);
     }
-  }, [layer, metadata]);
+  }, [table, metadata]);
 
-  return { layer, metadata, loading, error };
-}
-
-export function useStacGeoparquetItem(id: string, path: string) {
-  const { connection, duckDbError } = useDuckDbConnection();
-  const [error, setError] = useState<string | undefined>();
-  const [loading, setLoading] = useState(true);
-  const [item, setItem] = useState<StacItem | undefined>();
-
-  useEffect(() => {
-    if (duckDbError) {
-      setError("DuckDb error: " + duckDbError.toString());
-    }
-  }, [duckDbError]);
-
-  useEffect(() => {
-    (async () => {
-      if (connection) {
-        setLoading(true);
-        setItem(undefined);
-
-        try {
-          const item = await getItem(id, path, connection);
-          setItem(item);
-          // eslint-disable-next-line
-        } catch (error: any) {
-          setError(error.toString());
-        }
-        setLoading(false);
-      }
-    })();
-  }, [connection, id, path]);
-
-  return { item, error, loading };
+  return { table, metadata, loading, error };
 }
 
 async function getGeometryTable(
@@ -206,13 +168,15 @@ async function getMetadata(
   };
 }
 
-async function getItem(
+export async function getStacGeoparquetItem(
   id: string,
   path: string,
   connection: AsyncDuckDBConnection,
 ) {
   const result = await connection.query(
-    `SELECT * EXCLUDE geometry FROM read_parquet('${path}') WHERE id = '${id}'`,
+    `SELECT * REPLACE ST_AsGeoJSON(geometry) as geometry FROM read_parquet('${path}') WHERE id = '${id}'`,
   );
-  return stacWasm.arrowToStacJson(result)[0];
+  const item = stacWasm.arrowToStacJson(result)[0];
+  item.geometry = JSON.parse(item.geometry);
+  return item;
 }

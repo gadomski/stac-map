@@ -1,9 +1,9 @@
-import { Button, SimpleGrid, Stack } from "@chakra-ui/react";
+import { Button, Heading, Stack } from "@chakra-ui/react";
 import { useEffect } from "react";
 import { LuExternalLink } from "react-icons/lu";
 import type { StacItem } from "stac-ts";
-import { useFitBbox, useLayersDispatch } from "../../hooks";
-import { AssetCard } from "./asset";
+import { useAppDispatch, useFitBbox } from "../../hooks";
+import { Assets } from "./asset";
 import { getItemLayer } from "./layers";
 import { sanitizeBbox } from "./utils";
 import Value, {
@@ -11,24 +11,27 @@ import Value, {
   type SelfLinkButtonsProps,
 } from "./value";
 
-export default function Item({ item }: { item: StacItem }) {
-  const dispatch = useLayersDispatch();
+export default function Item({
+  item,
+  map = true,
+}: {
+  item: StacItem;
+  map?: boolean;
+}) {
   const fitBbox = useFitBbox();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
-    if (item.geometry) {
-      dispatch({ type: "set-value", layer: getItemLayer(item) });
-    } else {
-      dispatch({ type: "set-value", layer: null });
+    if (item && map) {
+      dispatch({ type: "set-layer", layer: getItemLayer(item) });
     }
-    dispatch({ type: "set-selected", layer: null });
-  }, [item, dispatch]);
+  }, [item, dispatch, map]);
 
   useEffect(() => {
-    if (item.bbox) {
+    if (item.bbox && map) {
       fitBbox(sanitizeBbox(item.bbox));
     }
-  }, [item, fitBbox]);
+  }, [item.bbox, fitBbox, map]);
 
   return (
     <Stack>
@@ -38,15 +41,10 @@ export default function Item({ item }: { item: StacItem }) {
         selfLinkButtonsType={SelfLinkButtons}
       ></Value>
 
-      <SimpleGrid columns={2} gap={2} my={2}>
-        {Object.entries(item.assets).map(([key, asset]) => (
-          <AssetCard
-            key={item.id + key}
-            assetKey={key}
-            asset={asset}
-          ></AssetCard>
-        ))}
-      </SimpleGrid>
+      <Heading size={"md"} mt={4}>
+        Assets
+      </Heading>
+      <Assets assets={item.assets}></Assets>
     </Stack>
   );
 }
