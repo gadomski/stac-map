@@ -11,8 +11,10 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { LuSearch } from "react-icons/lu";
+import { useAppDispatch, useAppState, useFitBbox } from "../../hooks";
 import { toaster } from "../ui/toaster";
 import { useNaturalLanguageCollectionSearch } from "./hooks";
+import { getCollectionsExtent } from "./utils";
 
 export function NaturalLanguageCollectionSearch({ href }: { href: string }) {
   const [query, setQuery] = useState<string | undefined>();
@@ -67,6 +69,9 @@ function Results({ query, href }: { query: string; href: string }) {
     query,
     href,
   );
+  const dispatch = useAppDispatch();
+  const fitBbox = useFitBbox();
+  const { collections } = useAppState();
 
   useEffect(() => {
     if (error) {
@@ -77,6 +82,22 @@ function Results({ query, href }: { query: string; href: string }) {
       });
     }
   }, [error]);
+
+  useEffect(() => {
+    if (results) {
+      const collectionIds = new Set<string>();
+      dispatch({ type: "deselect-all-collections" });
+      results.forEach((result) => {
+        dispatch({ type: "select-collection", id: result.collection_id });
+        collectionIds.add(result.collection_id);
+      });
+      fitBbox(
+        getCollectionsExtent(
+          collections.filter((collection) => collectionIds.has(collection.id)),
+        ),
+      );
+    }
+  }, [results, dispatch, collections, fitBbox]);
 
   if (loading) {
     return (
