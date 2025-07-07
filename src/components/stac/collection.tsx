@@ -26,7 +26,6 @@ import { MarkdownHooks } from "react-markdown";
 import type { StacCollection } from "stac-ts";
 import { useFitBbox, useIsCollectionSelected, useStacMap } from "../../hooks";
 import { Prose } from "../ui/prose";
-import { isCollectionWithinBounds } from "./utils";
 import Value from "./value";
 
 export function Collections({
@@ -304,4 +303,32 @@ export default function Collection({
   collection: StacCollection;
 }) {
   return <Value value={collection}></Value>;
+}
+
+function isCollectionWithinBounds(
+  collection: StacCollection,
+  bounds: LngLatBounds,
+) {
+  if (!collection.extent?.spatial?.bbox?.[0]) {
+    return false;
+  }
+
+  const bbox = collection.extent.spatial.bbox[0];
+  let collectionBounds;
+  if (bbox.length == 4) {
+    collectionBounds = [bbox[0], bbox[1], bbox[2], bbox[3]];
+  } else {
+    // assume 6
+    collectionBounds = [bbox[0], bbox[1], bbox[3], bbox[4]];
+  }
+  return (
+    collectionBounds[0] <= bounds.getEast() &&
+    collectionBounds[2] >= bounds.getWest() &&
+    collectionBounds[1] <= bounds.getNorth() &&
+    collectionBounds[3] >= bounds.getSouth() &&
+    (collectionBounds[0] >= bounds.getWest() ||
+      collectionBounds[1] >= bounds.getSouth() ||
+      collectionBounds[2] <= bounds.getEast() ||
+      collectionBounds[3] <= bounds.getNorth())
+  );
 }

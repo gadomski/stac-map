@@ -13,12 +13,8 @@ import {
   type MapRef,
 } from "react-map-gl/maplibre";
 import type { StacCollection, StacItem } from "stac-ts";
-import type { StacValue } from "./components/stac/types";
-import {
-  getCollectionsExtent,
-  getItemCollectionExtent,
-  sanitizeBbox,
-} from "./components/stac/utils";
+import type { StacItemCollection, StacValue } from "./components/stac/types";
+import { getCollectionsExtent, sanitizeBbox } from "./components/stac/utils";
 import { useColorModeValue } from "./components/ui/color-mode";
 import { useStacMap } from "./hooks";
 import { getPadding } from "./utils";
@@ -315,4 +311,32 @@ function getValueBbox(value: StacValue) {
 
 function invertColor(color: Color) {
   return [256 - color[0], 256 - color[1], 256 - color[2], color[3]] as Color;
+}
+
+function getItemCollectionExtent(itemCollection: StacItemCollection) {
+  const bbox = [180, 90, -180, -90];
+  let seen = false;
+  itemCollection.features.forEach((item) => {
+    if (item.bbox) {
+      seen = true;
+      const sanitizedBbox = sanitizeBbox(item.bbox);
+      if (sanitizedBbox[0] < bbox[0]) {
+        bbox[0] = sanitizedBbox[0];
+      }
+      if (sanitizedBbox[1] < bbox[1]) {
+        bbox[1] = sanitizedBbox[1];
+      }
+      if (sanitizedBbox[2] > bbox[2]) {
+        bbox[2] = sanitizedBbox[2];
+      }
+      if (sanitizedBbox[3] > bbox[3]) {
+        bbox[3] = sanitizedBbox[3];
+      }
+    }
+  });
+  if (seen) {
+    return bbox;
+  } else {
+    return [-180, -90, 180, 90];
+  }
 }
