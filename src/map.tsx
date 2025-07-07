@@ -303,7 +303,6 @@ function getCollectionsLayer({
 function getValueBbox(value: StacValue) {
   switch (value.type) {
     case "Catalog":
-      // TODO collections
       return null;
     case "Collection":
       return value.extent?.spatial?.bbox?.[0];
