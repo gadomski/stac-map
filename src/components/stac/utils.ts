@@ -1,28 +1,6 @@
 import { LngLatBounds } from "maplibre-gl";
 import type { StacCollection } from "stac-ts";
-import Catalog from "./catalog";
-import Collection from "./collection";
-import Item from "./item";
-import ItemCollection from "./item-collection";
-import type { StacItemCollection, StacValue } from "./types";
-
-export function getValue(value: StacValue, parquetPath: string | undefined) {
-  switch (value.type) {
-    case "Catalog":
-      return <Catalog catalog={value}></Catalog>;
-    case "Collection":
-      return <Collection collection={value}></Collection>;
-    case "Feature":
-      return <Item item={value}></Item>;
-    case "FeatureCollection":
-      return (
-        <ItemCollection
-          itemCollection={value}
-          parquetPath={parquetPath}
-        ></ItemCollection>
-      );
-  }
-}
+import type { StacItemCollection } from "./types";
 
 export function sanitizeBbox(bbox: number[]) {
   const newBbox = (bbox.length == 6 && [

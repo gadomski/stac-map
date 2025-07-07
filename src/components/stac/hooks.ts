@@ -1,14 +1,17 @@
 import type { UseFileUploadReturn } from "@chakra-ui/react";
 import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState } from "react";
-import type { StacCatalog, StacCollection, StacLink } from "stac-ts";
+import type { StacCollection, StacLink } from "stac-ts";
 import type {
   NaturalLanguageCollectionSearchResult,
   StacItemCollection,
   StacValue,
 } from "./types";
 
-export function useStacValue(href: string, fileUpload: UseFileUploadReturn) {
+export function useStacValue(
+  href: string | undefined,
+  fileUpload: UseFileUploadReturn,
+) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | undefined>();
   const [value, setValue] = useState<StacValue | undefined>();
@@ -16,73 +19,77 @@ export function useStacValue(href: string, fileUpload: UseFileUploadReturn) {
   const { db } = useDuckDb();
 
   useEffect(() => {
-    let url;
-    try {
-      url = new URL(href);
-    } catch {
-      return;
-    }
-
     (async () => {
-      setError(undefined);
-      setValue(undefined);
       setLoading(true);
-
-      try {
-        const response = await fetch(url);
-        if (href.endsWith(".parquet")) {
-          setParquetPath(href);
-          setValue(getStacGeoparquetValue(href));
-        } else {
-          setParquetPath(undefined);
-          setValue(await response.json());
+      setError(undefined);
+      if (href) {
+        let url;
+        try {
+          url = new URL(href);
+        } catch {
+          return;
         }
-        // eslint-disable-next-line
-      } catch (error: any) {
-        setError(href + ": " + error.toString());
-      }
 
+        try {
+          const response = await fetch(url);
+          if (href.endsWith(".parquet")) {
+            setParquetPath(href);
+            setValue(getStacGeoparquetValue(href));
+          } else {
+            setParquetPath(undefined);
+            setValue(await response.json());
+          }
+          // eslint-disable-next-line
+        } catch (error: any) {
+          setError(href + ": " + error.toString());
+        }
+      } else {
+        setValue(undefined);
+      }
       setLoading(false);
     })();
   }, [href]);
 
   useEffect(() => {
-    try {
-      // Only continue if it's a local path (from an uploaded file).
-      new URL(href);
-      return;
-    } catch {
-      // pass
-    }
-
     (async () => {
-      setError(undefined);
       setLoading(true);
-
-      if (fileUpload.acceptedFiles.length == 1 && db) {
-        const file = fileUpload.acceptedFiles[0];
+      setError(undefined);
+      if (href) {
         try {
-          if (href.endsWith(".parquet")) {
-            setParquetPath(href);
-            setValue(getStacGeoparquetValue(href));
-            db.registerFileBuffer(
-              href,
-              new Uint8Array(await file.arrayBuffer()),
-            );
-          } else {
-            setParquetPath(undefined);
-            const value = JSON.parse(await file.text());
-            if (!value.id) {
-              value.id = href;
-            }
-            setValue(value);
-          }
-          // eslint-disable-next-line
-        } catch (error: any) {
-          setError(error.toString());
+          // Only continue if it's a local path (from an uploaded file).
+          new URL(href);
+          setLoading(false);
+          return;
+        } catch {
+          // pass
         }
-      }
 
+        if (fileUpload.acceptedFiles.length == 1 && db) {
+          const file = fileUpload.acceptedFiles[0];
+          try {
+            if (href.endsWith(".parquet")) {
+              setParquetPath(href);
+              setValue(getStacGeoparquetValue(href));
+              db.registerFileBuffer(
+                href,
+                new Uint8Array(await file.arrayBuffer()),
+              );
+            } else {
+              setParquetPath(undefined);
+              const value = JSON.parse(await file.text());
+              if (!value.id) {
+                value.id = href;
+              }
+              setValue(value);
+            }
+            // eslint-disable-next-line
+          } catch (error: any) {
+            setError(error.toString());
+          }
+        }
+      } else {
+        setValue(undefined);
+      }
       setLoading(false);
     })();
   }, [href, fileUpload.acceptedFiles, db]);
@@ -90,7 +97,7 @@ export function useStacValue(href: string, fileUpload: UseFileUploadReturn) {
   return { value, parquetPath, loading, error };
 }
 
-export function useStacCollections(catalog: StacCatalog) {
+export function useStacCollections(value: StacValue | undefined) {
   const [loading, setLoading] = useState(true);
   const [collections, setCollections] = useState<
     StacCollection[] | undefined
@@ -100,37 +107,39 @@ export function useStacCollections(catalog: StacCatalog) {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      setCollections(undefined);
       setError(undefined);
-      const link = catalog.links?.find((link) => link.rel == "data");
-      if (link) {
-        try {
-          let url = new URL(link.href);
-          let collections: StacCollection[] = [];
-          while (true) {
-            // TODO better error handling
-            const response = await fetch(url);
-            const data: { collections: StacCollection[]; links: StacLink[] } =
-              await response.json();
-            collections = [...collections, ...data.collections];
-            setCollections(collections);
-            const nextLink = data.links.find((link) => link.rel == "next");
-            if (nextLink) {
-              url = new URL(nextLink.href);
-            } else {
-              break;
+
+      if (value?.type == "Catalog") {
+        const link = value.links?.find((link) => link.rel == "data");
+        if (link) {
+          try {
+            let url = new URL(link.href);
+            let collections: StacCollection[] = [];
+            while (true) {
+              // TODO better error handling
+              const response = await fetch(url);
+              const data: { collections: StacCollection[]; links: StacLink[] } =
+                await response.json();
+              collections = [...collections, ...data.collections];
+              setCollections(collections);
+              const nextLink = data.links.find((link) => link.rel == "next");
+              if (nextLink) {
+                url = new URL(nextLink.href);
+              } else {
+                break;
+              }
             }
+            // eslint-disable-next-line
+          } catch (error: any) {
+            setError(error.toString());
           }
-          // eslint-disable-next-line
-        } catch (error: any) {
-          setError(error.toString());
         }
       } else {
         setCollections(undefined);
       }
       setLoading(false);
     })();
-  }, [catalog, setCollections]);
+  }, [value]);
 
   return { collections, loading, error };
 }
@@ -148,7 +157,6 @@ export function useNaturalLanguageCollectionSearch(
   useEffect(() => {
     (async () => {
       setLoading(true);
-      setResults(undefined);
       setError(undefined);
       const body = JSON.stringify({
         query,
@@ -174,7 +182,7 @@ export function useNaturalLanguageCollectionSearch(
       }
       setLoading(false);
     })();
-  }, [query, href, setLoading, setError, setResults]);
+  }, [query, href]);
 
   return { results, loading, error };
 }

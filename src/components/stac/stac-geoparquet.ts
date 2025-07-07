@@ -8,8 +8,8 @@ import {
   Table,
   vectorFromArray,
 } from "apache-arrow";
-import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState } from "react";
+import type { StacItem } from "stac-ts";
 import * as stacWasm from "../../stac-wasm";
 
 export interface StacGeoparquetMetadata {
@@ -24,47 +24,19 @@ interface KeyValueMetadata {
   value: any;
 }
 
-export function useDuckDbConnection() {
-  const { db, error } = useDuckDb();
-  const [connection, setConnection] = useState<
-    AsyncDuckDBConnection | undefined
-  >();
-
-  useEffect(() => {
-    (async () => {
-      if (db) {
-        const connection = await db.connect();
-        await connection.query("LOAD spatial;");
-        setConnection(connection);
-      } else {
-        setConnection(undefined);
-      }
-    })();
-  }, [db]);
-
-  return { connection, duckDbError: error };
-}
-
-export function useStacGeoparquet(path: string) {
-  const { connection, duckDbError } = useDuckDbConnection();
-  const [loading, setLoading] = useState(true);
+export function useStacGeoparquetTable(
+  path: string | undefined,
+  connection: AsyncDuckDBConnection | undefined,
+) {
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [table, setTable] = useState<Table | undefined>();
-  const [metadata, setMetadata] = useState<
-    StacGeoparquetMetadata | undefined
-  >();
-
-  useEffect(() => {
-    if (duckDbError) {
-      setError("DuckDb error: " + duckDbError.toString());
-    }
-  }, [duckDbError]);
 
   useEffect(() => {
     (async () => {
-      if (connection) {
-        setLoading(true);
-        setTable(undefined);
+      setLoading(true);
+      setError(undefined);
+      if (connection && path) {
         try {
           const table = await getGeometryTable(path, connection);
           setTable(table);
@@ -72,15 +44,31 @@ export function useStacGeoparquet(path: string) {
         } catch (error: any) {
           setError(error.toString());
         }
+      } else {
+        setTable(undefined);
       }
+      setLoading(false);
     })();
   }, [connection, path]);
 
+  return { table, loading, error };
+}
+
+export function useStacGeoparquetMetadata(
+  path: string | undefined,
+  connection: AsyncDuckDBConnection | undefined,
+) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | undefined>();
+  const [metadata, setMetadata] = useState<
+    StacGeoparquetMetadata | undefined
+  >();
+
   useEffect(() => {
     (async () => {
-      if (connection) {
-        setLoading(true);
-        setMetadata(undefined);
+      setLoading(true);
+      setError(undefined);
+      if (connection && path) {
         try {
           const metadata = await getMetadata(path, connection);
           setMetadata(metadata);
@@ -88,17 +76,14 @@ export function useStacGeoparquet(path: string) {
         } catch (error: any) {
           setError(error.toString());
         }
+      } else {
+        setMetadata(undefined);
       }
+      setLoading(false);
     })();
   }, [connection, path]);
 
-  useEffect(() => {
-    if (table && metadata) {
-      setLoading(false);
-    }
-  }, [table, metadata]);
-
-  return { table, metadata, loading, error };
+  return { metadata, loading, error };
 }
 
 async function getGeometryTable(
@@ -168,15 +153,37 @@ async function getMetadata(
   };
 }
 
-export async function getStacGeoparquetItem(
-  id: string,
-  path: string,
-  connection: AsyncDuckDBConnection,
+export function useStacGeoparquetItem(
+  id: string | undefined,
+  path: string | undefined,
+  connection: AsyncDuckDBConnection | undefined,
 ) {
-  const result = await connection.query(
-    `SELECT * REPLACE ST_AsGeoJSON(geometry) as geometry FROM read_parquet('${path}') WHERE id = '${id}'`,
-  );
-  const item = stacWasm.arrowToStacJson(result)[0];
-  item.geometry = JSON.parse(item.geometry);
-  return item;
+  const [item, setItem] = useState<StacItem | undefined>();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | undefined>();
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      setError(undefined);
+      if (id && path && connection) {
+        try {
+          const result = await connection.query(
+            `SELECT * REPLACE ST_AsGeoJSON(geometry) as geometry FROM read_parquet('${path}') WHERE id = '${id}'`,
+          );
+          const item = stacWasm.arrowToStacJson(result)[0];
+          item.geometry = JSON.parse(item.geometry);
+          setItem(item);
+          // eslint-disable-next-line
+        } catch (error: any) {
+          setError(error.toString());
+        }
+      } else {
+        setItem(undefined);
+      }
+      setLoading(false);
+    })();
+  }, [connection, id, path]);
+
+  return { item, loading, error };
 }
