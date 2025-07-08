@@ -7,17 +7,19 @@ import {
   EmptyState,
   FormatNumber,
   HStack,
+  IconButton,
   Portal,
   Stack,
   Stat,
 } from "@chakra-ui/react";
-import { LuEyeOff, LuFileJson } from "react-icons/lu";
+import { LuEyeOff, LuFileJson, LuFocus } from "react-icons/lu";
 import type { StacItem } from "stac-ts";
-import { useStacMap } from "../../hooks";
+import { useFitBbox, useStacMap } from "../../hooks";
 import Loading from "../loading";
 import Item from "./item";
 import { type StacGeoparquetMetadata } from "./stac-geoparquet";
 import type { StacItemCollection } from "./types";
+import { getItemCollectionExtent } from "./utils";
 import Value from "./value";
 
 export default function ItemCollection({
@@ -30,9 +32,22 @@ export default function ItemCollection({
     stacGeoparquetMetadataIsPending,
     stacGeoparquetItem,
   } = useStacMap();
+  const fitBbox = useFitBbox();
+
   return (
     <Stack>
       <Value value={itemCollection} type="Item collection"></Value>
+      <HStack>
+        {itemCollection.features.length > 0 && (
+          <IconButton
+            size={"sm"}
+            variant={"outline"}
+            onClick={() => fitBbox(getItemCollectionExtent(itemCollection))}
+          >
+            <LuFocus></LuFocus>
+          </IconButton>
+        )}
+      </HStack>
       {stacGeoparquetMetadataIsPending && <Loading></Loading>}
       {stacGeoparquetMetadata && (
         <StacGeoparquetMetadata

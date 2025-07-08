@@ -2,12 +2,14 @@ import type { UseFileUploadReturn } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { isParquetFile, useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState } from "react";
-import type { StacCollection } from "stac-ts";
+import type { StacCollection, StacItem } from "stac-ts";
 import { toaster } from "../ui/toaster";
 import type {
   NaturalLanguageCollectionSearchResult,
   StacCollections,
   StacItemCollection,
+  StacSearch,
+  StacSearchRequest,
   StacValue,
 } from "./types";
 
@@ -79,6 +81,7 @@ export function useStacValue(
         return null;
       }
     },
+    enabled: !!href,
   });
 
   useEffect(() => {
@@ -110,7 +113,6 @@ export function useStacValue(
 
 export function useStacCollections(href: string | undefined) {
   const [currentHref, setCurrentHref] = useState<string | undefined>();
-  const [pages, setPages] = useState<StacCollections[]>([]);
   const [collections, setCollections] = useState<
     StacCollection[] | undefined
   >();
@@ -131,11 +133,11 @@ export function useStacCollections(href: string | undefined) {
         return null;
       }
     },
+    enabled: !!href,
   });
 
   useEffect(() => {
     setCurrentHref(href);
-    setPages([]);
     setCollections(undefined);
   }, [href]);
 
@@ -151,7 +153,10 @@ export function useStacCollections(href: string | undefined) {
 
   useEffect(() => {
     if (data) {
-      setPages((pages) => [...pages, data]);
+      setCollections((collections) => [
+        ...(collections ?? []),
+        ...data.collections,
+      ]);
       if (data) {
         const nextLink = data.links?.find((link) => link.rel == "next");
         if (nextLink) {
@@ -161,15 +166,82 @@ export function useStacCollections(href: string | undefined) {
     }
   }, [data]);
 
-  useEffect(() => {
-    if (pages.length > 0) {
-      setCollections(pages.flatMap((page) => page.collections));
-    } else {
-      setCollections(undefined);
-    }
-  }, [pages]);
-
   return { collections, isPending, error };
+}
+
+export function useItemSearch(searchRequest: StacSearchRequest | undefined) {
+  const [items, setItems] = useState<StacItem[] | undefined>();
+  const [url, setUrl] = useState<URL | undefined>();
+  const [body, setBody] = useState<StacSearch | undefined>();
+  const [method, setMethod] = useState<string | undefined>();
+  const [numberMatched, setNumberMatched] = useState<number | undefined>();
+
+  const { data, isPending, error } = useQuery<StacItemCollection | null>({
+    queryKey: ["item-search", url, method, body],
+    queryFn: async () => {
+      if (url && method) {
+        return await fetch(url, {
+          method,
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: body && JSON.stringify(body),
+        }).then((response) => {
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error(
+              `Error while searching ${url}: ${response.statusText}`,
+            );
+          }
+        });
+      } else {
+        return null;
+      }
+    },
+    enabled: !!searchRequest,
+  });
+
+  useEffect(() => {
+    setItems(undefined);
+    if (searchRequest) {
+      const search = searchRequest.search;
+      const url = new URL(searchRequest.link.href);
+      const method = (searchRequest.link.method as string | undefined) || "GET";
+      if (method === "GET") {
+        if (search.collections) {
+          url.searchParams.set("collections", search.collections.join(","));
+        }
+        setBody(undefined);
+      } else {
+        setBody(searchRequest.search);
+      }
+      setUrl(url);
+      setMethod(method);
+    }
+  }, [searchRequest]);
+
+  useEffect(() => {
+    if (data) {
+      setItems((items) => [...(items || []), ...data.features]);
+      if (data.numberMatched) {
+        setNumberMatched(data.numberMatched);
+      }
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (error) {
+      toaster.create({
+        type: "error",
+        title: "Error while searching",
+        description: error.message,
+      });
+    }
+  }, [error]);
+
+  return { items, isPending, numberMatched };
 }
 
 export function useNaturalLanguageCollectionSearch(

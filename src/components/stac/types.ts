@@ -13,6 +13,7 @@ export interface StacItemCollection {
   title?: string;
   description?: string;
   links?: StacLink[];
+  numberMatched?: number;
   [k: string]: unknown;
 }
 
@@ -25,6 +26,11 @@ export interface StacSearch {
   collections?: string[];
   bbox?: number[];
   limit?: number;
+}
+
+export interface StacSearchRequest {
+  search: StacSearch;
+  link: StacLink;
 }
 
 export interface NaturalLanguageCollectionSearchResult {
