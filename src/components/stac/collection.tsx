@@ -1,5 +1,7 @@
 import {
+  ActionBar,
   Badge,
+  Button,
   Card,
   Checkbox,
   CloseButton,
@@ -19,13 +21,15 @@ import {
   type IconButtonProps,
 } from "@chakra-ui/react";
 import { LngLatBounds } from "maplibre-gl";
-import { useEffect, useState } from "react";
-import { LuFocus, LuInfo, LuList, LuTable } from "react-icons/lu";
+import { useEffect, useState, type Dispatch } from "react";
+import { LuFocus, LuInfo, LuList, LuTable, LuX } from "react-icons/lu";
 import { useMap } from "react-map-gl/maplibre";
 import { MarkdownHooks } from "react-markdown";
 import type { StacCollection } from "stac-ts";
+import { type SelectedCollectionsAction } from "../../context";
 import { useFitBbox, useIsCollectionSelected, useStacMap } from "../../hooks";
 import { Prose } from "../ui/prose";
+import { getCollectionsExtent } from "./utils";
 import Value from "./value";
 
 export function Collections({
@@ -78,8 +82,7 @@ export function Collections({
           <HStack>
             Collections{" "}
             <Badge>
-              {filteredCollections.length < collections.length &&
-                filteredCollections.length + " / "}
+              {filterToMapBounds && filteredCollections.length + " / "}
               {collections.length}
             </Badge>
           </HStack>
@@ -330,5 +333,45 @@ function isCollectionWithinBounds(
       collectionBounds[1] >= bounds.getSouth() ||
       collectionBounds[2] <= bounds.getEast() ||
       collectionBounds[3] <= bounds.getNorth())
+  );
+}
+
+export function SelectedCollectionsActionBar({
+  collections,
+  dispatch,
+}: {
+  collections: StacCollection[];
+  dispatch: Dispatch<SelectedCollectionsAction>;
+}) {
+  const fitBbox = useFitBbox();
+
+  return (
+    <ActionBar.Root open={collections.length > 0}>
+      <Portal>
+        <ActionBar.Positioner>
+          <ActionBar.Content>
+            <ActionBar.SelectionTrigger>
+              {collections.length} collection{collections.length > 1 && "s"}{" "}
+              selected
+            </ActionBar.SelectionTrigger>
+            <ActionBar.Separator></ActionBar.Separator>
+            <IconButton
+              variant={"outline"}
+              size={"xs"}
+              onClick={() => fitBbox(getCollectionsExtent(collections))}
+            >
+              <LuFocus></LuFocus>
+            </IconButton>
+            <Button
+              size={"xs"}
+              variant={"outline"}
+              onClick={() => dispatch({ type: "deselect-all-collections" })}
+            >
+              <LuX></LuX> Deselect all
+            </Button>
+          </ActionBar.Content>
+        </ActionBar.Positioner>
+      </Portal>
+    </ActionBar.Root>
   );
 }

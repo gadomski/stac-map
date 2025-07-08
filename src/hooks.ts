@@ -1,4 +1,6 @@
-import { useCallback, useContext, useEffect, useRef } from "react";
+import { AsyncDuckDBConnection } from "@duckdb/duckdb-wasm";
+import { useDuckDb } from "duckdb-wasm-kit";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { type MapRef, useMap } from "react-map-gl/maplibre";
 import { sanitizeBbox } from "./components/stac/utils";
 import { StacMapContext } from "./context";
@@ -36,4 +38,25 @@ export function useFitBbox() {
 export function useIsCollectionSelected(id: string) {
   const { selectedCollections } = useStacMap();
   return selectedCollections.has(id);
+}
+
+export function useDuckDbConnection() {
+  const { db, error } = useDuckDb();
+  const [connection, setConnection] = useState<
+    AsyncDuckDBConnection | undefined
+  >();
+
+  useEffect(() => {
+    (async () => {
+      if (db) {
+        const connection = await db.connect();
+        await connection.query("LOAD spatial;");
+        setConnection(connection);
+      } else {
+        setConnection(undefined);
+      }
+    })();
+  }, [db]);
+
+  return { connection, error };
 }

@@ -13,20 +13,20 @@ interface StacMapContextType {
   fileUpload: UseFileUploadReturn;
 
   value: StacValue | undefined;
-  valueLoading: boolean;
+  valueIsPending: boolean;
 
   collections: StacCollection[] | undefined;
-  collectionsLoading: boolean;
+  collectionsIsPending: boolean;
   selectedCollections: Set<string>;
   selectedCollectionsDispatch: Dispatch<SelectedCollectionsAction>;
 
   stacGeoparquetTable: Table | undefined;
-  stacGeoparquetTableLoading: boolean;
+  stacGeoparquetTableIsPending: boolean;
   stacGeoparquetMetadata: StacGeoparquetMetadata | undefined;
-  stacGeoparquetMetadataLoading: boolean;
+  stacGeoparquetMetadataIsPending: boolean;
   setStacGeoparquetItemId: (id: string) => void;
   stacGeoparquetItem: StacItem | undefined;
-  stacGeoparquetItemLoading: boolean;
+  stacGeoparquetItemIsPending: boolean;
 }
 
 export type SelectedCollectionsAction =
