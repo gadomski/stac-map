@@ -1,17 +1,16 @@
 import {
-  Center,
   CloseButton,
   DataList,
   Field,
   Heading,
   Input,
   InputGroup,
-  Spinner,
   Stack,
 } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { LuSearch } from "react-icons/lu";
 import { useFitBbox, useStacMap } from "../../hooks";
+import Loading from "../loading";
 import { toaster } from "../ui/toaster";
 import { useNaturalLanguageCollectionSearch } from "./hooks";
 import { getCollectionsExtent } from "./utils";
@@ -105,11 +104,7 @@ function Results({ query, href }: { query: string; href: string }) {
   }, [results, collections, selectedCollectionsDispatch, fitBbox]);
 
   if (isPending) {
-    return (
-      <Center>
-        <Spinner size={"sm"}></Spinner>
-      </Center>
-    );
+    return <Loading></Loading>;
   } else if (results) {
     return (
       <Stack>
