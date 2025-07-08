@@ -1,5 +1,11 @@
 import type { UseFileUploadReturn } from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  type DefaultError,
+  type InfiniteData,
+  type QueryKey,
+} from "@tanstack/react-query";
 import { isParquetFile, useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState } from "react";
 import type { StacCollection, StacItem } from "stac-ts";
@@ -8,7 +14,6 @@ import type {
   NaturalLanguageCollectionSearchResult,
   StacCollections,
   StacItemCollection,
-  StacSearch,
   StacSearchRequest,
   StacValue,
 } from "./types";
@@ -171,65 +176,86 @@ export function useStacCollections(href: string | undefined) {
 
 export function useItemSearch(searchRequest: StacSearchRequest | undefined) {
   const [items, setItems] = useState<StacItem[] | undefined>();
-  const [url, setUrl] = useState<URL | undefined>();
-  const [body, setBody] = useState<StacSearch | undefined>();
-  const [method, setMethod] = useState<string | undefined>();
   const [numberMatched, setNumberMatched] = useState<number | undefined>();
 
-  const { data, isPending, error } = useQuery<StacItemCollection | null>({
-    queryKey: ["item-search", url, method, body],
-    queryFn: async () => {
-      if (url && method) {
-        return await fetch(url, {
-          method,
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: body && JSON.stringify(body),
-        }).then((response) => {
-          if (response.ok) {
-            return response.json();
+  const { data, error, hasNextPage, isFetching, fetchNextPage } =
+    useInfiniteQuery<
+      StacItemCollection | null,
+      DefaultError,
+      InfiniteData<StacItemCollection | null>,
+      QueryKey,
+      StacSearchRequest | undefined
+    >({
+      queryKey: ["item-search", searchRequest],
+      queryFn: async ({ pageParam }) => {
+        if (pageParam) {
+          const url = new URL(pageParam.link.href);
+          const method = (pageParam.link.method as string | undefined) || "GET";
+          const init: RequestInit = {
+            method,
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+          };
+          if (method === "GET") {
+            if (pageParam.search.collections) {
+              url.searchParams.set(
+                "collections",
+                pageParam.search.collections.join(","),
+              );
+            }
           } else {
-            throw new Error(
-              `Error while searching ${url}: ${response.statusText}`,
-            );
+            if (pageParam.link.body) {
+              init.body = JSON.stringify(pageParam.link.body);
+            } else {
+              init.body = JSON.stringify(pageParam.search);
+            }
           }
-        });
-      } else {
-        return null;
-      }
-    },
-    enabled: !!searchRequest,
-  });
-
-  useEffect(() => {
-    setItems(undefined);
-    if (searchRequest) {
-      const search = searchRequest.search;
-      const url = new URL(searchRequest.link.href);
-      const method = (searchRequest.link.method as string | undefined) || "GET";
-      if (method === "GET") {
-        if (search.collections) {
-          url.searchParams.set("collections", search.collections.join(","));
+          return await fetch(url, init).then((response) => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw new Error(
+                `Error while searching ${url}: ${response.statusText}`,
+              );
+            }
+          });
+        } else {
+          return null;
         }
-        setBody(undefined);
-      } else {
-        setBody(searchRequest.search);
-      }
-      setUrl(url);
-      setMethod(method);
-    }
-  }, [searchRequest]);
+      },
+      initialPageParam: searchRequest,
+      getNextPageParam: (lastPage: StacItemCollection | null) => {
+        if (lastPage) {
+          const nextLink = lastPage.links?.find((link) => link.rel == "next");
+          if (nextLink && searchRequest) {
+            return {
+              search: searchRequest.search,
+              link: nextLink,
+            };
+          }
+        }
+      },
+      enabled: !!searchRequest,
+    });
 
   useEffect(() => {
     if (data) {
-      setItems((items) => [...(items || []), ...data.features]);
-      if (data.numberMatched) {
-        setNumberMatched(data.numberMatched);
+      setItems(data.pages.flatMap((page) => page?.features || []));
+      if (data.pages.length > 0 && data.pages[0]?.numberMatched) {
+        setNumberMatched(data.pages[0].numberMatched);
       }
+    } else {
+      setItems(undefined);
     }
   }, [data]);
+
+  useEffect(() => {
+    if (searchRequest && hasNextPage && !isFetching) {
+      fetchNextPage();
+    }
+  }, [searchRequest, hasNextPage, isFetching, fetchNextPage]);
 
   useEffect(() => {
     if (error) {
@@ -241,7 +267,7 @@ export function useItemSearch(searchRequest: StacSearchRequest | undefined) {
     }
   }, [error]);
 
-  return { items, isPending, numberMatched };
+  return { items, hasNextPage, numberMatched };
 }
 
 export function useNaturalLanguageCollectionSearch(

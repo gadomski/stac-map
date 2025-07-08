@@ -85,7 +85,7 @@ function ItemSearch({ links }: { links: StacLink[] }) {
     searchRequest,
     setSearchRequest,
     searchItems,
-    searchIsPending,
+    searchHasNextPage,
     searchNumberMatched,
     item,
   } = useStacMap();
@@ -108,7 +108,7 @@ function ItemSearch({ links }: { links: StacLink[] }) {
       </Wrap>
       <HStack>
         <Button
-          disabled={searchRequest && searchIsPending}
+          disabled={searchRequest && searchHasNextPage}
           variant={"surface"}
           onClick={() => {
             if (selectedCollections) {
@@ -130,11 +130,11 @@ function ItemSearch({ links }: { links: StacLink[] }) {
             variant={"surface"}
             onClick={() => setSearchRequest(undefined)}
           >
-            <LuX></LuX> Clear
+            <LuX></LuX> {(searchHasNextPage && "Stop") || "Clear"}
           </Button>
         )}
       </HStack>
-      {searchRequest && searchIsPending && (
+      {searchRequest && searchHasNextPage && (
         <Progress.Root
           value={(searchNumberMatched && searchItems?.length) || null}
           max={searchNumberMatched}
@@ -150,7 +150,7 @@ function ItemSearch({ links }: { links: StacLink[] }) {
             type: "FeatureCollection",
             features: searchItems,
             title: "Search results",
-            description: `Found ${searchItems.length} item${searchItems.length > 0 && "s"}`,
+            description: `Found ${searchItems.length} item${((searchItems.length > 1 || searchItems.length == 0) && "s") || ""}`,
           }}
         ></ItemCollection>
       )}

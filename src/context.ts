@@ -32,7 +32,7 @@ interface StacMapContextType {
   setSearchRequest: (searchRequest: StacSearchRequest | undefined) => void;
   searchItems: StacItem[] | undefined;
   searchNumberMatched: number | undefined;
-  searchIsPending: boolean;
+  searchHasNextPage: boolean;
 
   item: StacItem | undefined;
   setItem: (item: StacItem | undefined) => void;

@@ -50,7 +50,7 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
   >();
   const {
     items: searchItems,
-    isPending: searchIsPending,
+    hasNextPage: searchHasNextPage,
     numberMatched: searchNumberMatched,
   } = useItemSearch(searchRequest);
   const [item, setItem] = useState<StacItem | undefined>();
@@ -111,7 +111,7 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
     setSearchRequest,
     searchItems,
     searchNumberMatched,
-    searchIsPending,
+    searchHasNextPage,
 
     item,
     setItem,
