@@ -1,6 +1,7 @@
-import { Button, Heading, Stack } from "@chakra-ui/react";
-import { LuExternalLink } from "react-icons/lu";
+import { Button, Heading, HStack, IconButton, Stack } from "@chakra-ui/react";
+import { LuExternalLink, LuFocus } from "react-icons/lu";
 import type { StacItem } from "stac-ts";
+import { useFitBbox } from "../../hooks";
 import { Assets } from "./asset";
 import Value, {
   SelfLinkButtons as BaseSelfLinkButtons,
@@ -8,6 +9,8 @@ import Value, {
 } from "./value";
 
 export default function Item({ item }: { item: StacItem }) {
+  const fitBbox = useFitBbox();
+
   return (
     <Stack>
       <Value
@@ -15,6 +18,18 @@ export default function Item({ item }: { item: StacItem }) {
         type={"Item"}
         selfLinkButtonsType={SelfLinkButtons}
       ></Value>
+
+      <HStack>
+        {item.bbox && (
+          <IconButton
+            size={"xs"}
+            variant={"surface"}
+            onClick={() => item.bbox && fitBbox(item.bbox)}
+          >
+            <LuFocus></LuFocus>
+          </IconButton>
+        )}
+      </HStack>
 
       <Heading size={"md"} mt={4}>
         Assets
