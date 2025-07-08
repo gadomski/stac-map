@@ -1,5 +1,7 @@
 import {
+  ActionBar,
   Badge,
+  Button,
   Card,
   Checkbox,
   CloseButton,
@@ -19,19 +21,15 @@ import {
   type IconButtonProps,
 } from "@chakra-ui/react";
 import { LngLatBounds } from "maplibre-gl";
-import { useEffect, useState } from "react";
-import { LuFocus, LuInfo, LuList, LuTable } from "react-icons/lu";
+import { useEffect, useState, type Dispatch } from "react";
+import { LuFocus, LuInfo, LuList, LuTable, LuX } from "react-icons/lu";
 import { useMap } from "react-map-gl/maplibre";
 import { MarkdownHooks } from "react-markdown";
 import type { StacCollection } from "stac-ts";
-import { useAppDispatch, useCollectionSelected, useFitBbox } from "../../hooks";
+import { type SelectedCollectionsAction } from "../../context";
+import { useFitBbox, useIsCollectionSelected, useStacMap } from "../../hooks";
 import { Prose } from "../ui/prose";
-import { getCollectionLayer, getCollectionsLayer } from "./layers";
-import {
-  getCollectionsExtent,
-  isCollectionWithinBounds,
-  sanitizeBbox,
-} from "./utils";
+import { getCollectionsExtent } from "./utils";
 import Value from "./value";
 
 export function Collections({
@@ -48,23 +46,6 @@ export function Collections({
   const [filterToMapBounds, setFilterToMapBounds] = useState(false);
   const [bounds, setBounds] = useState<LngLatBounds>();
   const { map } = useMap();
-  const dispatch = useAppDispatch();
-  const fitBbox = useFitBbox();
-
-  useEffect(() => {
-    dispatch({
-      type: "set-layer",
-      layer: getCollectionsLayer(collections, false),
-    });
-    dispatch({
-      type: "set-collections",
-      collections,
-    });
-  }, [dispatch, collections]);
-
-  useEffect(() => {
-    fitBbox(getCollectionsExtent(collections));
-  }, [collections, fitBbox]);
 
   useEffect(() => {
     if (filterToMapBounds && bounds) {
@@ -101,8 +82,7 @@ export function Collections({
           <HStack>
             Collections{" "}
             <Badge>
-              {filteredCollections.length < collections.length &&
-                filteredCollections.length + " / "}
+              {filterToMapBounds && filteredCollections.length + " / "}
               {collections.length}
             </Badge>
           </HStack>
@@ -240,26 +220,9 @@ interface CollectionButtonProps extends IconButtonProps {
 
 function CollectionButtons({ collection, ...rest }: CollectionButtonProps) {
   const [open, setOpen] = useState(false);
-  const setFitBbox = useFitBbox();
-  const [checked, setChecked] = useState(false);
-  const [disabled, setDisabled] = useState(false);
-  const dispatch = useAppDispatch();
-  const selected = useCollectionSelected(collection.id);
-
-  useEffect(() => {
-    setChecked(selected);
-  }, [selected]);
-
-  useEffect(() => {
-    if (disabled) {
-      if (selected == checked) {
-        setChecked(selected);
-        setDisabled(false);
-      }
-    } else {
-      setChecked(selected);
-    }
-  }, [collection, selected, disabled, checked]);
+  const selected = useIsCollectionSelected(collection.id);
+  const fitBbox = useFitBbox();
+  const { selectedCollectionsDispatch } = useStacMap();
 
   return (
     <>
@@ -268,27 +231,26 @@ function CollectionButtons({ collection, ...rest }: CollectionButtonProps) {
       </IconButton>
       <IconButton
         {...rest}
-        onClick={() => {
-          if (collection.extent?.spatial?.bbox?.[0]) {
-            setFitBbox(collection.extent.spatial.bbox[0]);
-          }
-        }}
         disabled={!collection.extent?.spatial?.bbox?.[0]}
+        onClick={() => fitBbox(collection.extent?.spatial?.bbox?.[0])}
       >
         <LuFocus></LuFocus>
       </IconButton>
       <Span flex={"1"}></Span>
 
       <Checkbox.Root
-        checked={checked}
-        disabled={disabled}
+        checked={selected}
         onCheckedChange={(e) => {
-          setDisabled(true);
-          setChecked(!!e.checked);
           if (e.checked) {
-            dispatch({ type: "select-collection", id: collection.id });
+            selectedCollectionsDispatch({
+              type: "select-collection",
+              id: collection.id,
+            });
           } else {
-            dispatch({ type: "deselect-collection", id: collection.id });
+            selectedCollectionsDispatch({
+              type: "deselect-collection",
+              id: collection.id,
+            });
           }
         }}
       >
@@ -307,7 +269,7 @@ function CollectionButtons({ collection, ...rest }: CollectionButtonProps) {
             <Dialog.Content>
               <Dialog.Header></Dialog.Header>
               <Dialog.Body>
-                <Collection collection={collection} map={false}></Collection>
+                <Collection collection={collection}></Collection>
               </Dialog.Body>
               <Dialog.Footer></Dialog.Footer>
               <Dialog.CloseTrigger asChild>
@@ -340,26 +302,76 @@ function getCollectionDateInterval(collection: StacCollection): string | null {
 
 export default function Collection({
   collection,
-  map = true,
 }: {
   collection: StacCollection;
-  map?: boolean;
+}) {
+  return <Value value={collection}></Value>;
+}
+
+function isCollectionWithinBounds(
+  collection: StacCollection,
+  bounds: LngLatBounds,
+) {
+  if (!collection.extent?.spatial?.bbox?.[0]) {
+    return false;
+  }
+
+  const bbox = collection.extent.spatial.bbox[0];
+  let collectionBounds;
+  if (bbox.length == 4) {
+    collectionBounds = [bbox[0], bbox[1], bbox[2], bbox[3]];
+  } else {
+    // assume 6
+    collectionBounds = [bbox[0], bbox[1], bbox[3], bbox[4]];
+  }
+  return (
+    collectionBounds[0] <= bounds.getEast() &&
+    collectionBounds[2] >= bounds.getWest() &&
+    collectionBounds[1] <= bounds.getNorth() &&
+    collectionBounds[3] >= bounds.getSouth() &&
+    (collectionBounds[0] >= bounds.getWest() ||
+      collectionBounds[1] >= bounds.getSouth() ||
+      collectionBounds[2] <= bounds.getEast() ||
+      collectionBounds[3] <= bounds.getNorth())
+  );
+}
+
+export function SelectedCollectionsActionBar({
+  collections,
+  dispatch,
+}: {
+  collections: StacCollection[];
+  dispatch: Dispatch<SelectedCollectionsAction>;
 }) {
   const fitBbox = useFitBbox();
-  const dispatch = useAppDispatch();
 
-  useEffect(() => {
-    const layer = getCollectionLayer(collection);
-    if (map && layer) {
-      dispatch({ type: "set-layer", layer });
-    }
-  }, [dispatch, collection, map]);
-
-  useEffect(() => {
-    if (map && collection.extent?.spatial?.bbox?.[0]) {
-      fitBbox(sanitizeBbox(collection.extent.spatial.bbox[0]));
-    }
-  }, [collection, fitBbox, map]);
-
-  return <Value value={collection}></Value>;
+  return (
+    <ActionBar.Root open={collections.length > 0}>
+      <Portal>
+        <ActionBar.Positioner>
+          <ActionBar.Content>
+            <ActionBar.SelectionTrigger>
+              {collections.length} collection{collections.length > 1 && "s"}{" "}
+              selected
+            </ActionBar.SelectionTrigger>
+            <ActionBar.Separator></ActionBar.Separator>
+            <IconButton
+              variant={"outline"}
+              size={"xs"}
+              onClick={() => fitBbox(getCollectionsExtent(collections))}
+            >
+              <LuFocus></LuFocus>
+            </IconButton>
+            <Button
+              size={"xs"}
+              variant={"outline"}
+              onClick={() => dispatch({ type: "deselect-all-collections" })}
+            >
+              <LuX></LuX> Deselect all
+            </Button>
+          </ActionBar.Content>
+        </ActionBar.Positioner>
+      </Portal>
+    </ActionBar.Root>
+  );
 }

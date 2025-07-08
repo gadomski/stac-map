@@ -1,182 +1,222 @@
 import type { UseFileUploadReturn } from "@chakra-ui/react";
-import { useDuckDb } from "duckdb-wasm-kit";
+import { useQuery } from "@tanstack/react-query";
+import { isParquetFile, useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState } from "react";
-import type { StacCatalog, StacCollection, StacLink } from "stac-ts";
+import type { StacCollection } from "stac-ts";
+import { toaster } from "../ui/toaster";
 import type {
   NaturalLanguageCollectionSearchResult,
+  StacCollections,
   StacItemCollection,
   StacValue,
 } from "./types";
 
-export function useStacValue(href: string, fileUpload: UseFileUploadReturn) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | undefined>();
+export function useStacValue(
+  href: string | undefined,
+  fileUpload: UseFileUploadReturn,
+) {
   const [value, setValue] = useState<StacValue | undefined>();
   const [parquetPath, setParquetPath] = useState<string | undefined>();
   const { db } = useDuckDb();
+  const { data, isPending, error } = useQuery<{
+    value: StacValue;
+    parquetPath: string | undefined;
+  } | null>({
+    queryKey: ["stac-value", href, fileUpload.acceptedFiles],
+    queryFn: async () => {
+      if (href) {
+        if (isUrl(href)) {
+          // TODO allow this to be forced
+          if (href.endsWith(".parquet")) {
+            return {
+              value: getStacGeoparquetValue(href),
+              parquetPath: href,
+            };
+          } else {
+            const data = await fetch(href).then((response) => {
+              if (response.ok) {
+                return response.json();
+              } else {
+                throw new Error(
+                  `Error while fetching the STAC value at ${href}: ${response.statusText}`,
+                );
+              }
+            });
+            return {
+              value: data,
+              parquetPath: undefined,
+            };
+          }
+        } else if (fileUpload.acceptedFiles.length == 1) {
+          const file = fileUpload.acceptedFiles[0];
+          if (await isParquetFile(file)) {
+            if (db) {
+              db.registerFileBuffer(
+                href,
+                new Uint8Array(await file.arrayBuffer()),
+              );
+              return {
+                value: getStacGeoparquetValue(href),
+                parquetPath: href,
+              };
+            } else {
+              throw new Error(
+                `Could not load ${href}, the DuckDB database is not initialized`,
+              );
+            }
+          } else {
+            return {
+              value: JSON.parse(await file.text()),
+              parquetPath: undefined,
+            };
+          }
+        } else {
+          throw new Error(
+            `Href '${href}' is not a URL, but there is not one (and only one) uploaded, accepted file`,
+          );
+        }
+      } else {
+        return null;
+      }
+    },
+  });
 
   useEffect(() => {
-    let url;
-    try {
-      url = new URL(href);
-    } catch {
-      return;
-    }
-
-    (async () => {
-      setError(undefined);
-      setValue(undefined);
-      setLoading(true);
-
-      try {
-        const response = await fetch(url);
-        if (href.endsWith(".parquet")) {
-          setParquetPath(href);
-          setValue(getStacGeoparquetValue(href));
-        } else {
-          setParquetPath(undefined);
-          setValue(await response.json());
-        }
-        // eslint-disable-next-line
-      } catch (error: any) {
-        setError(href + ": " + error.toString());
-      }
-
-      setLoading(false);
-    })();
+    setValue(undefined);
   }, [href]);
 
   useEffect(() => {
-    try {
-      // Only continue if it's a local path (from an uploaded file).
-      new URL(href);
-      return;
-    } catch {
-      // pass
+    if (error) {
+      toaster.create({
+        type: "error",
+        title: "Error while fetching the STAC value",
+        description: error.message,
+      });
     }
+  }, [error]);
 
-    (async () => {
-      setError(undefined);
-      setLoading(true);
+  useEffect(() => {
+    if (data) {
+      setValue(data.value);
+      setParquetPath(data.parquetPath);
+    } else {
+      setValue(undefined);
+      setParquetPath(undefined);
+    }
+  }, [data]);
 
-      if (fileUpload.acceptedFiles.length == 1 && db) {
-        const file = fileUpload.acceptedFiles[0];
-        try {
-          if (href.endsWith(".parquet")) {
-            setParquetPath(href);
-            setValue(getStacGeoparquetValue(href));
-            db.registerFileBuffer(
-              href,
-              new Uint8Array(await file.arrayBuffer()),
-            );
-          } else {
-            setParquetPath(undefined);
-            const value = JSON.parse(await file.text());
-            if (!value.id) {
-              value.id = href;
-            }
-            setValue(value);
-          }
-          // eslint-disable-next-line
-        } catch (error: any) {
-          setError(error.toString());
-        }
-      }
-
-      setLoading(false);
-    })();
-  }, [href, fileUpload.acceptedFiles, db]);
-
-  return { value, parquetPath, loading, error };
+  return { value, parquetPath, isPending };
 }
 
-export function useStacCollections(catalog: StacCatalog) {
-  const [loading, setLoading] = useState(true);
+export function useStacCollections(href: string | undefined) {
+  const [currentHref, setCurrentHref] = useState<string | undefined>();
+  const [pages, setPages] = useState<StacCollections[]>([]);
   const [collections, setCollections] = useState<
     StacCollection[] | undefined
   >();
-  const [error, setError] = useState<string | undefined>();
+  const { data, isPending, error } = useQuery<StacCollections | null>({
+    queryKey: ["stac-collections", currentHref],
+    queryFn: async () => {
+      if (currentHref) {
+        return await fetch(currentHref).then((response) => {
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error(
+              `Error while fetching collections at ${currentHref}: ${response.statusText}`,
+            );
+          }
+        });
+      } else {
+        return null;
+      }
+    },
+  });
 
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      setCollections(undefined);
-      setError(undefined);
-      const link = catalog.links?.find((link) => link.rel == "data");
-      if (link) {
-        try {
-          let url = new URL(link.href);
-          let collections: StacCollection[] = [];
-          while (true) {
-            // TODO better error handling
-            const response = await fetch(url);
-            const data: { collections: StacCollection[]; links: StacLink[] } =
-              await response.json();
-            collections = [...collections, ...data.collections];
-            setCollections(collections);
-            const nextLink = data.links.find((link) => link.rel == "next");
-            if (nextLink) {
-              url = new URL(nextLink.href);
-            } else {
-              break;
-            }
-          }
-          // eslint-disable-next-line
-        } catch (error: any) {
-          setError(error.toString());
-        }
-      } else {
-        setCollections(undefined);
-      }
-      setLoading(false);
-    })();
-  }, [catalog, setCollections]);
+    setCurrentHref(href);
+    setPages([]);
+    setCollections(undefined);
+  }, [href]);
 
-  return { collections, loading, error };
+  useEffect(() => {
+    if (error) {
+      toaster.create({
+        type: "error",
+        title: "Error while fetching STAC collections",
+        description: error.message,
+      });
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (data) {
+      setPages((pages) => [...pages, data]);
+      if (data) {
+        const nextLink = data.links?.find((link) => link.rel == "next");
+        if (nextLink) {
+          setCurrentHref(nextLink.href);
+        }
+      }
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (pages.length > 0) {
+      setCollections(pages.flatMap((page) => page.collections));
+    } else {
+      setCollections(undefined);
+    }
+  }, [pages]);
+
+  return { collections, isPending, error };
 }
 
 export function useNaturalLanguageCollectionSearch(
   query: string,
   href: string,
 ) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | undefined>();
   const [results, setResults] = useState<
     NaturalLanguageCollectionSearchResult[] | undefined
   >();
-
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      setResults(undefined);
-      setError(undefined);
+  const { data, isPending, error } = useQuery({
+    queryKey: ["natural-language-collection-search", query, href],
+    queryFn: async () => {
       const body = JSON.stringify({
         query,
         catalog_url: href,
       });
-      try {
-        const url = new URL(
-          "search",
-          import.meta.env.VITE_STAC_NATURAL_QUERY_API,
-        );
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body,
-        });
-        const data = await response.json();
-        setResults(data.results);
-        // eslint-disable-next-line
-      } catch (error: any) {
-        setError(error.toString());
-      }
-      setLoading(false);
-    })();
-  }, [query, href, setLoading, setError, setResults]);
+      const url = new URL(
+        "search",
+        import.meta.env.VITE_STAC_NATURAL_QUERY_API,
+      );
+      return await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body,
+      }).then((response) => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error(
+            `Error while performing natural language collection search on ${href}: ${response.statusText}`,
+          );
+        }
+      });
+    },
+  });
 
-  return { results, loading, error };
+  useEffect(() => {
+    if (data) {
+      setResults(data.results);
+    } else {
+      setResults(undefined);
+    }
+  }, [data]);
+
+  return { results, isPending, error };
 }
 
 function getStacGeoparquetValue(href: string): StacItemCollection {
@@ -186,4 +226,13 @@ function getStacGeoparquetValue(href: string): StacItemCollection {
     title: href.split("/").pop(),
     description: "A stac-geoparquet file",
   };
+}
+
+function isUrl(href: string) {
+  try {
+    new URL(href);
+    return true;
+  } catch {
+    return false;
+  }
 }

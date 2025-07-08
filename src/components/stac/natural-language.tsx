@@ -11,7 +11,7 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { LuSearch } from "react-icons/lu";
-import { useAppDispatch, useAppState, useFitBbox } from "../../hooks";
+import { useFitBbox, useStacMap } from "../../hooks";
 import { toaster } from "../ui/toaster";
 import { useNaturalLanguageCollectionSearch } from "./hooks";
 import { getCollectionsExtent } from "./utils";
@@ -65,13 +65,12 @@ export function NaturalLanguageCollectionSearch({ href }: { href: string }) {
 }
 
 function Results({ query, href }: { query: string; href: string }) {
-  const { results, loading, error } = useNaturalLanguageCollectionSearch(
+  const { results, isPending, error } = useNaturalLanguageCollectionSearch(
     query,
     href,
   );
-  const dispatch = useAppDispatch();
+  const { selectedCollectionsDispatch, collections } = useStacMap();
   const fitBbox = useFitBbox();
-  const { collections } = useAppState();
 
   useEffect(() => {
     if (error) {
@@ -85,21 +84,27 @@ function Results({ query, href }: { query: string; href: string }) {
 
   useEffect(() => {
     if (results) {
-      const collectionIds = new Set<string>();
-      dispatch({ type: "deselect-all-collections" });
+      selectedCollectionsDispatch({ type: "deselect-all-collections" });
+      const collectionIds = new Set();
       results.forEach((result) => {
-        dispatch({ type: "select-collection", id: result.collection_id });
+        selectedCollectionsDispatch({
+          type: "select-collection",
+          id: result.collection_id,
+        });
         collectionIds.add(result.collection_id);
       });
-      fitBbox(
-        getCollectionsExtent(
-          collections.filter((collection) => collectionIds.has(collection.id)),
-        ),
-      );
+      if (collections) {
+        const selectedCollections = collections.filter((collection) =>
+          collectionIds.has(collection.id),
+        );
+        if (selectedCollections.length > 0) {
+          fitBbox(getCollectionsExtent(selectedCollections));
+        }
+      }
     }
-  }, [results, dispatch, collections, fitBbox]);
+  }, [results, collections, selectedCollectionsDispatch, fitBbox]);
 
-  if (loading) {
+  if (isPending) {
     return (
       <Center>
         <Spinner size={"sm"}></Spinner>

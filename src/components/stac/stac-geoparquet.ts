@@ -1,5 +1,6 @@
 import { AsyncDuckDBConnection } from "@duckdb/duckdb-wasm";
 import { io } from "@geoarrow/geoarrow-js";
+import { useQuery } from "@tanstack/react-query";
 import {
   Binary,
   Data,
@@ -8,9 +9,9 @@ import {
   Table,
   vectorFromArray,
 } from "apache-arrow";
-import { useDuckDb } from "duckdb-wasm-kit";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import * as stacWasm from "../../stac-wasm";
+import { toaster } from "../ui/toaster";
 
 export interface StacGeoparquetMetadata {
   count: number;
@@ -24,81 +25,60 @@ interface KeyValueMetadata {
   value: any;
 }
 
-export function useDuckDbConnection() {
-  const { db, error } = useDuckDb();
-  const [connection, setConnection] = useState<
-    AsyncDuckDBConnection | undefined
-  >();
+export function useStacGeoparquetTable(
+  path: string | undefined,
+  connection: AsyncDuckDBConnection | undefined,
+) {
+  const { data, isPending, error } = useQuery({
+    queryKey: ["stac-geoparquet-table", path],
+    queryFn: async () => {
+      if (connection && path) {
+        return getGeometryTable(path, connection);
+      } else {
+        return null;
+      }
+    },
+  });
 
   useEffect(() => {
-    (async () => {
-      if (db) {
-        const connection = await db.connect();
-        await connection.query("LOAD spatial;");
-        setConnection(connection);
-      } else {
-        setConnection(undefined);
-      }
-    })();
-  }, [db]);
+    if (error) {
+      toaster.create({
+        type: "error",
+        title: "Error while getting the stac-geoparquet table",
+        description: error.message,
+      });
+    }
+  }, [error]);
 
-  return { connection, duckDbError: error };
+  return { table: data ?? undefined, isPending };
 }
 
-export function useStacGeoparquet(path: string) {
-  const { connection, duckDbError } = useDuckDbConnection();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | undefined>();
-  const [table, setTable] = useState<Table | undefined>();
-  const [metadata, setMetadata] = useState<
-    StacGeoparquetMetadata | undefined
-  >();
-
-  useEffect(() => {
-    if (duckDbError) {
-      setError("DuckDb error: " + duckDbError.toString());
-    }
-  }, [duckDbError]);
-
-  useEffect(() => {
-    (async () => {
-      if (connection) {
-        setLoading(true);
-        setTable(undefined);
-        try {
-          const table = await getGeometryTable(path, connection);
-          setTable(table);
-          // eslint-disable-next-line
-        } catch (error: any) {
-          setError(error.toString());
-        }
+export function useStacGeoparquetMetadata(
+  path: string | undefined,
+  connection: AsyncDuckDBConnection | undefined,
+) {
+  const { data, isPending, error } = useQuery({
+    queryKey: ["stac-geoparquet-metadata", path],
+    queryFn: async () => {
+      if (connection && path) {
+        return await getMetadata(path, connection);
+      } else {
+        return null;
       }
-    })();
-  }, [connection, path]);
+    },
+  });
 
   useEffect(() => {
-    (async () => {
-      if (connection) {
-        setLoading(true);
-        setMetadata(undefined);
-        try {
-          const metadata = await getMetadata(path, connection);
-          setMetadata(metadata);
-          // eslint-disable-next-line
-        } catch (error: any) {
-          setError(error.toString());
-        }
-      }
-    })();
-  }, [connection, path]);
-
-  useEffect(() => {
-    if (table && metadata) {
-      setLoading(false);
+    if (error) {
+      toaster.create({
+        type: "error",
+        title: "Error while getting the stac-geoparquet table",
+        description: error.message,
+      });
     }
-  }, [table, metadata]);
+  }, [error]);
 
-  return { table, metadata, loading, error };
+  return { metadata: data ?? undefined, isPending };
 }
 
 async function getGeometryTable(
@@ -168,15 +148,36 @@ async function getMetadata(
   };
 }
 
-export async function getStacGeoparquetItem(
-  id: string,
-  path: string,
-  connection: AsyncDuckDBConnection,
+export function useStacGeoparquetItem(
+  id: string | undefined,
+  path: string | undefined,
+  connection: AsyncDuckDBConnection | undefined,
 ) {
-  const result = await connection.query(
-    `SELECT * REPLACE ST_AsGeoJSON(geometry) as geometry FROM read_parquet('${path}') WHERE id = '${id}'`,
-  );
-  const item = stacWasm.arrowToStacJson(result)[0];
-  item.geometry = JSON.parse(item.geometry);
-  return item;
+  const { data, isPending, error } = useQuery({
+    queryKey: ["stac-geoparquet-item", id, path],
+    queryFn: async () => {
+      if (id && path && connection) {
+        const result = await connection.query(
+          `SELECT * REPLACE ST_AsGeoJSON(geometry) as geometry FROM read_parquet('${path}') WHERE id = '${id}'`,
+        );
+        const item = stacWasm.arrowToStacJson(result)[0];
+        item.geometry = JSON.parse(item.geometry);
+        return item;
+      } else {
+        return null;
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (error) {
+      toaster.create({
+        type: "error",
+        title: "Error while getting stac-geoparquet item",
+        description: error.message,
+      });
+    }
+  }, [error]);
+
+  return { item: data, isPending };
 }

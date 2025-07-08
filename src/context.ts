@@ -1,50 +1,35 @@
-import type { Layer } from "@deck.gl/core";
+import type { UseFileUploadReturn } from "@chakra-ui/react";
+import type { Table } from "apache-arrow";
 import { createContext, type Dispatch } from "react";
-import type { StacCollection } from "stac-ts";
+import type { StacCollection, StacItem } from "stac-ts";
+import type { StacGeoparquetMetadata } from "./components/stac/stac-geoparquet";
+import type { StacValue } from "./components/stac/types";
 
-export interface AppState {
-  layer: Layer | null;
-  pickedLayer: Layer | null;
-  collections: StacCollection[];
-  selectedCollectionIds: Set<string>;
+export const StacMapContext = createContext<StacMapContextType | null>(null);
+
+interface StacMapContextType {
+  href: string | undefined;
+  setHref: (href: string | undefined) => void;
+  fileUpload: UseFileUploadReturn;
+
+  value: StacValue | undefined;
+  valueIsPending: boolean;
+
+  collections: StacCollection[] | undefined;
+  collectionsIsPending: boolean;
+  selectedCollections: Set<string>;
+  selectedCollectionsDispatch: Dispatch<SelectedCollectionsAction>;
+
+  stacGeoparquetTable: Table | undefined;
+  stacGeoparquetTableIsPending: boolean;
+  stacGeoparquetMetadata: StacGeoparquetMetadata | undefined;
+  stacGeoparquetMetadataIsPending: boolean;
+  setStacGeoparquetItemId: (id: string) => void;
+  stacGeoparquetItem: StacItem | undefined;
+  stacGeoparquetItemIsPending: boolean;
 }
 
-export type AppAction =
-  | { type: "set-layer"; layer: Layer }
-  | { type: "set-picked-layer"; layer: Layer | null }
-  | { type: "set-collections"; collections: StacCollection[] }
+export type SelectedCollectionsAction =
   | { type: "select-collection"; id: string }
   | { type: "deselect-collection"; id: string }
   | { type: "deselect-all-collections" };
-
-export const AppContext = createContext<AppState | null>(null);
-export const AppDispatchContext = createContext<Dispatch<AppAction> | null>(
-  null,
-);
-
-export function appReducer(state: AppState, action: AppAction) {
-  switch (action.type) {
-    case "set-layer":
-      return { ...state, layer: action.layer };
-    case "set-picked-layer":
-      return { ...state, pickedLayer: action.layer };
-    case "set-collections":
-      return { ...state, collections: action.collections };
-    case "select-collection":
-      return {
-        ...state,
-        selectedCollectionIds: new Set([
-          ...state.selectedCollectionIds,
-          action.id,
-        ]),
-      };
-    case "deselect-collection":
-      state.selectedCollectionIds.delete(action.id);
-      return {
-        ...state,
-        selectedCollectionIds: new Set([...state.selectedCollectionIds]),
-      };
-    case "deselect-all-collections":
-      return { ...state, selectedCollectionIds: new Set<string>() };
-  }
-}

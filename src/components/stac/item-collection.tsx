@@ -6,167 +6,51 @@ import {
   Drawer,
   EmptyState,
   FormatNumber,
-  Heading,
   HStack,
   Portal,
   Stack,
   Stat,
 } from "@chakra-ui/react";
-import type { Table } from "apache-arrow";
-import { useEffect } from "react";
 import { LuEyeOff, LuFileJson } from "react-icons/lu";
-import { useAppDispatch, useFitBbox } from "../../hooks";
+import type { StacItem } from "stac-ts";
+import { useStacMap } from "../../hooks";
 import Loading from "../loading";
-import { toaster } from "../ui/toaster";
 import Item from "./item";
-import {
-  getItemCollectionLayer,
-  getItemLayer,
-  useStacGeoparquetLayer,
-} from "./layers";
-import {
-  useStacGeoparquet,
-  type StacGeoparquetMetadata,
-} from "./stac-geoparquet";
+import { type StacGeoparquetMetadata } from "./stac-geoparquet";
 import type { StacItemCollection } from "./types";
-import { getItemCollectionExtent } from "./utils";
 import Value from "./value";
 
 export default function ItemCollection({
   itemCollection,
-  parquetPath,
 }: {
   itemCollection: StacItemCollection;
-  parquetPath: string | undefined;
 }) {
+  const {
+    stacGeoparquetMetadata,
+    stacGeoparquetMetadataIsPending,
+    stacGeoparquetItem,
+  } = useStacMap();
   return (
     <Stack>
       <Value value={itemCollection} type="Item collection"></Value>
-      {(parquetPath && (
-        <StacGeoparquetItemCollection
-          path={parquetPath}
-        ></StacGeoparquetItemCollection>
-      )) || (
-        <JsonItemCollection
-          itemCollection={itemCollection}
-        ></JsonItemCollection>
+      {stacGeoparquetMetadataIsPending && <Loading></Loading>}
+      {stacGeoparquetMetadata && (
+        <StacGeoparquetMetadata
+          metadata={stacGeoparquetMetadata}
+        ></StacGeoparquetMetadata>
+      )}
+      {stacGeoparquetItem && (
+        <StacGeoparquetItem item={stacGeoparquetItem}></StacGeoparquetItem>
       )}
     </Stack>
   );
 }
 
-function JsonItemCollection({
-  itemCollection,
+function StacGeoparquetMetadata({
+  metadata,
 }: {
-  itemCollection: StacItemCollection;
+  metadata: StacGeoparquetMetadata;
 }) {
-  const fitBbox = useFitBbox();
-  const dispatch = useAppDispatch();
-
-  useEffect(() => {
-    dispatch({
-      type: "set-layer",
-      layer: getItemCollectionLayer(itemCollection),
-    });
-  }, [itemCollection, dispatch]);
-
-  useEffect(() => {
-    const bbox = getItemCollectionExtent(itemCollection);
-    fitBbox(bbox);
-  }, [fitBbox, itemCollection]);
-
-  return null;
-}
-
-function StacGeoparquetItemCollection({ path }: { path: string }) {
-  const { table, metadata, loading, error } = useStacGeoparquet(path);
-
-  useEffect(() => {
-    if (error) {
-      toaster.create({
-        type: "error",
-        title: "Error reading stac-geoparquet",
-        description: error,
-      });
-    }
-  }, [error]);
-
-  if (loading) {
-    return <Loading></Loading>;
-  } else {
-    return (
-      <>
-        <Stack>
-          {metadata && <Metadata metadata={metadata}></Metadata>}
-          {table && (
-            <LayerWithItemPicker
-              path={path}
-              table={table}
-            ></LayerWithItemPicker>
-          )}
-        </Stack>
-      </>
-    );
-  }
-}
-
-function LayerWithItemPicker({ table, path }: { table: Table; path: string }) {
-  const dispatch = useAppDispatch();
-  const { layer, item, error } = useStacGeoparquetLayer(table, path);
-
-  useEffect(() => {
-    if (error) {
-      toaster.create({
-        type: "error",
-        title: "Error creating the stac-geoparquet layer",
-        description: error,
-      });
-    }
-  }, [error]);
-
-  useEffect(() => {
-    if (layer) {
-      dispatch({ type: "set-layer", layer });
-    }
-  }, [layer, dispatch]);
-
-  useEffect(() => {
-    if (item?.geometry) {
-      dispatch({
-        type: "set-picked-layer",
-        layer: getItemLayer(item).clone({
-          getFillColor: [48, 192, 253, 100],
-          getLineColor: [48, 192, 253, 200],
-        }),
-      });
-    } else {
-      dispatch({ type: "set-picked-layer", layer: null });
-    }
-  }, [item, dispatch]);
-
-  if (item) {
-    return (
-      <>
-        <Heading size={"sm"} mt={4}>
-          Picked item
-        </Heading>
-        <Card.Root size={"sm"}>
-          <Card.Body>
-            <Item item={item} map={false}></Item>;
-          </Card.Body>
-        </Card.Root>
-      </>
-    );
-  }
-}
-
-function Metadata({ metadata }: { metadata: StacGeoparquetMetadata }) {
-  const fitBbox = useFitBbox();
-
-  useEffect(() => {
-    fitBbox(metadata.bbox);
-  }, [metadata.bbox, fitBbox]);
-
   return (
     <Stack gap={4}>
       <Stat.Root>
@@ -179,6 +63,17 @@ function Metadata({ metadata }: { metadata: StacGeoparquetMetadata }) {
         <MetadataDrawer metadata={metadata}></MetadataDrawer>
       </HStack>
     </Stack>
+  );
+}
+
+function StacGeoparquetItem({ item }: { item: StacItem }) {
+  return (
+    <Card.Root>
+      <Card.Header>Selected item</Card.Header>
+      <Card.Body>
+        <Item item={item}></Item>
+      </Card.Body>
+    </Card.Root>
   );
 }
 

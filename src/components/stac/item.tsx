@@ -1,38 +1,13 @@
 import { Button, Heading, Stack } from "@chakra-ui/react";
-import { useEffect } from "react";
 import { LuExternalLink } from "react-icons/lu";
 import type { StacItem } from "stac-ts";
-import { useAppDispatch, useFitBbox } from "../../hooks";
 import { Assets } from "./asset";
-import { getItemLayer } from "./layers";
-import { sanitizeBbox } from "./utils";
 import Value, {
   SelfLinkButtons as BaseSelfLinkButtons,
   type SelfLinkButtonsProps,
 } from "./value";
 
-export default function Item({
-  item,
-  map = true,
-}: {
-  item: StacItem;
-  map?: boolean;
-}) {
-  const fitBbox = useFitBbox();
-  const dispatch = useAppDispatch();
-
-  useEffect(() => {
-    if (item && map) {
-      dispatch({ type: "set-layer", layer: getItemLayer(item) });
-    }
-  }, [item, dispatch, map]);
-
-  useEffect(() => {
-    if (item.bbox && map) {
-      fitBbox(sanitizeBbox(item.bbox));
-    }
-  }, [item.bbox, fitBbox, map]);
-
+export default function Item({ item }: { item: StacItem }) {
   return (
     <Stack>
       <Value

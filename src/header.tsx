@@ -1,6 +1,7 @@
 import { Box, Button, HStack, Input, Menu, Portal } from "@chakra-ui/react";
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useState } from "react";
 import { ColorModeButton } from "./components/ui/color-mode";
+import { useStacMap } from "./hooks";
 
 const EXAMPLES = [
   ["eoAPI DevSeed", "https://stac.eoapi.dev/"],
@@ -20,36 +21,25 @@ const EXAMPLES = [
   ],
 ];
 
-export default function Header({
-  href,
-  setHref,
-}: {
-  href: string | undefined;
-  setHref: Dispatch<SetStateAction<string | undefined>>;
-}) {
+export default function Header() {
   return (
     <HStack py={4}>
-      <HrefInput href={href} setHref={setHref}></HrefInput>
-      <Examples setHref={setHref}></Examples>
+      <HrefInput></HrefInput>
+      <Examples></Examples>
       <ColorModeButton></ColorModeButton>
     </HStack>
   );
 }
 
-function HrefInput({
-  href,
-  setHref,
-}: {
-  href: string | undefined;
-  setHref: Dispatch<SetStateAction<string | undefined>>;
-}) {
+function HrefInput() {
+  const { href, setHref } = useStacMap();
   const [value, setValue] = useState(href || "");
 
   useEffect(() => {
     if (href) {
       setValue(href);
     }
-  }, [href, setValue]);
+  }, [href]);
 
   return (
     <Box
@@ -70,11 +60,9 @@ function HrefInput({
   );
 }
 
-function Examples({
-  setHref,
-}: {
-  setHref: Dispatch<SetStateAction<string | undefined>>;
-}) {
+function Examples() {
+  const { setHref } = useStacMap();
+
   return (
     <Menu.Root onSelect={(details) => setHref(details.value)}>
       <Menu.Trigger asChild>
