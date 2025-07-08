@@ -65,7 +65,7 @@ export function NaturalLanguageCollectionSearch({ href }: { href: string }) {
 }
 
 function Results({ query, href }: { query: string; href: string }) {
-  const { results, loading, error } = useNaturalLanguageCollectionSearch(
+  const { results, isPending, error } = useNaturalLanguageCollectionSearch(
     query,
     href,
   );
@@ -104,7 +104,7 @@ function Results({ query, href }: { query: string; href: string }) {
     }
   }, [results, collections, selectedCollectionsDispatch, fitBbox]);
 
-  if (loading) {
+  if (isPending) {
     return (
       <Center>
         <Spinner size={"sm"}></Spinner>

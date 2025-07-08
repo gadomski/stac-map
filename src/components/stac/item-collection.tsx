@@ -27,13 +27,13 @@ export default function ItemCollection({
 }) {
   const {
     stacGeoparquetMetadata,
-    stacGeoparquetMetadataLoading,
+    stacGeoparquetMetadataIsPending,
     stacGeoparquetItem,
   } = useStacMap();
   return (
     <Stack>
       <Value value={itemCollection} type="Item collection"></Value>
-      {stacGeoparquetMetadataLoading && <Loading></Loading>}
+      {stacGeoparquetMetadataIsPending && <Loading></Loading>}
       {stacGeoparquetMetadata && (
         <StacGeoparquetMetadata
           metadata={stacGeoparquetMetadata}

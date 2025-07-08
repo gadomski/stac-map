@@ -6,7 +6,7 @@ export type StacValue =
   | StacItem
   | StacItemCollection;
 
-export type StacItemCollection = {
+export interface StacItemCollection {
   type: "FeatureCollection";
   features: StacItem[];
   id?: string;
@@ -14,15 +14,20 @@ export type StacItemCollection = {
   description?: string;
   links?: StacLink[];
   [k: string]: unknown;
-};
+}
 
-export type StacSearch = {
+export interface StacCollections {
+  collections: StacCollection[];
+  links?: StacLink[];
+}
+
+export interface StacSearch {
   collections?: string[];
   bbox?: number[];
   limit?: number;
-};
+}
 
-export type NaturalLanguageCollectionSearchResult = {
+export interface NaturalLanguageCollectionSearchResult {
   collection_id: string;
   explanation: string;
-};
+}

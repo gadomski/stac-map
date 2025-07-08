@@ -1,69 +1,44 @@
-import {
-  ActionBar,
-  Button,
-  IconButton,
-  Portal,
-  useFileUpload,
-} from "@chakra-ui/react";
-import { AsyncDuckDBConnection } from "@duckdb/duckdb-wasm";
-import { useDuckDb } from "duckdb-wasm-kit";
-import {
-  useEffect,
-  useReducer,
-  useState,
-  type Dispatch,
-  type ReactNode,
-} from "react";
-import { LuFocus, LuX } from "react-icons/lu";
-import type { StacCollection } from "stac-ts";
+import { useFileUpload } from "@chakra-ui/react";
+import { useEffect, useReducer, useState, type ReactNode } from "react";
+import { SelectedCollectionsActionBar } from "./components/stac/collection";
 import { useStacCollections, useStacValue } from "./components/stac/hooks";
 import {
   useStacGeoparquetItem,
   useStacGeoparquetMetadata,
   useStacGeoparquetTable,
 } from "./components/stac/stac-geoparquet";
-import { getCollectionsExtent } from "./components/stac/utils";
-import { toaster } from "./components/ui/toaster";
 import { StacMapContext, type SelectedCollectionsAction } from "./context";
-import { useFitBbox } from "./hooks";
+import { useDuckDbConnection } from "./hooks";
 
 export function StacMapProvider({ children }: { children: ReactNode }) {
+  const { connection } = useDuckDbConnection();
   const [href, setHref] = useState<string | undefined>(getInitialHref());
   const fileUpload = useFileUpload({ maxFiles: 1 });
   const {
     value,
-    loading: valueLoading,
+    isPending: valueIsPending,
     parquetPath,
-    error: valueError,
   } = useStacValue(href, fileUpload);
-  const {
-    collections,
-    loading: collectionsLoading,
-    error: collectionsError,
-  } = useStacCollections(value);
+  const { collections, isPending: collectionsIsPending } = useStacCollections(
+    value?.links?.find((link) => link.rel == "data")?.href,
+  );
   const [selectedCollections, selectedCollectionsDispatch] = useReducer(
     selectedCollectionsReducer,
     new Set<string>(),
   );
-  const { connection, error: duckDbConnectionError } = useDuckDbConnection();
   const {
     table: stacGeoparquetTable,
-    loading: stacGeoparquetTableLoading,
-    error: stacGeoparquetTableError,
+    isPending: stacGeoparquetTableIsPending,
   } = useStacGeoparquetTable(parquetPath, connection);
   const {
     metadata: stacGeoparquetMetadata,
-    loading: stacGeoparquetMetadataLoading,
-    error: stacGeoparquetMetadataError,
+    isPending: stacGeoparquetMetadataIsPending,
   } = useStacGeoparquetMetadata(parquetPath, connection);
   const [stacGeoparquetItemId, setStacGeoparquetItemId] = useState<
     string | undefined
   >();
-  const {
-    item: stacGeoparquetItem,
-    loading: stacGeoparquetItemLoading,
-    error: stacGeoparquetItemError,
-  } = useStacGeoparquetItem(stacGeoparquetItemId, parquetPath, connection);
+  const { item: stacGeoparquetItem, isPending: stacGeoparquetItemIsPending } =
+    useStacGeoparquetItem(stacGeoparquetItemId, parquetPath, connection);
 
   useEffect(() => {
     function handlePopState() {
@@ -92,74 +67,26 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
     }
   }, [fileUpload.acceptedFiles]);
 
-  useEffect(() => {
-    if (valueError) {
-      createToastError("Error when getting a STAC value", valueError);
-    }
-  }, [valueError]);
-
-  useEffect(() => {
-    if (collectionsError) {
-      createToastError("Error when getting STAC collections", collectionsError);
-    }
-  }, [collectionsError]);
-
-  useEffect(() => {
-    if (duckDbConnectionError) {
-      createToastError(
-        "Error loading DuckDB",
-        duckDbConnectionError.toString(),
-      );
-    }
-  }, [duckDbConnectionError]);
-
-  useEffect(() => {
-    if (stacGeoparquetTableError) {
-      createToastError(
-        "Error reading stac-geoparquet",
-        stacGeoparquetTableError,
-      );
-    }
-  }, [stacGeoparquetTableError]);
-
-  useEffect(() => {
-    if (stacGeoparquetMetadataError) {
-      createToastError(
-        "Error reading stac-geoparquet metadata",
-        stacGeoparquetMetadataError,
-      );
-    }
-  }, [stacGeoparquetMetadataError]);
-
-  useEffect(() => {
-    if (stacGeoparquetItemError) {
-      createToastError(
-        "Error getting stac-geoparquet item",
-        stacGeoparquetItemError,
-      );
-    }
-  }, [stacGeoparquetItemError]);
-
   const contextValue = {
     href,
     setHref,
     fileUpload,
 
     value,
-    valueLoading,
+    valueIsPending,
 
     collections,
-    collectionsLoading,
+    collectionsIsPending,
     selectedCollections,
     selectedCollectionsDispatch,
 
     stacGeoparquetTable,
     stacGeoparquetMetadata,
-    stacGeoparquetTableLoading,
-    stacGeoparquetMetadataLoading,
+    stacGeoparquetTableIsPending,
+    stacGeoparquetMetadataIsPending,
     setStacGeoparquetItemId,
     stacGeoparquetItem,
-    stacGeoparquetItemLoading,
+    stacGeoparquetItemIsPending,
   };
 
   return (
@@ -185,71 +112,6 @@ function getInitialHref() {
     return undefined;
   }
   return href;
-}
-
-function createToastError(title: string, description: string) {
-  toaster.create({ type: "error", title, description });
-}
-
-function useDuckDbConnection() {
-  const { db, error } = useDuckDb();
-  const [connection, setConnection] = useState<
-    AsyncDuckDBConnection | undefined
-  >();
-
-  useEffect(() => {
-    (async () => {
-      if (db) {
-        const connection = await db.connect();
-        await connection.query("LOAD spatial;");
-        setConnection(connection);
-      } else {
-        setConnection(undefined);
-      }
-    })();
-  }, [db]);
-
-  return { connection, error };
-}
-
-function SelectedCollectionsActionBar({
-  collections,
-  dispatch,
-}: {
-  collections: StacCollection[];
-  dispatch: Dispatch<SelectedCollectionsAction>;
-}) {
-  const fitBbox = useFitBbox();
-
-  return (
-    <ActionBar.Root open={collections.length > 0}>
-      <Portal>
-        <ActionBar.Positioner>
-          <ActionBar.Content>
-            <ActionBar.SelectionTrigger>
-              {collections.length} collection{collections.length > 1 && "s"}{" "}
-              selected
-            </ActionBar.SelectionTrigger>
-            <ActionBar.Separator></ActionBar.Separator>
-            <IconButton
-              variant={"outline"}
-              size={"xs"}
-              onClick={() => fitBbox(getCollectionsExtent(collections))}
-            >
-              <LuFocus></LuFocus>
-            </IconButton>
-            <Button
-              size={"xs"}
-              variant={"outline"}
-              onClick={() => dispatch({ type: "deselect-all-collections" })}
-            >
-              <LuX></LuX> Deselect all
-            </Button>
-          </ActionBar.Content>
-        </ActionBar.Positioner>
-      </Portal>
-    </ActionBar.Root>
-  );
 }
 
 function selectedCollectionsReducer(

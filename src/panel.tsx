@@ -12,8 +12,8 @@ import Upload from "./components/upload";
 import { useStacMap } from "./hooks";
 
 export default function Panel() {
-  const { href, value, valueLoading, fileUpload } = useStacMap();
-  const [tabValue, setTabValue] = useState("value");
+  const { href, value, valueIsPending, fileUpload } = useStacMap();
+  const [tabValue, setTabValue] = useState("upload");
   const [enableSearch, setEnableSearch] = useState(false);
 
   useEffect(() => {
@@ -24,7 +24,6 @@ export default function Panel() {
           value.links?.find((link) => link.rel == "search") !== undefined, // Item search
       );
     } else {
-      setTabValue("upload");
       setEnableSearch(false);
     }
   }, [value]);
@@ -49,7 +48,8 @@ export default function Panel() {
       </Tabs.List>
       <Tabs.ContentGroup overflow={"scroll"} maxH={"80dvh"} px={4} pb={4}>
         <Tabs.Content value="value">
-          {(valueLoading && <Loading></Loading>) || (value && getValue(value))}
+          {(valueIsPending && <Loading></Loading>) ||
+            (value && getValue(value))}
         </Tabs.Content>
         <Tabs.Content value="search">
           {href && value && <Search value={value} href={href}></Search>}
