@@ -109,7 +109,7 @@ function ItemSearch({ links }: { links: StacLink[] }) {
       <HStack>
         <Button
           disabled={searchRequest && searchHasNextPage}
-          variant={"surface"}
+          size={"sm"}
           onClick={() => {
             if (selectedCollections) {
               fitBbox(getCollectionsExtent(selectedCollections));
@@ -129,6 +129,7 @@ function ItemSearch({ links }: { links: StacLink[] }) {
           <Button
             variant={"surface"}
             onClick={() => setSearchRequest(undefined)}
+            size={"sm"}
           >
             <LuX></LuX> {(searchHasNextPage && "Stop") || "Clear"}
           </Button>
@@ -155,7 +156,7 @@ function ItemSearch({ links }: { links: StacLink[] }) {
         ></ItemCollection>
       )}
       {item && (
-        <Card.Root>
+        <Card.Root size={"sm"}>
           <Card.Header>Selected item</Card.Header>
           <Card.Body>
             <Item item={item}></Item>
