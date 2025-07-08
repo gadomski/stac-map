@@ -149,9 +149,12 @@ function ItemSearch({ links }: { links: StacLink[] }) {
         <ItemCollection
           itemCollection={{
             type: "FeatureCollection",
+            id: "search",
             features: searchItems,
             title: "Search results",
             description: `Found ${searchItems.length} item${((searchItems.length > 1 || searchItems.length == 0) && "s") || ""}`,
+            search: searchRequest?.search,
+            links: searchRequest && [searchRequest.link],
           }}
         ></ItemCollection>
       )}
