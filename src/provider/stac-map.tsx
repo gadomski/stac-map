@@ -1,11 +1,12 @@
 import { useFileUpload } from "@chakra-ui/react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { StacItem } from "stac-ts";
 import { StacMapContext } from "../context/stac-map";
 import { useStacCollections } from "../hooks/stac-collections";
 import useStacGeoparquet from "../hooks/stac-geoparquet";
 import useStacValue from "../hooks/stac-value";
-import type { StacValue } from "../types/stac";
+import type { StacValue, DateRange } from "../types/stac";
+import { serializeDateRange, deserializeDateRange } from "../utils/url-persistence";
 
 export function StacMapProvider({ children }: { children: ReactNode }) {
   const [href, setHref] = useState<string | undefined>(getInitialHref());
@@ -15,13 +16,34 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
     value?.links?.find((link) => link.rel == "data")?.href,
   );
   const [stacGeoparquetItemId, setStacGeoparquetItemId] = useState<string>();
+  
+  // Date filtering state
+  const [dateRange, setDateRange] = useState<DateRange>(() => {
+    // Initialize from URL on mount
+    const params = new URLSearchParams(location.search);
+    const dateRangeParam = params.get("dateRange");
+    if (dateRangeParam) {
+      return deserializeDateRange(new URLSearchParams(dateRangeParam));
+    }
+    return { startDate: null, endDate: null };
+  });
+
   const {
     table: stacGeoparquetTable,
     metadata: stacGeoparquetMetadata,
     item: stacGeoparquetItem,
-  } = useStacGeoparquet({ path: parquetPath, id: stacGeoparquetItemId });
+  } = useStacGeoparquet({ path: parquetPath, id: stacGeoparquetItemId, dateRange });
+  
   const [picked, setPicked] = useState<StacValue>();
   const [searchItems, setSearchItems] = useState<StacItem[][]>([]);
+
+  const clearDateRange = useCallback(() => {
+    setDateRange({ startDate: null, endDate: null });
+  }, []);
+
+  const isDateFilterActive = useMemo(() => {
+    return dateRange.startDate !== null || dateRange.endDate !== null;
+  }, [dateRange]);
 
   useEffect(() => {
     function handlePopState() {
@@ -42,6 +64,21 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
     }
     setSearchItems([]);
   }, [href]);
+
+  // Add URL persistence to date range changes
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const dateRangeParam = serializeDateRange(dateRange);
+
+    if (dateRangeParam) {
+      params.set("dateRange", dateRangeParam);
+    } else {
+      params.delete("dateRange");
+    }
+
+    const newUrl = `${location.pathname}?${params.toString()}`;
+    history.replaceState(null, "", newUrl);
+  }, [dateRange]);
 
   useEffect(() => {
     // It should never be more than 1.
@@ -70,6 +107,12 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
 
     searchItems,
     setSearchItems,
+
+    // Date filtering properties
+    dateRange,
+    setDateRange,
+    clearDateRange,
+    isDateFilterActive,
   };
 
   return (
