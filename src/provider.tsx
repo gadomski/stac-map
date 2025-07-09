@@ -55,7 +55,6 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
   } = useItemSearch(searchRequest);
   const [item, setItem] = useState<StacItem | undefined>();
   
-  // Date filtering state
   const [dateRange, setDateRange] = useState<{
     startDate: string | null;
     endDate: string | null;
@@ -122,7 +121,6 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
     item,
     setItem,
 
-    // Date filtering state
     dateRange,
     setDateRange,
   };

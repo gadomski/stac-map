@@ -51,14 +51,12 @@ export function Collections({
   useEffect(() => {
     let filtered = collections;
     
-    // Apply map bounds filtering if enabled
     if (filterToMapBounds && bounds) {
       filtered = filtered.filter((collection) =>
         isCollectionWithinBounds(collection, bounds),
       );
     }
     
-    // Apply date range filtering if active
     if (dateRange && (dateRange.startDate || dateRange.endDate)) {
       filtered = filtered.filter((collection) =>
         isCollectionWithinDateRange(collection, dateRange),

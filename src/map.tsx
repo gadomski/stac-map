@@ -301,7 +301,6 @@ function getStacGeoparquetLayer(
   const inverseFillColor = invertColor(fillColor);
   const inverseLineColor = invertColor(lineColor);
   
-  // Filter table by date range if active
   let filteredTable = table;
   if (dateRange && (dateRange.startDate || dateRange.endDate)) {
     // Note: This is a simplified approach. In a real implementation,
@@ -316,7 +315,6 @@ function getStacGeoparquetLayer(
     stroked: true,
     filled: true,
     getFillColor: (info) => {
-      // Apply date filtering at the layer level
       if (dateRange && (dateRange.startDate || dateRange.endDate)) {
         // Note: This would need to be enhanced to actually filter by date
         // For now, we'll show all items but this could be improved
@@ -368,7 +366,6 @@ function getCollectionsLayer({
 }) {
   const validCollections = collections.filter(
     (collection) => {
-      // Filter by spatial extent
       const hasSpatialExtent = collection.extent?.spatial?.bbox?.[0];
       
       // Filter by temporal extent if date range is active

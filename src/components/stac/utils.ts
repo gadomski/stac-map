@@ -95,17 +95,14 @@ export function isCollectionWithinDateRange(
   const filterStart = dateRange.startDate ? new Date(dateRange.startDate) : null;
   const filterEnd = dateRange.endDate ? new Date(dateRange.endDate) : null;
 
-  // If no temporal extent in collection, exclude it
   if (!collectionStart && !collectionEnd) {
     return false;
   }
 
-  // If filter has start date, collection must end after or on the start date
   if (filterStart && collectionEnd && collectionEnd < filterStart) {
     return false;
   }
 
-  // If filter has end date, collection must start before or on the end date
   if (filterEnd && collectionStart && collectionStart > filterEnd) {
     return false;
   }
@@ -126,12 +123,10 @@ export function isItemWithinDateRange(
   const filterStart = dateRange.startDate ? new Date(dateRange.startDate) : null;
   const filterEnd = dateRange.endDate ? new Date(dateRange.endDate) : null;
 
-  // If filter has start date, item must be on or after the start date
   if (filterStart && itemDateTime < filterStart) {
     return false;
   }
 
-  // If filter has end date, item must be on or before the end date
   if (filterEnd && itemDateTime > filterEnd) {
     return false;
   }

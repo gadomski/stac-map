@@ -37,7 +37,6 @@ interface StacMapContextType {
   item: StacItem | undefined;
   setItem: (item: StacItem | undefined) => void;
 
-  // Date filtering state
   dateRange: {
     startDate: string | null;
     endDate: string | null;
