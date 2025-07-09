@@ -1588,16 +1588,6 @@
     "@types/geojson" "^7946.0.10"
     tslib "^2.8.1"
 
-"@turf/centroid@^7.2.0":
-  version "7.2.0"
-  resolved "https://registry.yarnpkg.com/@turf/centroid/-/centroid-7.2.0.tgz#3211fe81d68b65082c7be72bf099b33b9211b282"
-  integrity sha512-yJqDSw25T7P48au5KjvYqbDVZ7qVnipziVfZ9aSo7P2/jTE7d4BP21w0/XLi3T/9bry/t9PR1GDDDQljN4KfDw==
-  dependencies:
-    "@turf/helpers" "^7.2.0"
-    "@turf/meta" "^7.2.0"
-    "@types/geojson" "^7946.0.10"
-    tslib "^2.8.1"
-
 "@turf/clean-coords@^7.2.0":
   version "7.2.0"
   resolved "https://registry.yarnpkg.com/@turf/clean-coords/-/clean-coords-7.2.0.tgz#39f85be033bc33601da2e95948e6c184af34610f"
@@ -1871,16 +1861,16 @@
   integrity sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==
 
 "@types/node@*":
-  version "24.0.10"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-24.0.10.tgz#f65a169779bf0d70203183a1890be7bee8ca2ddb"
-  integrity sha512-ENHwaH+JIRTDIEEbDK6QSQntAYGtbvdDXnMXnZaZ6k13Du1dPMmprkEHIL7ok2Wl2aZevetwTAb5S+7yIF+enA==
+  version "24.0.12"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-24.0.12.tgz#3cf8719572145cfecf4cf9d180d8e7f74a61af00"
+  integrity sha512-LtOrbvDf5ndC9Xi+4QZjVL0woFymF/xSTKZKPgrrl7H7XoeDvnD+E2IclKVDyaK9UM756W/3BXqSU+JEHopA9g==
   dependencies:
     undici-types "~7.8.0"
 
 "@types/node@^20.13.0":
-  version "20.19.4"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.19.4.tgz#c4b8ce51a0f675a354225c58980ccacfe0af5d74"
-  integrity sha512-OP+We5WV8Xnbuvw0zC2m4qfB/BJvjyCwtNjhHdJxV1639SGSKrLmJkc3fMnp2Qy8nJyHp8RO6umxELN/dS1/EA==
+  version "20.19.6"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.19.6.tgz#cf0bb71776bb061e700b6de68e0e531b5570f6ae"
+  integrity sha512-uYssdp9z5zH5GQ0L4zEJ2ZuavYsJwkozjiUzCRfGtaaQcyjAMJ34aP8idv61QlqTozu6kudyr6JMq9Chf09dfA==
   dependencies:
     undici-types "~6.21.0"
 
@@ -5251,9 +5241,9 @@ vite-plugin-top-level-await@^1.5.0:
     uuid "^10.0.0"
 
 vite-plugin-wasm@^3.4.1:
-  version "3.4.1"
-  resolved "https://registry.yarnpkg.com/vite-plugin-wasm/-/vite-plugin-wasm-3.4.1.tgz#62b546ac7e25cc2a0e7b1331ed5c4ba1dd71b743"
-  integrity sha512-ja3nSo2UCkVeitltJGkS3pfQHAanHv/DqGatdI39ja6McgABlpsZ5hVgl6wuR8Qx5etY3T5qgDQhOWzc5RReZA==
+  version "3.5.0"
+  resolved "https://registry.yarnpkg.com/vite-plugin-wasm/-/vite-plugin-wasm-3.5.0.tgz#c72af91b1e3687e12f1c339a12e25937b5813ae5"
+  integrity sha512-X5VWgCnqiQEGb+omhlBVsvTfxikKtoOgAzQ95+BZ8gQ+VfMHIjSHr0wyvXFQCa0eKQ0fKyaL0kWcEnYqBac4lQ==
 
 vite-tsconfig-paths@^5.1.4:
   version "5.1.4"

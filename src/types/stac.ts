@@ -1,3 +1,4 @@
+import type { BBox } from "geojson";
 import type { StacCatalog, StacCollection, StacItem, StacLink } from "stac-ts";
 
 export type StacValue =
@@ -31,6 +32,18 @@ export interface StacSearch {
 export interface StacSearchRequest {
   search: StacSearch;
   link: StacLink;
+}
+
+export interface StacGeoparquetMetadata {
+  count: number;
+  bbox: BBox;
+  keyValue: KeyValueMetadata[];
+}
+
+export interface KeyValueMetadata {
+  key: string;
+  // eslint-disable-next-line
+  value: any;
 }
 
 export interface NaturalLanguageCollectionSearchResult {

@@ -1,7 +1,7 @@
 import { Box, Button, HStack, Input, Menu, Portal } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { ColorModeButton } from "./components/ui/color-mode";
-import { useStacMap } from "./hooks";
+import useStacMap from "../hooks/stac-map";
+import { ColorModeButton } from "./ui/color-mode";
 
 const EXAMPLES = [
   ["eoAPI DevSeed", "https://stac.eoapi.dev/"],
@@ -23,7 +23,7 @@ const EXAMPLES = [
 
 export default function Header() {
   return (
-    <HStack py={4}>
+    <HStack>
       <HrefInput></HrefInput>
       <Examples></Examples>
       <ColorModeButton></ColorModeButton>
@@ -51,7 +51,7 @@ function HrefInput() {
       w={"full"}
     >
       <Input
-        bg={"bg.muted/60"}
+        bg={"bg.muted/90"}
         placeholder="Enter a STAC url"
         value={value}
         onChange={(e) => setValue(e.target.value)}
