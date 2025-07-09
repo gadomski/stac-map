@@ -1,12 +1,18 @@
 import { useMemo } from "react";
 import useStacMap from "./stac-map";
 import { isItemWithinDateRange } from "../utils/date-filter";
+import type { DateRange } from "../types/stac";
+
+function isDateRangeActive(dateRange: DateRange): boolean {
+  return dateRange.startDate !== null || dateRange.endDate !== null || 
+         dateRange.startTime !== undefined || dateRange.endTime !== undefined;
+}
 
 export function useFilteredSearchItems() {
   const { searchItems, dateRange } = useStacMap();
 
   return useMemo(() => {
-    if (!dateRange.startDate && !dateRange.endDate) {
+    if (!isDateRangeActive(dateRange)) {
       return searchItems;
     }
 
@@ -20,12 +26,11 @@ export function useFilteredCollections() {
   const { collections, dateRange } = useStacMap();
 
   return useMemo(() => {
-    if (!collections || (!dateRange.startDate && !dateRange.endDate)) {
+    if (!collections || !isDateRangeActive(dateRange)) {
       return collections;
     }
 
     return collections.filter((collection) => {
-      // Filter based on collection temporal extent if available
       if (collection.extent?.temporal?.interval) {
         const intervals = collection.extent.temporal.interval;
         return intervals.some((interval) => {

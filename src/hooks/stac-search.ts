@@ -8,14 +8,13 @@ import useStacMap from "./stac-map";
 export default function useStacSearch(search: StacSearch, link: StacLink) {
   const { dateRange } = useStacMap();
 
-  // Add datetime to search if date range is active
   const searchWithDateRange = useMemo(() => {
     const datetime = formatDateRangeForStacSearch(dateRange);
     return datetime ? { ...search, datetime } : search;
   }, [search, dateRange]);
 
   return useInfiniteQuery({
-    queryKey: ["search", searchWithDateRange, link, dateRange], // Include dateRange in query key
+    queryKey: ["search", searchWithDateRange, link, dateRange],
     initialPageParam: updateLink(link, searchWithDateRange),
     getNextPageParam: (lastPage: StacItemCollection) =>
       lastPage.links?.find((link) => link.rel == "next"),

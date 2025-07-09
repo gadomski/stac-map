@@ -17,15 +17,14 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
   );
   const [stacGeoparquetItemId, setStacGeoparquetItemId] = useState<string>();
   
-  // Date filtering state
+
   const [dateRange, setDateRange] = useState<DateRange>(() => {
-    // Initialize from URL on mount
     const params = new URLSearchParams(location.search);
     const dateRangeParam = params.get("dateRange");
     if (dateRangeParam) {
       return deserializeDateRange(new URLSearchParams(dateRangeParam));
     }
-    return { startDate: null, endDate: null };
+    return { startDate: null, endDate: null, startTime: undefined, endTime: undefined };
   });
 
   const {
@@ -38,11 +37,12 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
   const [searchItems, setSearchItems] = useState<StacItem[][]>([]);
 
   const clearDateRange = useCallback(() => {
-    setDateRange({ startDate: null, endDate: null });
+    setDateRange({ startDate: null, endDate: null, startTime: undefined, endTime: undefined });
   }, []);
 
   const isDateFilterActive = useMemo(() => {
-    return dateRange.startDate !== null || dateRange.endDate !== null;
+    return dateRange.startDate !== null || dateRange.endDate !== null || 
+           dateRange.startTime !== undefined || dateRange.endTime !== undefined;
   }, [dateRange]);
 
   useEffect(() => {
@@ -65,7 +65,6 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
     setSearchItems([]);
   }, [href]);
 
-  // Add URL persistence to date range changes
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const dateRangeParam = serializeDateRange(dateRange);
@@ -81,7 +80,6 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
   }, [dateRange]);
 
   useEffect(() => {
-    // It should never be more than 1.
     if (fileUpload.acceptedFiles.length == 1) {
       setHref(fileUpload.acceptedFiles[0].name);
     }

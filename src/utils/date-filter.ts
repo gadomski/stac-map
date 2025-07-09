@@ -1,6 +1,25 @@
 import type { StacItem } from "stac-ts";
 import type { DateRange, DateFilterPreset } from "../types/stac";
 
+function createDateTime(date: Date, time?: string): Date {
+  if (!time) return date;
+  
+  const [hours, minutes] = time.split(":").map(Number);
+  const datetime = new Date(date);
+  datetime.setHours(hours, minutes, 0, 0);
+  return datetime;
+}
+
+function getEffectiveStartDateTime(dateRange: DateRange): Date | null {
+  if (!dateRange.startDate) return null;
+  return createDateTime(dateRange.startDate, dateRange.startTime);
+}
+
+function getEffectiveEndDateTime(dateRange: DateRange): Date | null {
+  if (!dateRange.endDate) return null;
+  return createDateTime(dateRange.endDate, dateRange.endTime);
+}
+
 export function isItemWithinDateRange(
   item: StacItem,
   dateRange: DateRange,
@@ -13,8 +32,11 @@ export function isItemWithinDateRange(
       item.properties?.end_datetime,
   );
 
-  if (dateRange.startDate && itemDate < dateRange.startDate) return false;
-  if (dateRange.endDate && itemDate > dateRange.endDate) return false;
+  const effectiveStartDate = getEffectiveStartDateTime(dateRange);
+  const effectiveEndDate = getEffectiveEndDateTime(dateRange);
+
+  if (effectiveStartDate && itemDate < effectiveStartDate) return false;
+  if (effectiveEndDate && itemDate > effectiveEndDate) return false;
 
   return true;
 }
@@ -24,8 +46,11 @@ export function formatDateRangeForStacSearch(
 ): string | null {
   if (!dateRange.startDate && !dateRange.endDate) return null;
 
-  const start = dateRange.startDate?.toISOString() || "..";
-  const end = dateRange.endDate?.toISOString() || "..";
+  const effectiveStartDate = getEffectiveStartDateTime(dateRange);
+  const effectiveEndDate = getEffectiveEndDateTime(dateRange);
+
+  const start = effectiveStartDate?.toISOString() || "..";
+  const end = effectiveEndDate?.toISOString() || "..";
 
   return `${start}/${end}`;
 }
@@ -41,8 +66,12 @@ export function parseDateTime(dateString: string, timeString?: string): Date {
 
 export function isValidDateRange(dateRange: DateRange): boolean {
   if (!dateRange.startDate && !dateRange.endDate) return true;
-  if (dateRange.startDate && dateRange.endDate) {
-    return dateRange.startDate <= dateRange.endDate;
+  
+  const effectiveStartDate = getEffectiveStartDateTime(dateRange);
+  const effectiveEndDate = getEffectiveEndDateTime(dateRange);
+  
+  if (effectiveStartDate && effectiveEndDate) {
+    return effectiveStartDate <= effectiveEndDate;
   }
   return true;
 }

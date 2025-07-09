@@ -55,7 +55,6 @@ export default function Map() {
     picked,
   } = useStacMap();
   
-  // Use filtered data
   const filteredSearchItems = useFilteredSearchItems();
   const filteredCollections = useFilteredCollections();
   
