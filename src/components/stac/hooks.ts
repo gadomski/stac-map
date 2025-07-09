@@ -205,6 +205,9 @@ export function useItemSearch(searchRequest: StacSearchRequest | undefined) {
                 pageParam.search.collections.join(","),
               );
             }
+            if (pageParam.search.datetime) {
+              url.searchParams.set("datetime", pageParam.search.datetime);
+            }
           } else {
             if (pageParam.link.body) {
               init.body = JSON.stringify(pageParam.link.body);

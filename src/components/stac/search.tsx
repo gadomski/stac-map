@@ -22,7 +22,8 @@ import Collection from "./collection";
 import Item from "./item";
 import ItemCollection from "./item-collection";
 import { NaturalLanguageCollectionSearch } from "./natural-language";
-import { getCollectionsExtent } from "./utils";
+import DateFilter from "./date-filter";
+import { getCollectionsExtent, formatDateRangeForStacSearch } from "./utils";
 
 export default function Search({
   itemSearchLinks,
@@ -74,6 +75,15 @@ export default function Search({
           </Accordion.ItemContent>
         </Accordion.Item>
       )}
+      <Accordion.Item value="date-filter">
+        <Accordion.ItemTrigger>
+          <Span flex="1">Date Range Filter</Span>
+          <Accordion.ItemIndicator></Accordion.ItemIndicator>
+        </Accordion.ItemTrigger>
+        <Accordion.ItemContent py={4}>
+          <DateFilter></DateFilter>
+        </Accordion.ItemContent>
+      </Accordion.Item>
     </Accordion.Root>
   );
 }
@@ -88,6 +98,7 @@ function ItemSearch({ links }: { links: StacLink[] }) {
     searchHasNextPage,
     searchNumberMatched,
     item,
+    dateRange,
   } = useStacMap();
   const selectedCollections = useSelectedCollections();
   const fitBbox = useFitBbox();
@@ -114,10 +125,23 @@ function ItemSearch({ links }: { links: StacLink[] }) {
             if (selectedCollections) {
               fitBbox(getCollectionsExtent(selectedCollections));
             }
+            
+            // Build search parameters including date range
+            const searchParams: {
+              collections: string[];
+              datetime?: string;
+            } = {
+              collections: [...selectedCollectionIds],
+            };
+            
+            // Add datetime parameter if date range is active
+            const datetimeParam = formatDateRangeForStacSearch(dateRange);
+            if (datetimeParam) {
+              searchParams.datetime = datetimeParam;
+            }
+            
             setSearchRequest({
-              search: {
-                collections: [...selectedCollectionIds],
-              },
+              search: searchParams,
               // TODO allow configuration
               link: links[0],
             });
