@@ -14,7 +14,10 @@ import {
 } from "react-map-gl/maplibre";
 import type { StacCollection } from "stac-ts";
 import useStacMap from "../hooks/stac-map";
-import { useFilteredSearchItems, useFilteredCollections } from "../hooks/stac-filtered-data";
+import {
+  useFilteredSearchItems,
+  useFilteredCollections,
+} from "../hooks/stac-filtered-data";
 import { useColorModeValue } from "./ui/color-mode";
 
 function DeckGLOverlay(props: DeckProps) {
@@ -54,10 +57,10 @@ export default function Map() {
     setPicked,
     picked,
   } = useStacMap();
-  
+
   const filteredSearchItems = useFilteredSearchItems();
   const filteredCollections = useFilteredCollections();
-  
+
   const [data, setData] = useState<GeoJSON | Feature[]>();
   const [visible, setVisible] = useState(true);
   const [filled, setFilled] = useState(true);
@@ -69,7 +72,9 @@ export default function Map() {
   useEffect(() => {
     switch (value?.type) {
       case "Catalog":
-        setBbbox(filteredCollections && getCollectionsExtent(filteredCollections));
+        setBbbox(
+          filteredCollections && getCollectionsExtent(filteredCollections),
+        );
         setData(
           filteredCollections &&
             filteredCollections.map((collection) =>

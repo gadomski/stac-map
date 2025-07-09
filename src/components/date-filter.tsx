@@ -13,26 +13,40 @@ import { DATE_FILTER_PRESETS, isValidDateRange } from "../utils/date-filter";
 import type { DateRange } from "../types/stac";
 
 export default function DateFilter() {
-  const { dateRange, setDateRange, clearDateRange, isDateFilterActive } = useStacMap();
+  const { dateRange, setDateRange, clearDateRange, isDateFilterActive } =
+    useStacMap();
 
-  const handlePresetSelect = (preset: typeof DATE_FILTER_PRESETS[0]) => {
+  const handlePresetSelect = (preset: (typeof DATE_FILTER_PRESETS)[0]) => {
     setDateRange(preset.getDateRange());
   };
 
-  const handleCustomDateChange = (field: keyof DateRange, value: Date | string | null) => {
-    setDateRange(prev => ({ ...prev, [field]: value }));
+  const handleCustomDateChange = (
+    field: keyof DateRange,
+    value: Date | string | null,
+  ) => {
+    setDateRange((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleTimeChange = (field: 'startTime' | 'endTime', value: string) => {
-    setDateRange(prev => ({ ...prev, [field]: value || undefined }));
+  const handleTimeChange = (field: "startTime" | "endTime", value: string) => {
+    setDateRange((prev) => ({ ...prev, [field]: value || undefined }));
   };
 
   return (
-    <VStack gap={4} align="stretch" p={4} borderWidth={1} borderRadius="md" bg="white" shadow="sm">
+    <VStack
+      gap={4}
+      align="stretch"
+      p={4}
+      borderWidth={1}
+      borderRadius="md"
+      bg="white"
+      shadow="sm"
+    >
       <HStack justify="space-between" align="center">
         <HStack>
           <LuCalendar />
-          <Text fontSize="sm" fontWeight="medium">Date & Time Filter</Text>
+          <Text fontSize="sm" fontWeight="medium">
+            Date & Time Filter
+          </Text>
         </HStack>
         {isDateFilterActive && (
           <Button
@@ -48,58 +62,73 @@ export default function DateFilter() {
       </HStack>
 
       <VStack gap={3} align="stretch">
-        <Text fontSize="sm" fontWeight="medium">Quick Presets</Text>
+        <Text fontSize="sm" fontWeight="medium">
+          Quick Presets
+        </Text>
         <ButtonGroup size="sm" variant="outline" flexWrap="wrap">
-          {DATE_FILTER_PRESETS.map(preset => (
-            <Button
-              key={preset.id}
-              onClick={() => handlePresetSelect(preset)}
-            >
+          {DATE_FILTER_PRESETS.map((preset) => (
+            <Button key={preset.id} onClick={() => handlePresetSelect(preset)}>
               {preset.label}
             </Button>
           ))}
         </ButtonGroup>
 
-        <Text fontSize="sm" fontWeight="medium">Custom Range</Text>
+        <Text fontSize="sm" fontWeight="medium">
+          Custom Range
+        </Text>
         <VStack gap={3} align="stretch">
           {/* Start Date and Time */}
           <VStack align="stretch" gap={2}>
-            <Text fontSize="xs" fontWeight="medium">Start Date & Time</Text>
+            <Text fontSize="xs" fontWeight="medium">
+              Start Date & Time
+            </Text>
             <HStack gap={2}>
               <Input
                 type="date"
                 size="sm"
                 flex={1}
-                value={dateRange.startDate?.toISOString().split('T')[0] || ''}
-                onChange={(e) => handleCustomDateChange('startDate', e.target.value ? new Date(e.target.value) : null)}
+                value={dateRange.startDate?.toISOString().split("T")[0] || ""}
+                onChange={(e) =>
+                  handleCustomDateChange(
+                    "startDate",
+                    e.target.value ? new Date(e.target.value) : null,
+                  )
+                }
               />
               <Input
                 type="time"
                 size="sm"
                 flex={1}
-                value={dateRange.startTime || ''}
-                onChange={(e) => handleTimeChange('startTime', e.target.value)}
+                value={dateRange.startTime || ""}
+                onChange={(e) => handleTimeChange("startTime", e.target.value)}
               />
             </HStack>
           </VStack>
 
           {/* End Date and Time */}
           <VStack align="stretch" gap={2}>
-            <Text fontSize="xs" fontWeight="medium">End Date & Time</Text>
+            <Text fontSize="xs" fontWeight="medium">
+              End Date & Time
+            </Text>
             <HStack gap={2}>
               <Input
                 type="date"
                 size="sm"
                 flex={1}
-                value={dateRange.endDate?.toISOString().split('T')[0] || ''}
-                onChange={(e) => handleCustomDateChange('endDate', e.target.value ? new Date(e.target.value) : null)}
+                value={dateRange.endDate?.toISOString().split("T")[0] || ""}
+                onChange={(e) =>
+                  handleCustomDateChange(
+                    "endDate",
+                    e.target.value ? new Date(e.target.value) : null,
+                  )
+                }
               />
               <Input
                 type="time"
                 size="sm"
                 flex={1}
-                value={dateRange.endTime || ''}
-                onChange={(e) => handleTimeChange('endTime', e.target.value)}
+                value={dateRange.endTime || ""}
+                onChange={(e) => handleTimeChange("endTime", e.target.value)}
               />
             </HStack>
           </VStack>
@@ -124,4 +153,4 @@ export default function DateFilter() {
       </VStack>
     </VStack>
   );
-} 
+}

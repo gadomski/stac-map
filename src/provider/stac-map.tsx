@@ -1,12 +1,21 @@
 import { useFileUpload } from "@chakra-ui/react";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import type { StacItem } from "stac-ts";
 import { StacMapContext } from "../context/stac-map";
 import { useStacCollections } from "../hooks/stac-collections";
 import useStacGeoparquet from "../hooks/stac-geoparquet";
 import useStacValue from "../hooks/stac-value";
 import type { StacValue, DateRange } from "../types/stac";
-import { serializeDateRange, deserializeDateRange } from "../utils/url-persistence";
+import {
+  serializeDateRange,
+  deserializeDateRange,
+} from "../utils/url-persistence";
 
 export function StacMapProvider({ children }: { children: ReactNode }) {
   const [href, setHref] = useState<string | undefined>(getInitialHref());
@@ -16,7 +25,6 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
     value?.links?.find((link) => link.rel == "data")?.href,
   );
   const [stacGeoparquetItemId, setStacGeoparquetItemId] = useState<string>();
-  
 
   const [dateRange, setDateRange] = useState<DateRange>(() => {
     const params = new URLSearchParams(location.search);
@@ -24,25 +32,43 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
     if (dateRangeParam) {
       return deserializeDateRange(new URLSearchParams(dateRangeParam));
     }
-    return { startDate: null, endDate: null, startTime: undefined, endTime: undefined };
+    return {
+      startDate: null,
+      endDate: null,
+      startTime: undefined,
+      endTime: undefined,
+    };
   });
 
   const {
     table: stacGeoparquetTable,
     metadata: stacGeoparquetMetadata,
     item: stacGeoparquetItem,
-  } = useStacGeoparquet({ path: parquetPath, id: stacGeoparquetItemId, dateRange });
-  
+  } = useStacGeoparquet({
+    path: parquetPath,
+    id: stacGeoparquetItemId,
+    dateRange,
+  });
+
   const [picked, setPicked] = useState<StacValue>();
   const [searchItems, setSearchItems] = useState<StacItem[][]>([]);
 
   const clearDateRange = useCallback(() => {
-    setDateRange({ startDate: null, endDate: null, startTime: undefined, endTime: undefined });
+    setDateRange({
+      startDate: null,
+      endDate: null,
+      startTime: undefined,
+      endTime: undefined,
+    });
   }, []);
 
   const isDateFilterActive = useMemo(() => {
-    return dateRange.startDate !== null || dateRange.endDate !== null || 
-           dateRange.startTime !== undefined || dateRange.endTime !== undefined;
+    return (
+      dateRange.startDate !== null ||
+      dateRange.endDate !== null ||
+      dateRange.startTime !== undefined ||
+      dateRange.endTime !== undefined
+    );
   }, [dateRange]);
 
   useEffect(() => {

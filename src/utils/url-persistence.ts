@@ -31,4 +31,4 @@ export function deserializeDateRange(searchParams: URLSearchParams): DateRange {
     startTime: searchParams.get("startTime") || undefined,
     endTime: searchParams.get("endTime") || undefined,
   };
-} 
+}

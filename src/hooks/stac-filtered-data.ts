@@ -4,8 +4,12 @@ import { isItemWithinDateRange } from "../utils/date-filter";
 import type { DateRange } from "../types/stac";
 
 function isDateRangeActive(dateRange: DateRange): boolean {
-  return dateRange.startDate !== null || dateRange.endDate !== null || 
-         dateRange.startTime !== undefined || dateRange.endTime !== undefined;
+  return (
+    dateRange.startDate !== null ||
+    dateRange.endDate !== null ||
+    dateRange.startTime !== undefined ||
+    dateRange.endTime !== undefined
+  );
 }
 
 export function useFilteredSearchItems() {
@@ -45,4 +49,4 @@ export function useFilteredCollections() {
       return true;
     });
   }, [collections, dateRange]);
-} 
+}

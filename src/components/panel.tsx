@@ -78,7 +78,9 @@ export default function Panel() {
         </Tabs.Content>
         <Tabs.Content value="search">
           {value && itemSearchLinks.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+            >
               <DateFilter />
               <ItemSearch
                 value={value}

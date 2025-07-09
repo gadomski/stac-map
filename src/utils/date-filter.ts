@@ -3,7 +3,7 @@ import type { DateRange, DateFilterPreset } from "../types/stac";
 
 function createDateTime(date: Date, time?: string): Date {
   if (!time) return date;
-  
+
   const [hours, minutes] = time.split(":").map(Number);
   const datetime = new Date(date);
   datetime.setHours(hours, minutes, 0, 0);
@@ -26,12 +26,13 @@ export function isItemWithinDateRange(
 ): boolean {
   if (!dateRange.startDate && !dateRange.endDate) return true;
 
-  const datetimeValue = item.properties?.datetime ||
+  const datetimeValue =
+    item.properties?.datetime ||
     item.properties?.start_datetime ||
     item.properties?.end_datetime;
-  
+
   if (!datetimeValue) return false;
-  
+
   const itemDate = new Date(datetimeValue);
 
   const effectiveStartDate = getEffectiveStartDateTime(dateRange);
@@ -68,10 +69,10 @@ export function parseDateTime(dateString: string, timeString?: string): Date {
 
 export function isValidDateRange(dateRange: DateRange): boolean {
   if (!dateRange.startDate && !dateRange.endDate) return true;
-  
+
   const effectiveStartDate = getEffectiveStartDateTime(dateRange);
   const effectiveEndDate = getEffectiveEndDateTime(dateRange);
-  
+
   if (effectiveStartDate && effectiveEndDate) {
     return effectiveStartDate <= effectiveEndDate;
   }
@@ -111,4 +112,4 @@ export const DATE_FILTER_PRESETS: DateFilterPreset[] = [
       endDate: new Date(),
     }),
   },
-]; 
+];

@@ -16,7 +16,7 @@ import type { StacGeoparquetMetadata, DateRange } from "../types/stac";
 
 function createDateTime(date: Date, time?: string): Date {
   if (!time) return date;
-  
+
   const [hours, minutes] = time.split(":").map(Number);
   const datetime = new Date(date);
   datetime.setHours(hours, minutes, 0, 0);
@@ -27,7 +27,6 @@ function getEffectiveStartDateTime(dateRange: DateRange): Date | null {
   if (!dateRange.startDate) return null;
   return createDateTime(dateRange.startDate, dateRange.startTime);
 }
-
 
 function getEffectiveEndDateTime(dateRange: DateRange): Date | null {
   if (!dateRange.endDate) return null;
@@ -45,7 +44,7 @@ export default function useStacGeoparquet({
 }) {
   const { db } = useDuckDb();
   const [connection, setConnection] = useState<AsyncDuckDBConnection>();
-  
+
   const { data: table } = useQuery({
     queryKey: ["stac-geoparquet-table", path, dateRange], // Include dateRange
     queryFn: async () => {
@@ -87,13 +86,16 @@ export default function useStacGeoparquet({
   return { table, metadata, item };
 }
 
-async function getTable(path: string, connection: AsyncDuckDBConnection, dateRange: DateRange) {
+async function getTable(
+  path: string,
+  connection: AsyncDuckDBConnection,
+  dateRange: DateRange,
+) {
   let query = `SELECT ST_AsWKB(geometry) as geometry, id FROM read_parquet('${path}')`;
-
 
   const effectiveStartDate = getEffectiveStartDateTime(dateRange);
   const effectiveEndDate = getEffectiveEndDateTime(dateRange);
-  
+
   if (effectiveStartDate || effectiveEndDate) {
     const conditions = [];
     if (effectiveStartDate) {
@@ -140,10 +142,9 @@ async function getMetadata(
 ): Promise<StacGeoparquetMetadata> {
   let query = `SELECT COUNT(*) as count, MIN(bbox.xmin) as xmin, MIN(bbox.ymin) as ymin, MAX(bbox.xmax) as xmax, MAX(bbox.ymax) as ymax FROM read_parquet('${path}')`;
 
-
   const effectiveStartDate = getEffectiveStartDateTime(dateRange);
   const effectiveEndDate = getEffectiveEndDateTime(dateRange);
-  
+
   if (effectiveStartDate || effectiveEndDate) {
     const conditions = [];
     if (effectiveStartDate) {
@@ -196,7 +197,7 @@ async function getItem(
 
   const effectiveStartDate = getEffectiveStartDateTime(dateRange);
   const effectiveEndDate = getEffectiveEndDateTime(dateRange);
-  
+
   if (effectiveStartDate || effectiveEndDate) {
     const conditions = [];
     if (effectiveStartDate) {
