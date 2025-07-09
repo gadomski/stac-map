@@ -27,11 +27,26 @@ export interface StacSearch {
   collections?: string[];
   bbox?: number[];
   limit?: number;
+  datetime?: string; // ISO 8601 datetime range
 }
 
 export interface StacSearchRequest {
   search: StacSearch;
   link: StacLink;
+}
+
+// Add new date range types
+export interface DateRange {
+  startDate: Date | null;
+  endDate: Date | null;
+  startTime?: string; // HH:mm format
+  endTime?: string; // HH:mm format
+}
+
+export interface DateFilterPreset {
+  id: string;
+  label: string;
+  getDateRange: () => DateRange;
 }
 
 export interface StacGeoparquetMetadata {

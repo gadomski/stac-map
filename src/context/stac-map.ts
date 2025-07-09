@@ -2,7 +2,7 @@ import type { UseFileUploadReturn } from "@chakra-ui/react";
 import type { Table } from "apache-arrow";
 import { createContext, type Dispatch, type SetStateAction } from "react";
 import type { StacCollection, StacItem } from "stac-ts";
-import type { StacGeoparquetMetadata, StacValue } from "../types/stac";
+import type { StacGeoparquetMetadata, StacValue, DateRange } from "../types/stac";
 
 export const StacMapContext = createContext<StacMapContextType | null>(null);
 
@@ -22,4 +22,10 @@ interface StacMapContextType {
 
   searchItems: StacItem[][];
   setSearchItems: Dispatch<SetStateAction<StacItem[][]>>;
+
+  // Date filtering properties
+  dateRange: DateRange;
+  setDateRange: (dateRange: DateRange) => void;
+  clearDateRange: () => void;
+  isDateFilterActive: boolean;
 }
