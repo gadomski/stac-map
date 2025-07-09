@@ -29,7 +29,7 @@ import type { StacCollection } from "stac-ts";
 import { type SelectedCollectionsAction } from "../../context";
 import { useFitBbox, useIsCollectionSelected, useStacMap } from "../../hooks";
 import { Prose } from "../ui/prose";
-import { getCollectionsExtent, isCollectionWithinDateRange } from "./utils";
+import { getCollectionsExtent } from "./utils";
 import Value from "./value";
 
 export function Collections({
@@ -46,7 +46,7 @@ export function Collections({
   const [filterToMapBounds, setFilterToMapBounds] = useState(false);
   const [bounds, setBounds] = useState<LngLatBounds>();
   const { map } = useMap();
-  const { dateRange } = useStacMap();
+
 
   useEffect(() => {
     let filtered = collections;
@@ -57,14 +57,8 @@ export function Collections({
       );
     }
     
-    if (dateRange && (dateRange.startDate || dateRange.endDate)) {
-      filtered = filtered.filter((collection) =>
-        isCollectionWithinDateRange(collection, dateRange),
-      );
-    }
-    
     setFilteredCollections(filtered);
-  }, [filterToMapBounds, map, collections, bounds, dateRange]);
+  }, [filterToMapBounds, map, collections, bounds]);
 
   useEffect(() => {
     if (map) {

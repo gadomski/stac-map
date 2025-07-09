@@ -18,7 +18,6 @@ import {
   getCollectionsExtent,
   getItemCollectionExtent,
   sanitizeBbox,
-  isCollectionWithinDateRange,
   isItemWithinDateRange,
 } from "./components/stac/utils";
 import { useColorModeValue } from "./components/ui/color-mode";
@@ -89,13 +88,12 @@ export default function Map() {
           fillColor,
           lineColor,
           selectedCollections,
-          dateRange,
         }),
       );
     } else {
       setCollectionsLayer(null);
     }
-  }, [collections, selectedCollections, lineColor, fillColor, dateRange]);
+  }, [collections, selectedCollections, lineColor, fillColor]);
 
   useEffect(() => {
     if (collections) {
@@ -340,26 +338,14 @@ function getCollectionsLayer({
   selectedCollections,
   lineColor,
   fillColor,
-  dateRange,
 }: {
   collections: StacCollection[];
   selectedCollections: Set<string>;
   lineColor: Color;
   fillColor: Color;
-  dateRange: { startDate: string | null; endDate: string | null } | null;
 }) {
   const validCollections = collections.filter(
-    (collection) => {
-      const hasSpatialExtent = collection.extent?.spatial?.bbox?.[0];
-      
-      // Filter by temporal extent if date range is active
-      let hasValidTemporalExtent = true;
-      if (dateRange && (dateRange.startDate || dateRange.endDate)) {
-        hasValidTemporalExtent = isCollectionWithinDateRange(collection, dateRange);
-      }
-      
-      return hasSpatialExtent && hasValidTemporalExtent;
-    }
+    (collection) => collection.extent?.spatial?.bbox?.[0]
   );
 
   return new GeoJsonLayer({

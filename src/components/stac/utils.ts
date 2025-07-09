@@ -80,39 +80,7 @@ export function getItemCollectionExtent(itemCollection: StacItemCollection) {
   }
 }
 
-export function isCollectionWithinDateRange(
-  collection: StacCollection,
-  dateRange: { startDate: string | null; endDate: string | null } | null,
-) {
-  if (!collection.extent?.temporal?.interval?.[0]) {
-    return false;
-  }
 
-  if (!dateRange || (!dateRange.startDate && !dateRange.endDate)) {
-    return true;
-  }
-
-  const temporalExtents = collection.extent.temporal.interval[0];
-  const collectionStart = temporalExtents[0] ? new Date(temporalExtents[0]) : null;
-  const collectionEnd = temporalExtents[1] ? new Date(temporalExtents[1]) : null;
-  
-  const filterStart = dateRange.startDate ? new Date(dateRange.startDate) : null;
-  const filterEnd = dateRange.endDate ? new Date(dateRange.endDate) : null;
-
-  if (!collectionStart && !collectionEnd) {
-    return false;
-  }
-
-  if (filterStart && collectionEnd && collectionEnd < filterStart) {
-    return false;
-  }
-
-  if (filterEnd && collectionStart && collectionStart > filterEnd) {
-    return false;
-  }
-
-  return true;
-}
 
 export function isItemWithinDateRange(
   item: StacItem,
