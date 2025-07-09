@@ -23,7 +23,9 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
   
   const [dateRange, setDateRange] = useState<{
     startDate: string | null;
+    startTime: string | null;
     endDate: string | null;
+    endTime: string | null;
   } | null>(null);
   
   const {

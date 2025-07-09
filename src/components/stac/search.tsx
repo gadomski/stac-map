@@ -51,6 +51,15 @@ export default function Search({
       onValueChange={(e) => setValue(e.value)}
       variant={"enclosed"}
     >
+        <Accordion.Item value="date-filter">
+        <Accordion.ItemTrigger>
+          <Span flex="1">Filter</Span>
+          <Accordion.ItemIndicator></Accordion.ItemIndicator>
+        </Accordion.ItemTrigger>
+        <Accordion.ItemContent py={4}>
+          <DateFilter></DateFilter>
+        </Accordion.ItemContent>
+      </Accordion.Item>
       {itemSearchLinks && itemSearchLinks.length > 0 && (
         <Accordion.Item value="item">
           <Accordion.ItemTrigger>
@@ -75,15 +84,7 @@ export default function Search({
           </Accordion.ItemContent>
         </Accordion.Item>
       )}
-      <Accordion.Item value="date-filter">
-        <Accordion.ItemTrigger>
-          <Span flex="1">Date Range Filter</Span>
-          <Accordion.ItemIndicator></Accordion.ItemIndicator>
-        </Accordion.ItemTrigger>
-        <Accordion.ItemContent py={4}>
-          <DateFilter></DateFilter>
-        </Accordion.ItemContent>
-      </Accordion.Item>
+
     </Accordion.Root>
   );
 }

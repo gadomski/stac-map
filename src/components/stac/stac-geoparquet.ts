@@ -28,7 +28,7 @@ interface KeyValueMetadata {
 export function useStacGeoparquetTable(
   path: string | undefined,
   connection: AsyncDuckDBConnection | undefined,
-  dateRange?: { startDate: string | null; endDate: string | null } | null,
+  dateRange?: { startDate: string | null; startTime: string | null; endDate: string | null; endTime: string | null } | null,
 ) {
   const { data, isPending, error } = useQuery({
     queryKey: ["stac-geoparquet-table", path, dateRange],
@@ -57,7 +57,7 @@ export function useStacGeoparquetTable(
 export function useStacGeoparquetMetadata(
   path: string | undefined,
   connection: AsyncDuckDBConnection | undefined,
-  dateRange?: { startDate: string | null; endDate: string | null } | null,
+  dateRange?: { startDate: string | null; startTime: string | null; endDate: string | null; endTime: string | null } | null,
 ) {
   const { data, isPending, error } = useQuery({
     queryKey: ["stac-geoparquet-metadata", path, dateRange],
@@ -86,16 +86,18 @@ export function useStacGeoparquetMetadata(
 async function getGeometryTable(
   path: string,
   connection: AsyncDuckDBConnection,
-  dateRange?: { startDate: string | null; endDate: string | null } | null,
+  dateRange?: { startDate: string | null; startTime: string | null; endDate: string | null; endTime: string | null } | null,
 ) {
   let whereClause = "";
   if (dateRange && (dateRange.startDate || dateRange.endDate)) {
     const conditions = [];
     if (dateRange.startDate) {
-      conditions.push(`datetime >= '${dateRange.startDate}'`);
+      const startDateTime = `${dateRange.startDate}T${dateRange.startTime || '00:00'}`;
+      conditions.push(`datetime >= '${startDateTime}'`);
     }
     if (dateRange.endDate) {
-      conditions.push(`datetime <= '${dateRange.endDate}'`);
+      const endDateTime = `${dateRange.endDate}T${dateRange.endTime || '23:59'}`;
+      conditions.push(`datetime <= '${endDateTime}'`);
     }
     whereClause = `WHERE ${conditions.join(" AND ")}`;
   }
@@ -131,16 +133,18 @@ async function getGeometryTable(
 async function getMetadata(
   path: string,
   connection: AsyncDuckDBConnection,
-  dateRange?: { startDate: string | null; endDate: string | null } | null,
+  dateRange?: { startDate: string | null; startTime: string | null; endDate: string | null; endTime: string | null } | null,
 ): Promise<StacGeoparquetMetadata> {
   let whereClause = "";
   if (dateRange && (dateRange.startDate || dateRange.endDate)) {
     const conditions = [];
     if (dateRange.startDate) {
-      conditions.push(`datetime >= '${dateRange.startDate}'`);
+      const startDateTime = `${dateRange.startDate}T${dateRange.startTime || '00:00'}`;
+      conditions.push(`datetime >= '${startDateTime}'`);
     }
     if (dateRange.endDate) {
-      conditions.push(`datetime <= '${dateRange.endDate}'`);
+      const endDateTime = `${dateRange.endDate}T${dateRange.endTime || '23:59'}`;
+      conditions.push(`datetime <= '${endDateTime}'`);
     }
     whereClause = `WHERE ${conditions.join(" AND ")}`;
   }

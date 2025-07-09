@@ -26,6 +26,7 @@ export interface StacSearch {
   collections?: string[];
   bbox?: number[];
   limit?: number;
+  datetime?: string;
 }
 
 export interface StacSearchRequest {

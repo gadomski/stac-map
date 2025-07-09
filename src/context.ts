@@ -39,9 +39,11 @@ interface StacMapContextType {
 
   dateRange: {
     startDate: string | null;
+    startTime: string | null;
     endDate: string | null;
+    endTime: string | null;
   } | null;
-  setDateRange: (range: { startDate: string | null; endDate: string | null; } | null) => void;
+  setDateRange: (range: { startDate: string | null; startTime: string | null; endDate: string | null; endTime: string | null; } | null) => void;
 }
 
 export type SelectedCollectionsAction =
