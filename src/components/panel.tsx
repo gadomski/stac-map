@@ -9,6 +9,7 @@ import {
 import type { StacLink } from "stac-ts";
 import useStacMap from "../hooks/stac-map";
 import useStacValue from "../hooks/stac-value";
+import DateFilter from "./date-filter";
 import ItemSearch from "./search/item";
 import Upload from "./upload";
 import Value from "./value";
@@ -77,11 +78,14 @@ export default function Panel() {
         </Tabs.Content>
         <Tabs.Content value="search">
           {value && itemSearchLinks.length > 0 && (
-            <ItemSearch
-              value={value}
-              links={itemSearchLinks}
-              defaultLink={itemSearchLinks[0]}
-            ></ItemSearch>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <DateFilter />
+              <ItemSearch
+                value={value}
+                links={itemSearchLinks}
+                defaultLink={itemSearchLinks[0]}
+              ></ItemSearch>
+            </div>
           )}
         </Tabs.Content>
         <Tabs.Content value="picked">

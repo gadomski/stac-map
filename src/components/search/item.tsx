@@ -144,7 +144,7 @@ function SearchResults({
   } = useStacSearch(search, link);
   const [numberMatched, setNumberMatched] = useState<number>();
   const [value, setValue] = useState<number | null>(null);
-  const { setSearchItems, setPicked } = useStacMap();
+  const { setSearchItems, setPicked, isDateFilterActive } = useStacMap();
   const [paused, setPaused] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -189,6 +189,16 @@ function SearchResults({
 
   return (
     <>
+      {isDateFilterActive && (
+        <Alert.Root status="info">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Description>
+              Showing results filtered by date range
+            </Alert.Description>
+          </Alert.Content>
+        </Alert.Root>
+      )}
       <Progress.Root value={value} max={numberMatched}>
         <Progress.Label>
           {(value && `Found ${value} item${value === 1 ? "" : "s"}`) ||
