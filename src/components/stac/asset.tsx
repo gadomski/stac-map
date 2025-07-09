@@ -1,6 +1,5 @@
 import {
   Card,
-  EmptyState,
   HStack,
   IconButton,
   type IconButtonProps,
@@ -10,7 +9,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { LuDownload, LuImageMinus } from "react-icons/lu";
+import { LuDownload } from "react-icons/lu";
 import type { StacAsset } from "stac-ts";
 
 export function Assets({ assets }: { assets: { [k: string]: StacAsset } }) {
@@ -31,9 +30,6 @@ export function AssetCard({
   asset: StacAsset;
 }) {
   const [showImage, setShowImage] = useState(false);
-  const [description, setDescription] = useState(
-    "Asset is not JPEG or PNG media type",
-  );
 
   const iconButtonProps: IconButtonProps = {
     size: "2xs",
@@ -52,33 +48,18 @@ export function AssetCard({
         </Text>
       </Card.Header>
       <Card.Body>
-        {(showImage && (
+        {showImage && (
           <Image
             src={asset.href}
             onError={() => {
-              setDescription("Image failed to load");
               setShowImage(false);
             }}
           ></Image>
-        )) || (
-          <EmptyState.Root size={"sm"}>
-            <EmptyState.Content>
-              <EmptyState.Indicator>
-                <LuImageMinus></LuImageMinus>
-              </EmptyState.Indicator>
-              <EmptyState.Title fontSize={"sm"}>
-                Cannot display
-              </EmptyState.Title>
-              <EmptyState.Description fontSize={"xs"}>
-                {description}
-              </EmptyState.Description>
-            </EmptyState.Content>
-          </EmptyState.Root>
         )}
+        <Text fontSize={"2xs"}>{asset.type}</Text>
       </Card.Body>
       <Card.Footer>
         <Stack gap={4}>
-          <Text fontSize={"2xs"}>{asset.type}</Text>
           <HStack>
             <IconButton {...iconButtonProps} asChild>
               <a href={asset.href}>

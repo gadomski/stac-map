@@ -1,12 +1,18 @@
 import { useFileUpload } from "@chakra-ui/react";
 import { useEffect, useReducer, useState, type ReactNode } from "react";
+import type { StacItem } from "stac-ts";
 import { SelectedCollectionsActionBar } from "./components/stac/collection";
-import { useStacCollections, useStacValue } from "./components/stac/hooks";
+import {
+  useItemSearch,
+  useStacCollections,
+  useStacValue,
+} from "./components/stac/hooks";
 import {
   useStacGeoparquetItem,
   useStacGeoparquetMetadata,
   useStacGeoparquetTable,
 } from "./components/stac/stac-geoparquet";
+import type { StacSearchRequest } from "./components/stac/types";
 import { StacMapContext, type SelectedCollectionsAction } from "./context";
 import { useDuckDbConnection } from "./hooks";
 
@@ -39,6 +45,15 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
   >();
   const { item: stacGeoparquetItem, isPending: stacGeoparquetItemIsPending } =
     useStacGeoparquetItem(stacGeoparquetItemId, parquetPath, connection);
+  const [searchRequest, setSearchRequest] = useState<
+    StacSearchRequest | undefined
+  >();
+  const {
+    items: searchItems,
+    hasNextPage: searchHasNextPage,
+    numberMatched: searchNumberMatched,
+  } = useItemSearch(searchRequest);
+  const [item, setItem] = useState<StacItem | undefined>();
 
   useEffect(() => {
     function handlePopState() {
@@ -67,6 +82,10 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
     }
   }, [fileUpload.acceptedFiles]);
 
+  useEffect(() => {
+    setItem(undefined);
+  }, [searchRequest]);
+
   const contextValue = {
     href,
     setHref,
@@ -87,6 +106,15 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
     setStacGeoparquetItemId,
     stacGeoparquetItem,
     stacGeoparquetItemIsPending,
+
+    searchRequest,
+    setSearchRequest,
+    searchItems,
+    searchNumberMatched,
+    searchHasNextPage,
+
+    item,
+    setItem,
   };
 
   return (
@@ -121,6 +149,8 @@ function selectedCollectionsReducer(
   switch (action.type) {
     case "select-collection":
       return new Set([...state, action.id]);
+    case "set-selected-collections":
+      return action.collections;
     case "deselect-collection":
       state.delete(action.id);
       return new Set([...state]);

@@ -3,7 +3,7 @@ import type { Table } from "apache-arrow";
 import { createContext, type Dispatch } from "react";
 import type { StacCollection, StacItem } from "stac-ts";
 import type { StacGeoparquetMetadata } from "./components/stac/stac-geoparquet";
-import type { StacValue } from "./components/stac/types";
+import type { StacSearchRequest, StacValue } from "./components/stac/types";
 
 export const StacMapContext = createContext<StacMapContextType | null>(null);
 
@@ -27,9 +27,19 @@ interface StacMapContextType {
   setStacGeoparquetItemId: (id: string) => void;
   stacGeoparquetItem: StacItem | undefined;
   stacGeoparquetItemIsPending: boolean;
+
+  searchRequest: StacSearchRequest | undefined;
+  setSearchRequest: (searchRequest: StacSearchRequest | undefined) => void;
+  searchItems: StacItem[] | undefined;
+  searchNumberMatched: number | undefined;
+  searchHasNextPage: boolean;
+
+  item: StacItem | undefined;
+  setItem: (item: StacItem | undefined) => void;
 }
 
 export type SelectedCollectionsAction =
   | { type: "select-collection"; id: string }
+  | { type: "set-selected-collections"; collections: Set<string> }
   | { type: "deselect-collection"; id: string }
   | { type: "deselect-all-collections" };

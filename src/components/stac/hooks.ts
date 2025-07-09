@@ -1,13 +1,20 @@
 import type { UseFileUploadReturn } from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  type DefaultError,
+  type InfiniteData,
+  type QueryKey,
+} from "@tanstack/react-query";
 import { isParquetFile, useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState } from "react";
-import type { StacCollection } from "stac-ts";
+import type { StacCollection, StacItem } from "stac-ts";
 import { toaster } from "../ui/toaster";
 import type {
   NaturalLanguageCollectionSearchResult,
   StacCollections,
   StacItemCollection,
+  StacSearchRequest,
   StacValue,
 } from "./types";
 
@@ -79,6 +86,7 @@ export function useStacValue(
         return null;
       }
     },
+    enabled: !!href,
   });
 
   useEffect(() => {
@@ -110,7 +118,6 @@ export function useStacValue(
 
 export function useStacCollections(href: string | undefined) {
   const [currentHref, setCurrentHref] = useState<string | undefined>();
-  const [pages, setPages] = useState<StacCollections[]>([]);
   const [collections, setCollections] = useState<
     StacCollection[] | undefined
   >();
@@ -131,11 +138,11 @@ export function useStacCollections(href: string | undefined) {
         return null;
       }
     },
+    enabled: !!href,
   });
 
   useEffect(() => {
     setCurrentHref(href);
-    setPages([]);
     setCollections(undefined);
   }, [href]);
 
@@ -151,7 +158,10 @@ export function useStacCollections(href: string | undefined) {
 
   useEffect(() => {
     if (data) {
-      setPages((pages) => [...pages, data]);
+      setCollections((collections) => [
+        ...(collections ?? []),
+        ...data.collections,
+      ]);
       if (data) {
         const nextLink = data.links?.find((link) => link.rel == "next");
         if (nextLink) {
@@ -161,15 +171,103 @@ export function useStacCollections(href: string | undefined) {
     }
   }, [data]);
 
-  useEffect(() => {
-    if (pages.length > 0) {
-      setCollections(pages.flatMap((page) => page.collections));
-    } else {
-      setCollections(undefined);
-    }
-  }, [pages]);
-
   return { collections, isPending, error };
+}
+
+export function useItemSearch(searchRequest: StacSearchRequest | undefined) {
+  const [items, setItems] = useState<StacItem[] | undefined>();
+  const [numberMatched, setNumberMatched] = useState<number | undefined>();
+
+  const { data, error, hasNextPage, isFetching, fetchNextPage } =
+    useInfiniteQuery<
+      StacItemCollection | null,
+      DefaultError,
+      InfiniteData<StacItemCollection | null>,
+      QueryKey,
+      StacSearchRequest | undefined
+    >({
+      queryKey: ["item-search", searchRequest],
+      queryFn: async ({ pageParam }) => {
+        if (pageParam) {
+          const url = new URL(pageParam.link.href);
+          const method = (pageParam.link.method as string | undefined) || "GET";
+          const init: RequestInit = {
+            method,
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+          };
+          if (method === "GET") {
+            if (pageParam.search.collections) {
+              url.searchParams.set(
+                "collections",
+                pageParam.search.collections.join(","),
+              );
+            }
+          } else {
+            if (pageParam.link.body) {
+              init.body = JSON.stringify(pageParam.link.body);
+            } else {
+              init.body = JSON.stringify(pageParam.search);
+            }
+          }
+          return await fetch(url, init).then((response) => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw new Error(
+                `Error while searching ${url}: ${response.statusText}`,
+              );
+            }
+          });
+        } else {
+          return null;
+        }
+      },
+      initialPageParam: searchRequest,
+      getNextPageParam: (lastPage: StacItemCollection | null) => {
+        if (lastPage) {
+          const nextLink = lastPage.links?.find((link) => link.rel == "next");
+          if (nextLink && searchRequest) {
+            return {
+              search: searchRequest.search,
+              link: nextLink,
+            };
+          }
+        }
+      },
+      enabled: !!searchRequest,
+    });
+
+  useEffect(() => {
+    if (data) {
+      setItems(data.pages.flatMap((page) => page?.features || []));
+      if (data.pages.length > 0 && data.pages[0]?.numberMatched) {
+        setNumberMatched(data.pages[0].numberMatched);
+      }
+    } else {
+      setItems(undefined);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (searchRequest && hasNextPage && !isFetching) {
+      fetchNextPage();
+    }
+  }, [searchRequest, hasNextPage, isFetching, fetchNextPage]);
+
+  useEffect(() => {
+    if (error) {
+      toaster.create({
+        type: "error",
+        title: "Error while searching",
+        description: error.message,
+      });
+    }
+  }, [error]);
+
+  return { items, hasNextPage, numberMatched };
 }
 
 export function useNaturalLanguageCollectionSearch(

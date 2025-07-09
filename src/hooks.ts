@@ -40,6 +40,13 @@ export function useIsCollectionSelected(id: string) {
   return selectedCollections.has(id);
 }
 
+export function useSelectedCollections() {
+  const { collections, selectedCollections } = useStacMap();
+  return collections?.filter((collection) =>
+    selectedCollections.has(collection.id),
+  );
+}
+
 export function useDuckDbConnection() {
   const { db, error } = useDuckDb();
   const [connection, setConnection] = useState<

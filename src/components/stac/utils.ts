@@ -1,4 +1,5 @@
 import type { StacCollection } from "stac-ts";
+import type { StacItemCollection } from "./types";
 
 export function sanitizeBbox(bbox: number[]) {
   const newBbox = (bbox.length == 6 && [
@@ -48,4 +49,32 @@ export function getCollectionsExtent(collections: StacCollection[]) {
     }
   });
   return bbox;
+}
+
+export function getItemCollectionExtent(itemCollection: StacItemCollection) {
+  const bbox = [180, 90, -180, -90];
+  let seen = false;
+  itemCollection.features.forEach((item) => {
+    if (item.bbox) {
+      seen = true;
+      const sanitizedBbox = sanitizeBbox(item.bbox);
+      if (sanitizedBbox[0] < bbox[0]) {
+        bbox[0] = sanitizedBbox[0];
+      }
+      if (sanitizedBbox[1] < bbox[1]) {
+        bbox[1] = sanitizedBbox[1];
+      }
+      if (sanitizedBbox[2] > bbox[2]) {
+        bbox[2] = sanitizedBbox[2];
+      }
+      if (sanitizedBbox[3] > bbox[3]) {
+        bbox[3] = sanitizedBbox[3];
+      }
+    }
+  });
+  if (seen) {
+    return bbox;
+  } else {
+    return [-180, -90, 180, 90];
+  }
 }

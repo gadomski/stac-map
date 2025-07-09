@@ -1,6 +1,7 @@
 import { Tabs } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { LuInfo, LuSearch, LuUpload } from "react-icons/lu";
+import type { StacLink } from "stac-ts";
 import Loading from "./components/loading";
 import Catalog from "./components/stac/catalog";
 import Collection from "./components/stac/collection";
@@ -15,18 +16,30 @@ export default function Panel() {
   const { href, value, valueIsPending, fileUpload } = useStacMap();
   const [tabValue, setTabValue] = useState("upload");
   const [enableSearch, setEnableSearch] = useState(false);
+  const [itemSearchLinks, setItemSearchLinks] = useState<
+    StacLink[] | undefined
+  >();
+  const [
+    naturalLanguageCollectionSearchHref,
+    setNaturalLanguageCollectionSearchHref,
+  ] = useState<string | undefined>();
 
   useEffect(() => {
     if (value) {
       setTabValue("value");
-      setEnableSearch(
-        value.type === "Catalog" || // Natural language
-          value.links?.find((link) => link.rel == "search") !== undefined, // Item search
+      setItemSearchLinks(value.links?.filter((link) => link.rel == "search"));
+      setNaturalLanguageCollectionSearchHref(
+        (value.type === "Catalog" && href) || undefined,
       );
-    } else {
-      setEnableSearch(false);
     }
-  }, [value]);
+  }, [href, value]);
+
+  useEffect(() => {
+    setEnableSearch(
+      !!naturalLanguageCollectionSearchHref ||
+        (!!itemSearchLinks && itemSearchLinks.length > 0),
+    );
+  }, [naturalLanguageCollectionSearchHref, itemSearchLinks]);
 
   return (
     <Tabs.Root
@@ -52,7 +65,12 @@ export default function Panel() {
             (value && getValue(value))}
         </Tabs.Content>
         <Tabs.Content value="search">
-          {href && value && <Search value={value} href={href}></Search>}
+          <Search
+            itemSearchLinks={itemSearchLinks}
+            naturalLanguageCollectionSearchHref={
+              naturalLanguageCollectionSearchHref
+            }
+          ></Search>
         </Tabs.Content>
         <Tabs.Content value="upload">
           <Upload fileUpload={fileUpload}></Upload>

@@ -13,8 +13,12 @@ import {
   type MapRef,
 } from "react-map-gl/maplibre";
 import type { StacCollection, StacItem } from "stac-ts";
-import type { StacItemCollection, StacValue } from "./components/stac/types";
-import { getCollectionsExtent, sanitizeBbox } from "./components/stac/utils";
+import type { StacValue } from "./components/stac/types";
+import {
+  getCollectionsExtent,
+  getItemCollectionExtent,
+  sanitizeBbox,
+} from "./components/stac/utils";
 import { useColorModeValue } from "./components/ui/color-mode";
 import { useStacMap } from "./hooks";
 import { getPadding } from "./utils";
@@ -36,10 +40,12 @@ export default function Map() {
   const [fillColor] = useState<Color>([207, 63, 2, 50]);
   const [lineColor] = useState<Color>([207, 63, 2, 100]);
   const [layers, setLayers] = useState<Layer[]>([]);
-  const [valueLayer, setValueLayer] = useState<Layer | null>();
-  const [collectionsLayer, setCollectionsLayer] = useState<Layer | null>();
+  const [valueLayer, setValueLayer] = useState<GeoJsonLayer | null>();
+  const [collectionsLayer, setCollectionsLayer] =
+    useState<GeoJsonLayer | null>();
   const [stacGeoparquetLayer, setStacGeoparquetLayer] =
-    useState<Layer | null>();
+    useState<GeoArrowPolygonLayer | null>();
+  const [searchLayer, setSearchLayer] = useState<GeoJsonLayer | null>();
   const {
     value,
     collections,
@@ -48,15 +54,20 @@ export default function Map() {
     stacGeoparquetMetadata,
     setStacGeoparquetItemId,
     stacGeoparquetItem,
+    searchItems,
+    item,
+    setItem,
   } = useStacMap();
 
   useEffect(() => {
     if (value) {
-      setValueLayer(getValueLayer({ value, lineColor, fillColor }));
+      setValueLayer(
+        getValueLayer({ value, lineColor, fillColor, item, setItem }),
+      );
     } else {
       setValueLayer(null);
     }
-  }, [value, fillColor, lineColor]);
+  }, [value, fillColor, lineColor, item, setItem]);
 
   useEffect(() => {
     if (value) {
@@ -122,18 +133,38 @@ export default function Map() {
   }, [stacGeoparquetMetadata]);
 
   useEffect(() => {
-    const layers = [];
+    if (searchItems) {
+      setSearchLayer(
+        getValueLayer({
+          value: { type: "FeatureCollection", features: searchItems },
+          fillColor,
+          lineColor,
+          item,
+          setItem,
+          id: "search",
+        }),
+      );
+    } else {
+      setSearchLayer(null);
+    }
+  }, [searchItems, fillColor, lineColor, item, setItem]);
+
+  useEffect(() => {
+    const layers: Layer[] = [];
+    if (searchLayer) {
+      layers.push(searchLayer);
+    }
     if (stacGeoparquetLayer) {
-      layers.push(stacGeoparquetLayer);
+      layers.push(stacGeoparquetLayer.clone({ visible: !searchLayer }));
     }
     if (collectionsLayer) {
-      layers.push(collectionsLayer);
+      layers.push(collectionsLayer.clone({ visible: !searchLayer }));
     }
     if (valueLayer) {
-      layers.push(valueLayer);
+      layers.push(valueLayer.clone({ visible: !searchLayer }));
     }
     setLayers(layers);
-  }, [stacGeoparquetLayer, collectionsLayer, valueLayer]);
+  }, [searchLayer, stacGeoparquetLayer, collectionsLayer, valueLayer]);
 
   return (
     <MaplibreMap
@@ -159,11 +190,19 @@ function getValueLayer({
   value,
   lineColor,
   fillColor,
+  item,
+  setItem,
+  id = "value",
 }: {
   value: StacValue;
   lineColor: Color;
   fillColor: Color;
+  item: StacItem | undefined;
+  setItem: (item: StacItem | undefined) => void;
+  id?: string;
 }) {
+  const inverseFillColor = invertColor(fillColor);
+  const inverseLineColor = invertColor(lineColor);
   switch (value.type) {
     case "Collection":
       if (!value.extent?.spatial?.bbox?.[0]) {
@@ -171,7 +210,7 @@ function getValueLayer({
       }
 
       return new GeoJsonLayer({
-        id: "value",
+        id,
         data: bboxPolygon(sanitizeBbox(value.extent.spatial.bbox[0]) as BBox),
         stroked: true,
         filled: true,
@@ -185,20 +224,35 @@ function getValueLayer({
         return null;
       } else {
         return new GeoJsonLayer({
-          id: "value",
+          id,
           // @ts-expect-error Don't want to bother typing correctly
           data: value,
           stroked: true,
           filled: true,
-          getLineColor: fillColor,
-          getFillColor: fillColor,
+          getLineColor: (info) => {
+            if (item && info.id == item.id) {
+              return inverseLineColor;
+            } else {
+              return lineColor;
+            }
+          },
+          getFillColor: (info) => {
+            if (item && info.id == item.id) {
+              return inverseFillColor;
+            } else {
+              return fillColor;
+            }
+          },
           lineWidthUnits: "pixels",
           getLineWidth: 2,
+          autoHighlight: true,
+          pickable: true,
+          onClick: (info) => setItem(info.object),
         });
       }
     case "Feature":
       return new GeoJsonLayer({
-        id: "value",
+        id,
         // @ts-expect-error Don't want to bother typing correctly
         data: value,
         stroked: true,
@@ -311,32 +365,4 @@ function getValueBbox(value: StacValue) {
 
 function invertColor(color: Color) {
   return [256 - color[0], 256 - color[1], 256 - color[2], color[3]] as Color;
-}
-
-function getItemCollectionExtent(itemCollection: StacItemCollection) {
-  const bbox = [180, 90, -180, -90];
-  let seen = false;
-  itemCollection.features.forEach((item) => {
-    if (item.bbox) {
-      seen = true;
-      const sanitizedBbox = sanitizeBbox(item.bbox);
-      if (sanitizedBbox[0] < bbox[0]) {
-        bbox[0] = sanitizedBbox[0];
-      }
-      if (sanitizedBbox[1] < bbox[1]) {
-        bbox[1] = sanitizedBbox[1];
-      }
-      if (sanitizedBbox[2] > bbox[2]) {
-        bbox[2] = sanitizedBbox[2];
-      }
-      if (sanitizedBbox[3] > bbox[3]) {
-        bbox[3] = sanitizedBbox[3];
-      }
-    }
-  });
-  if (seen) {
-    return bbox;
-  } else {
-    return [-180, -90, 180, 90];
-  }
 }
