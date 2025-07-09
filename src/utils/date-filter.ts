@@ -26,11 +26,13 @@ export function isItemWithinDateRange(
 ): boolean {
   if (!dateRange.startDate && !dateRange.endDate) return true;
 
-  const itemDate = new Date(
-    item.properties?.datetime ||
-      item.properties?.start_datetime ||
-      item.properties?.end_datetime,
-  );
+  const datetimeValue = item.properties?.datetime ||
+    item.properties?.start_datetime ||
+    item.properties?.end_datetime;
+  
+  if (!datetimeValue) return false;
+  
+  const itemDate = new Date(datetimeValue);
 
   const effectiveStartDate = getEffectiveStartDateTime(dateRange);
   const effectiveEndDate = getEffectiveEndDateTime(dateRange);
