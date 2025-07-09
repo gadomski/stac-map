@@ -1,20 +1,14 @@
-import {
-  Box,
-  FileUpload,
-  Icon,
-  type UseFileUploadReturn,
-} from "@chakra-ui/react";
+import { Box, FileUpload, Icon } from "@chakra-ui/react";
 import { LuUpload } from "react-icons/lu";
+import useStacMap from "../hooks/stac-map";
 
-export default function Upload({
-  fileUpload,
-}: {
-  fileUpload: UseFileUploadReturn;
-}) {
+export default function Upload() {
+  const { fileUpload } = useStacMap();
+
   return (
-    <FileUpload.RootProvider alignItems="stretch" value={fileUpload} pb={4}>
+    <FileUpload.RootProvider alignItems="stretch" value={fileUpload}>
       <FileUpload.HiddenInput />
-      <FileUpload.Dropzone bg={"bg.muted/60"}>
+      <FileUpload.Dropzone bg="bg.panel" mx={2} mb={2}>
         <Icon size="md" color="fg.muted">
           <LuUpload />
         </Icon>
