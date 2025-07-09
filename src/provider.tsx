@@ -20,6 +20,12 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
   const { connection } = useDuckDbConnection();
   const [href, setHref] = useState<string | undefined>(getInitialHref());
   const fileUpload = useFileUpload({ maxFiles: 1 });
+  
+  const [dateRange, setDateRange] = useState<{
+    startDate: string | null;
+    endDate: string | null;
+  } | null>(null);
+  
   const {
     value,
     isPending: valueIsPending,
@@ -35,11 +41,11 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
   const {
     table: stacGeoparquetTable,
     isPending: stacGeoparquetTableIsPending,
-  } = useStacGeoparquetTable(parquetPath, connection);
+  } = useStacGeoparquetTable(parquetPath, connection, dateRange);
   const {
     metadata: stacGeoparquetMetadata,
     isPending: stacGeoparquetMetadataIsPending,
-  } = useStacGeoparquetMetadata(parquetPath, connection);
+  } = useStacGeoparquetMetadata(parquetPath, connection, dateRange);
   const [stacGeoparquetItemId, setStacGeoparquetItemId] = useState<
     string | undefined
   >();
@@ -54,11 +60,6 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
     numberMatched: searchNumberMatched,
   } = useItemSearch(searchRequest);
   const [item, setItem] = useState<StacItem | undefined>();
-  
-  const [dateRange, setDateRange] = useState<{
-    startDate: string | null;
-    endDate: string | null;
-  } | null>(null);
 
   useEffect(() => {
     function handlePopState() {

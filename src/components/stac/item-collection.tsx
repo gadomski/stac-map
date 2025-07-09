@@ -12,7 +12,9 @@ import {
   Portal,
   Stack,
   Stat,
+  Text,
 } from "@chakra-ui/react";
+import { useMemo } from "react";
 import { LuDownload, LuEyeOff, LuFileJson, LuFocus } from "react-icons/lu";
 import type { StacItem } from "stac-ts";
 import { useFitBbox, useStacMap } from "../../hooks";
@@ -20,7 +22,7 @@ import Loading from "../loading";
 import Item from "./item";
 import { type StacGeoparquetMetadata } from "./stac-geoparquet";
 import type { StacItemCollection } from "./types";
-import { getItemCollectionExtent } from "./utils";
+import { getItemCollectionExtent, isItemWithinDateRange } from "./utils";
 import Value from "./value";
 
 export default function ItemCollection({
@@ -32,12 +34,41 @@ export default function ItemCollection({
     stacGeoparquetMetadata,
     stacGeoparquetMetadataIsPending,
     stacGeoparquetItem,
+    dateRange,
   } = useStacMap();
   const fitBbox = useFitBbox();
 
+  const filteredFeatures = useMemo(() => {
+    if (!dateRange || (!dateRange.startDate && !dateRange.endDate)) {
+      return itemCollection.features;
+    }
+
+    return itemCollection.features.filter((feature) =>
+      isItemWithinDateRange(feature, dateRange)
+    );
+  }, [itemCollection.features, dateRange]);
+
+  const filteredItemCollection = useMemo(() => ({
+    ...itemCollection,
+    features: filteredFeatures,
+  }), [itemCollection, filteredFeatures]);
+
+  const isFilterActive = dateRange && (dateRange.startDate || dateRange.endDate);
+
   return (
     <Stack>
-      <Value value={itemCollection} type="Item collection"></Value>
+      <Value value={filteredItemCollection} type="Item collection"></Value>
+      
+      {isFilterActive && (
+        <Card.Root variant="elevated" bg="blue.50" borderColor="blue.200">
+          <Card.Body py={2}>
+            <Text fontSize="sm" color="blue.700">
+              <strong>Date Filter Active:</strong> Showing {filteredFeatures.length} of {itemCollection.features.length} items
+            </Text>
+          </Card.Body>
+        </Card.Root>
+      )}
+      
       <HStack>
         <DownloadTrigger
           asChild
@@ -49,11 +80,11 @@ export default function ItemCollection({
             <LuDownload></LuDownload>
           </IconButton>
         </DownloadTrigger>
-        {itemCollection.features.length > 0 && (
+        {filteredFeatures.length > 0 && (
           <IconButton
             size={"sm"}
             variant={"subtle"}
-            onClick={() => fitBbox(getItemCollectionExtent(itemCollection))}
+            onClick={() => fitBbox(getItemCollectionExtent(filteredItemCollection))}
           >
             <LuFocus></LuFocus>
           </IconButton>
@@ -77,6 +108,9 @@ function StacGeoparquetMetadata({
 }: {
   metadata: StacGeoparquetMetadata;
 }) {
+  const { dateRange } = useStacMap();
+  const isFilterActive = dateRange && (dateRange.startDate || dateRange.endDate);
+
   return (
     <Stack gap={4}>
       <Stat.Root>
@@ -85,6 +119,17 @@ function StacGeoparquetMetadata({
           <FormatNumber value={metadata.count}></FormatNumber>
         </Stat.ValueText>
       </Stat.Root>
+      
+      {isFilterActive && (
+        <Card.Root variant="elevated" bg="green.50" borderColor="green.200">
+          <Card.Body py={2}>
+            <Text fontSize="sm" color="green.700">
+              <strong>Date Filter Active:</strong> Showing {metadata.count} filtered items
+            </Text>
+          </Card.Body>
+        </Card.Root>
+      )}
+      
       <HStack>
         <MetadataDrawer metadata={metadata}></MetadataDrawer>
       </HStack>

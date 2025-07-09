@@ -115,7 +115,6 @@ export default function Map() {
           fillColor,
           setStacGeoparquetItemId,
           stacGeoparquetItem,
-          dateRange,
         ),
       );
     } else {
@@ -127,7 +126,6 @@ export default function Map() {
     lineColor,
     setStacGeoparquetItemId,
     stacGeoparquetItem,
-    dateRange,
   ]);
 
   useEffect(() => {
@@ -296,30 +294,16 @@ function getStacGeoparquetLayer(
   lineColor: Color,
   setStacGeoparquetItemId: (id: string) => void,
   stacGeoparquetItem: StacItem | undefined,
-  dateRange?: { startDate: string | null; endDate: string | null } | null,
 ) {
   const inverseFillColor = invertColor(fillColor);
   const inverseLineColor = invertColor(lineColor);
-  
-  let filteredTable = table;
-  if (dateRange && (dateRange.startDate || dateRange.endDate)) {
-    // Note: This is a simplified approach. In a real implementation,
-    // you would need to query the DuckDB table with date filters.
-    // For now, we'll use the full table and rely on the layer's filter function
-    filteredTable = table;
-  }
-  
+
   return new GeoArrowPolygonLayer({
     id: "stac-geoparquet",
-    data: filteredTable,
+    data: table,
     stroked: true,
     filled: true,
     getFillColor: (info) => {
-      if (dateRange && (dateRange.startDate || dateRange.endDate)) {
-        // Note: This would need to be enhanced to actually filter by date
-        // For now, we'll show all items but this could be improved
-      }
-      
       if (
         stacGeoparquetItem &&
         stacGeoparquetItem?.id == table.getChild("id")?.get(info.index)

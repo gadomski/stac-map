@@ -28,12 +28,13 @@ interface KeyValueMetadata {
 export function useStacGeoparquetTable(
   path: string | undefined,
   connection: AsyncDuckDBConnection | undefined,
+  dateRange?: { startDate: string | null; endDate: string | null } | null,
 ) {
   const { data, isPending, error } = useQuery({
-    queryKey: ["stac-geoparquet-table", path],
+    queryKey: ["stac-geoparquet-table", path, dateRange],
     queryFn: async () => {
       if (connection && path) {
-        return getGeometryTable(path, connection);
+        return getGeometryTable(path, connection, dateRange);
       } else {
         return null;
       }
@@ -56,12 +57,13 @@ export function useStacGeoparquetTable(
 export function useStacGeoparquetMetadata(
   path: string | undefined,
   connection: AsyncDuckDBConnection | undefined,
+  dateRange?: { startDate: string | null; endDate: string | null } | null,
 ) {
   const { data, isPending, error } = useQuery({
-    queryKey: ["stac-geoparquet-metadata", path],
+    queryKey: ["stac-geoparquet-metadata", path, dateRange],
     queryFn: async () => {
       if (connection && path) {
-        return await getMetadata(path, connection);
+        return await getMetadata(path, connection, dateRange);
       } else {
         return null;
       }
@@ -84,9 +86,22 @@ export function useStacGeoparquetMetadata(
 async function getGeometryTable(
   path: string,
   connection: AsyncDuckDBConnection,
+  dateRange?: { startDate: string | null; endDate: string | null } | null,
 ) {
+  let whereClause = "";
+  if (dateRange && (dateRange.startDate || dateRange.endDate)) {
+    const conditions = [];
+    if (dateRange.startDate) {
+      conditions.push(`datetime >= '${dateRange.startDate}'`);
+    }
+    if (dateRange.endDate) {
+      conditions.push(`datetime <= '${dateRange.endDate}'`);
+    }
+    whereClause = `WHERE ${conditions.join(" AND ")}`;
+  }
+
   const result = await connection.query(
-    `SELECT ST_AsWKB(geometry) as geometry, id FROM read_parquet('${path}')`,
+    `SELECT ST_AsWKB(geometry) as geometry, id FROM read_parquet('${path}') ${whereClause}`,
   );
   const geometry: Uint8Array[] = result.getChildAt(0)?.toArray();
   const wkb = new Uint8Array(geometry?.flatMap((array) => [...array]));
@@ -116,9 +131,22 @@ async function getGeometryTable(
 async function getMetadata(
   path: string,
   connection: AsyncDuckDBConnection,
+  dateRange?: { startDate: string | null; endDate: string | null } | null,
 ): Promise<StacGeoparquetMetadata> {
+  let whereClause = "";
+  if (dateRange && (dateRange.startDate || dateRange.endDate)) {
+    const conditions = [];
+    if (dateRange.startDate) {
+      conditions.push(`datetime >= '${dateRange.startDate}'`);
+    }
+    if (dateRange.endDate) {
+      conditions.push(`datetime <= '${dateRange.endDate}'`);
+    }
+    whereClause = `WHERE ${conditions.join(" AND ")}`;
+  }
+
   const summaryResult = await connection.query(
-    `SELECT COUNT(*) as count, MIN(bbox.xmin) as xmin, MIN(bbox.ymin) as ymin, MAX(bbox.xmax) as xmax, MAX(bbox.ymax) as ymax FROM read_parquet('${path}')`,
+    `SELECT COUNT(*) as count, MIN(bbox.xmin) as xmin, MIN(bbox.ymin) as ymin, MAX(bbox.xmax) as xmax, MAX(bbox.ymax) as ymax FROM read_parquet('${path}') ${whereClause}`,
   );
   const summaryRow = summaryResult.toArray().map((row) => row.toJSON())[0];
 

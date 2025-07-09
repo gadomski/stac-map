@@ -55,7 +55,7 @@ export default function DateFilter() {
       <Card.Body pt={0}>
         <VStack gap={3} align="stretch">
           <Stack gap={2}>
-            <Text htmlFor="start-date" fontSize="sm" fontWeight="medium">
+            <Text as="label" fontSize="sm" fontWeight="medium">
               Start Date
             </Text>
             <Input
@@ -69,7 +69,7 @@ export default function DateFilter() {
           </Stack>
 
           <Stack gap={2}>
-            <Text htmlFor="end-date" fontSize="sm" fontWeight="medium">
+            <Text as="label" fontSize="sm" fontWeight="medium">
               End Date
             </Text>
             <Input

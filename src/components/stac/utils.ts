@@ -82,10 +82,14 @@ export function getItemCollectionExtent(itemCollection: StacItemCollection) {
 
 export function isCollectionWithinDateRange(
   collection: StacCollection,
-  dateRange: { startDate: string | null; endDate: string | null },
+  dateRange: { startDate: string | null; endDate: string | null } | null,
 ) {
   if (!collection.extent?.temporal?.interval?.[0]) {
     return false;
+  }
+
+  if (!dateRange || (!dateRange.startDate && !dateRange.endDate)) {
+    return true;
   }
 
   const temporalExtents = collection.extent.temporal.interval[0];
@@ -112,11 +116,15 @@ export function isCollectionWithinDateRange(
 
 export function isItemWithinDateRange(
   item: StacItem,
-  dateRange: { startDate: string | null; endDate: string | null },
+  dateRange: { startDate: string | null; endDate: string | null } | null,
 ) {
   const itemDate = item.properties?.datetime;
   if (!itemDate) {
     return false;
+  }
+
+  if (!dateRange || (!dateRange.startDate && !dateRange.endDate)) {
+    return true;
   }
 
   const itemDateTime = new Date(itemDate);
@@ -135,18 +143,31 @@ export function isItemWithinDateRange(
 }
 
 export function formatDateRangeForStacSearch(
-  dateRange: { startDate: string | null; endDate: string | null }
+  dateRange: { startDate: string | null; endDate: string | null } | null
 ): string | null {
-  if (!dateRange.startDate && !dateRange.endDate) {
+  if (!dateRange || (!dateRange.startDate && !dateRange.endDate)) {
     return null;
   }
 
+  // Convert date strings to RFC3339 format
+  const formatDateToRFC3339 = (dateString: string, isEndDate: boolean = false): string => {
+    if (isEndDate) {
+      return `${dateString}T23:59:59Z`;
+    } else {
+      return `${dateString}T00:00:00Z`;
+    }
+  };
+
   if (dateRange.startDate && dateRange.endDate) {
-    return `${dateRange.startDate}/${dateRange.endDate}`;
+    const startDate = formatDateToRFC3339(dateRange.startDate, false);
+    const endDate = formatDateToRFC3339(dateRange.endDate, true);
+    return `${startDate}/${endDate}`;
   } else if (dateRange.startDate) {
-    return `${dateRange.startDate}/..`;
+    const startDate = formatDateToRFC3339(dateRange.startDate, false);
+    return `${startDate}/..`;
   } else if (dateRange.endDate) {
-    return `../${dateRange.endDate}`;
+    const endDate = formatDateToRFC3339(dateRange.endDate, true);
+    return `../${endDate}`;
   }
 
   return null;
