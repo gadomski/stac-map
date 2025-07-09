@@ -1,5 +1,6 @@
 import type { StacCollection } from "stac-ts";
 import type { StacItemCollection } from "./types";
+import type { StacItem } from "stac-ts";
 
 export function sanitizeBbox(bbox: number[]) {
   const newBbox = (bbox.length == 6 && [
@@ -77,4 +78,81 @@ export function getItemCollectionExtent(itemCollection: StacItemCollection) {
   } else {
     return [-180, -90, 180, 90];
   }
+}
+
+export function isCollectionWithinDateRange(
+  collection: StacCollection,
+  dateRange: { startDate: string | null; endDate: string | null },
+) {
+  if (!collection.extent?.temporal?.interval?.[0]) {
+    return false;
+  }
+
+  const temporalExtents = collection.extent.temporal.interval[0];
+  const collectionStart = temporalExtents[0] ? new Date(temporalExtents[0]) : null;
+  const collectionEnd = temporalExtents[1] ? new Date(temporalExtents[1]) : null;
+  
+  const filterStart = dateRange.startDate ? new Date(dateRange.startDate) : null;
+  const filterEnd = dateRange.endDate ? new Date(dateRange.endDate) : null;
+
+  // If no temporal extent in collection, exclude it
+  if (!collectionStart && !collectionEnd) {
+    return false;
+  }
+
+  // If filter has start date, collection must end after or on the start date
+  if (filterStart && collectionEnd && collectionEnd < filterStart) {
+    return false;
+  }
+
+  // If filter has end date, collection must start before or on the end date
+  if (filterEnd && collectionStart && collectionStart > filterEnd) {
+    return false;
+  }
+
+  return true;
+}
+
+export function isItemWithinDateRange(
+  item: StacItem,
+  dateRange: { startDate: string | null; endDate: string | null },
+) {
+  const itemDate = item.properties?.datetime;
+  if (!itemDate) {
+    return false;
+  }
+
+  const itemDateTime = new Date(itemDate);
+  const filterStart = dateRange.startDate ? new Date(dateRange.startDate) : null;
+  const filterEnd = dateRange.endDate ? new Date(dateRange.endDate) : null;
+
+  // If filter has start date, item must be on or after the start date
+  if (filterStart && itemDateTime < filterStart) {
+    return false;
+  }
+
+  // If filter has end date, item must be on or before the end date
+  if (filterEnd && itemDateTime > filterEnd) {
+    return false;
+  }
+
+  return true;
+}
+
+export function formatDateRangeForStacSearch(
+  dateRange: { startDate: string | null; endDate: string | null }
+): string | null {
+  if (!dateRange.startDate && !dateRange.endDate) {
+    return null;
+  }
+
+  if (dateRange.startDate && dateRange.endDate) {
+    return `${dateRange.startDate}/${dateRange.endDate}`;
+  } else if (dateRange.startDate) {
+    return `${dateRange.startDate}/..`;
+  } else if (dateRange.endDate) {
+    return `../${dateRange.endDate}`;
+  }
+
+  return null;
 }
