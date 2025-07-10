@@ -24,11 +24,11 @@ export default function DateFilter() {
     field: keyof DateRange,
     value: Date | string | null,
   ) => {
-    setDateRange((prev) => ({ ...prev, [field]: value }));
+    setDateRange({ ...dateRange, [field]: value });
   };
 
   const handleTimeChange = (field: "startTime" | "endTime", value: string) => {
-    setDateRange((prev) => ({ ...prev, [field]: value || undefined }));
+    setDateRange({ ...dateRange, [field]: value || undefined });
   };
 
   return (
@@ -53,10 +53,9 @@ export default function DateFilter() {
             size="sm"
             variant="ghost"
             colorScheme="red"
-            leftIcon={<LuX />}
             onClick={clearDateRange}
           >
-            Clear
+            <LuX /> Clear
           </Button>
         )}
       </HStack>
