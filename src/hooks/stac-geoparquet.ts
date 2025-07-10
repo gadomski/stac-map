@@ -12,7 +12,8 @@ import {
 import { useDuckDb } from "duckdb-wasm-kit";
 import { useEffect, useState } from "react";
 import * as stacWasm from "../stac-wasm";
-import type { StacGeoparquetMetadata, DateRange } from "../types/stac";
+import type { StacGeoparquetMetadata } from "../types/stac";
+import type { DateRange } from "../components/date-filter";
 
 function createDateTime(date: Date, time?: string): Date {
   if (!time) return date;

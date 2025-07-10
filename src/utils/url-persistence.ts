@@ -1,4 +1,4 @@
-import type { DateRange } from "../types/stac";
+import type { DateRange } from "../components/date-filter";
 
 export function serializeDateRange(dateRange: DateRange): string | null {
   if (!dateRange.startDate && !dateRange.endDate) return null;

@@ -11,7 +11,8 @@ import { StacMapContext } from "../context/stac-map";
 import { useStacCollections } from "../hooks/stac-collections";
 import useStacGeoparquet from "../hooks/stac-geoparquet";
 import useStacValue from "../hooks/stac-value";
-import type { StacValue, DateRange } from "../types/stac";
+import type { StacValue } from "../types/stac";
+import type { DateRange } from "../components/date-filter";
 import {
   serializeDateRange,
   deserializeDateRange,

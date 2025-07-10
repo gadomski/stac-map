@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import useStacMap from "./stac-map";
 import { isItemWithinDateRange } from "../utils/date-filter";
-import type { DateRange } from "../types/stac";
+import type { DateRange } from "../components/date-filter";
 
 function isDateRangeActive(dateRange: DateRange): boolean {
   return (

@@ -5,8 +5,8 @@ import type { StacCollection, StacItem } from "stac-ts";
 import type {
   StacGeoparquetMetadata,
   StacValue,
-  DateRange,
 } from "../types/stac";
+import type { DateRange } from "../components/date-filter";
 
 export const StacMapContext = createContext<StacMapContextType | null>(null);
 

@@ -1,5 +1,5 @@
 import type { StacItem } from "stac-ts";
-import type { DateRange, DateFilterPreset } from "../types/stac";
+import type { DateRange, DateFilterPreset } from "../components/date-filter";
 
 function createDateTime(date: Date, time?: string): Date {
   if (!time) return date;
