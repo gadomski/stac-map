@@ -1,5 +1,6 @@
 import type { StacItem } from "stac-ts";
 import type { DateRange, DateFilterPreset } from "../components/date-filter";
+import type { StacValue } from "../types/stac";
 
 function createDateTime(date: Date, time?: string): Date {
   if (!time) return date;
@@ -113,3 +114,76 @@ export const DATE_FILTER_PRESETS: DateFilterPreset[] = [
     }),
   },
 ];
+export function extractTemporalExtent(value: StacValue): { start: Date; end: Date } | null {
+  if (!value) return null;
+
+  switch (value.type) {
+    case "Collection":
+      if (value.extent?.temporal?.interval?.[0]) {
+        const [start, end] = value.extent.temporal.interval[0];
+        if (start && end) {
+          return {
+            start: new Date(start),
+            end: new Date(end),
+          };
+        }
+      }
+      break;
+
+    case "Feature": {
+      const datetime = value.properties?.datetime;
+      if (datetime) {
+        const date = new Date(datetime);
+        return {
+          start: date,
+          end: date,
+        };
+      }
+      break;
+    }
+
+    case "FeatureCollection":
+      if (value.features.length > 0) {
+        let minDate: Date | null = null;
+        let maxDate: Date | null = null;
+
+        value.features.forEach((item) => {
+          const datetime = item.properties?.datetime;
+          if (datetime) {
+            const date = new Date(datetime);
+            if (!minDate || date < minDate) {
+              minDate = date;
+            }
+            if (!maxDate || date > maxDate) {
+              maxDate = date;
+            }
+          }
+        });
+
+        if (minDate && maxDate) {
+          return {
+            start: minDate,
+            end: maxDate,
+          };
+        }
+      }
+      break;
+
+    case "Catalog":
+      break;
+  }
+
+  return null;
+}
+
+export function createDateRangeFromTemporalExtent(value: StacValue): DateRange | null {
+  const temporalExtent = extractTemporalExtent(value);
+  if (!temporalExtent) return null;
+
+  return {
+    startDate: temporalExtent.start,
+    endDate: temporalExtent.end,
+    startTime: undefined,
+    endTime: undefined,
+  };
+}

@@ -17,6 +17,7 @@ import {
   serializeDateRange,
   deserializeDateRange,
 } from "../utils/url-persistence";
+import { createDateRangeFromTemporalExtent } from "../utils/date-filter";
 
 export function StacMapProvider({ children }: { children: ReactNode }) {
   const [href, setHref] = useState<string | undefined>(getInitialHref());
@@ -115,6 +116,17 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setPicked(stacGeoparquetItem);
   }, [stacGeoparquetItem]);
+
+  useEffect(() => {
+    if (value) {
+      const temporalDateRange = createDateRangeFromTemporalExtent(value);
+      if (temporalDateRange) {
+        setDateRange(temporalDateRange);
+      } else {
+        clearDateRange();
+      }
+    }
+  }, [value, clearDateRange]);
 
   const contextValue = {
     href,
