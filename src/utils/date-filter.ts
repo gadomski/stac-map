@@ -27,20 +27,20 @@ export function isItemWithinDateRange(
 ): boolean {
   if (!dateRange.startDate && !dateRange.endDate) return true;
 
-  const datetimeValue =
-    item.properties?.datetime ||
-    item.properties?.start_datetime ||
-    item.properties?.end_datetime;
+  const itemStart = item.properties?.datetime || item.properties?.start_datetime;
+  const itemEnd = item.properties?.datetime || item.properties?.end_datetime;
 
-  if (!datetimeValue) return false;
-
-  const itemDate = new Date(datetimeValue);
+  if (!itemStart && !itemEnd) return false;
 
   const effectiveStartDate = getEffectiveStartDateTime(dateRange);
   const effectiveEndDate = getEffectiveEndDateTime(dateRange);
 
-  if (effectiveStartDate && itemDate < effectiveStartDate) return false;
-  if (effectiveEndDate && itemDate > effectiveEndDate) return false;
+  const itemStartDate = itemStart ? new Date(itemStart) : null;
+  const itemEndDate = itemEnd ? new Date(itemEnd) : null;
+
+  
+  if (effectiveStartDate && itemEndDate && itemEndDate < effectiveStartDate) return false;
+  if (effectiveEndDate && itemStartDate && itemStartDate > effectiveEndDate) return false;
 
   return true;
 }
