@@ -35,8 +35,6 @@ export interface StacSearchRequest {
   link: StacLink;
 }
 
-
-
 export interface StacGeoparquetMetadata {
   count: number;
   bbox: BBox;
