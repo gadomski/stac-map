@@ -1,16 +1,3 @@
-export interface DateRange {
-  startDate: Date | null;
-  endDate: Date | null;
-  startTime?: string; // HH:mm format
-  endTime?: string; // HH:mm format
-}
-
-export interface DateFilterPreset {
-  id: string;
-  label: string;
-  getDateRange: () => DateRange;
-}
-
 import {
   Alert,
   Button,
@@ -23,6 +10,19 @@ import {
 import { LuCalendar, LuX } from "react-icons/lu";
 import useStacMap from "../hooks/stac-map";
 import { DATE_FILTER_PRESETS, isValidDateRange } from "../utils/date-filter";
+
+export interface DateRange {
+  startDate: Date | null;
+  endDate: Date | null;
+  startTime?: string; // HH:mm format
+  endTime?: string; // HH:mm format
+}
+
+export interface DateFilterPreset {
+  id: string;
+  label: string;
+  getDateRange: () => DateRange;
+}
 
 export default function DateFilter() {
   const { dateRange, setDateRange, clearDateRange, isDateFilterActive } =
@@ -116,7 +116,6 @@ export default function DateFilter() {
             </HStack>
           </VStack>
 
-          {/* End Date and Time */}
           <VStack align="stretch" gap={2}>
             <Text fontSize="xs" fontWeight="medium">
               End Date & Time
