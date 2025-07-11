@@ -16,6 +16,8 @@ import type { DateRange } from "../components/date-filter";
 import {
   serializeDateRange,
   deserializeDateRange,
+  serializeClientFilterDateRange,
+  deserializeClientFilterDateRange,
 } from "../utils/url-persistence";
 import { createDateRangeFromTemporalExtent } from "../utils/date-filter";
 
@@ -42,6 +44,20 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
     };
   });
 
+  const [clientFilterDateRange, setClientFilterDateRange] = useState<DateRange>(() => {
+    const params = new URLSearchParams(location.search);
+    const clientFilterParam = params.get("clientFilter");
+    if (clientFilterParam) {
+      return deserializeClientFilterDateRange(new URLSearchParams(clientFilterParam));
+    }
+    return {
+      startDate: null,
+      endDate: null,
+      startTime: undefined,
+      endTime: undefined,
+    };
+  });
+
   const {
     table: stacGeoparquetTable,
     metadata: stacGeoparquetMetadata,
@@ -49,7 +65,7 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
   } = useStacGeoparquet({
     path: parquetPath,
     id: stacGeoparquetItemId,
-    dateRange,
+    dateRange: clientFilterDateRange, // Use client filter for GeoParquet
   });
 
   const [picked, setPicked] = useState<StacValue>();
@@ -57,6 +73,15 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
 
   const clearDateRange = useCallback(() => {
     setDateRange({
+      startDate: null,
+      endDate: null,
+      startTime: undefined,
+      endTime: undefined,
+    });
+  }, []);
+
+  const clearClientFilterDateRange = useCallback(() => {
+    setClientFilterDateRange({
       startDate: null,
       endDate: null,
       startTime: undefined,
@@ -72,6 +97,15 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
       dateRange.endTime !== undefined
     );
   }, [dateRange]);
+
+  const isClientFilterActive = useMemo(() => {
+    return (
+      clientFilterDateRange.startDate !== null ||
+      clientFilterDateRange.endDate !== null ||
+      clientFilterDateRange.startTime !== undefined ||
+      clientFilterDateRange.endTime !== undefined
+    );
+  }, [clientFilterDateRange]);
 
   useEffect(() => {
     function handlePopState() {
@@ -106,6 +140,20 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
     const newUrl = `${location.pathname}?${params.toString()}`;
     history.replaceState(null, "", newUrl);
   }, [dateRange]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const clientFilterParam = serializeClientFilterDateRange(clientFilterDateRange);
+
+    if (clientFilterParam) {
+      params.set("clientFilter", clientFilterParam);
+    } else {
+      params.delete("clientFilter");
+    }
+
+    const newUrl = `${location.pathname}?${params.toString()}`;
+    history.replaceState(null, "", newUrl);
+  }, [clientFilterDateRange]);
 
   useEffect(() => {
     if (fileUpload.acceptedFiles.length == 1) {
@@ -145,11 +193,15 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
     searchItems,
     setSearchItems,
 
-    // Date filtering properties
     dateRange,
     setDateRange,
     clearDateRange,
     isDateFilterActive,
+
+    clientFilterDateRange,
+    setClientFilterDateRange,
+    clearClientFilterDateRange,
+    isClientFilterActive,
   };
 
   return (

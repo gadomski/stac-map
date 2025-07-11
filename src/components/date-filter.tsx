@@ -21,13 +21,25 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { LuCalendar, LuX } from "react-icons/lu";
-import useStacMap from "../hooks/stac-map";
 import { DATE_FILTER_PRESETS, isValidDateRange } from "../utils/date-filter";
 
-export default function DateFilter() {
-  const { dateRange, setDateRange, clearDateRange, isDateFilterActive } =
-    useStacMap();
+interface DateFilterProps {
+  dateRange: DateRange;
+  setDateRange: (dateRange: DateRange) => void;
+  clearDateRange: () => void;
+  isDateFilterActive: boolean;
+  title?: string;
+  description?: string;
+}
 
+export default function DateFilter({
+  dateRange,
+  setDateRange,
+  clearDateRange,
+  isDateFilterActive,
+  title = "Date & Time Filter",
+  description
+}: DateFilterProps) {
   const handlePresetSelect = (preset: (typeof DATE_FILTER_PRESETS)[0]) => {
     setDateRange(preset.getDateRange());
   };
@@ -57,7 +69,7 @@ export default function DateFilter() {
         <HStack>
           <LuCalendar />
           <Text fontSize="sm" fontWeight="medium">
-            Date & Time Filter
+            {title}
           </Text>
         </HStack>
         {isDateFilterActive && (
@@ -71,6 +83,12 @@ export default function DateFilter() {
           </Button>
         )}
       </HStack>
+
+      {description && (
+        <Text fontSize="xs" color="gray.600">
+          {description}
+        </Text>
+      )}
 
       <VStack gap={3} align="stretch">
         <Text fontSize="sm" fontWeight="medium">

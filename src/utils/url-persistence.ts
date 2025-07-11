@@ -32,3 +32,36 @@ export function deserializeDateRange(searchParams: URLSearchParams): DateRange {
     endTime: searchParams.get("endTime") || undefined,
   };
 }
+
+export function serializeClientFilterDateRange(dateRange: DateRange): string | null {
+  if (!dateRange.startDate && !dateRange.endDate) return null;
+
+  const params = new URLSearchParams();
+  if (dateRange.startDate) {
+    params.set("clientStartDate", dateRange.startDate.toISOString());
+  }
+  if (dateRange.endDate) {
+    params.set("clientEndDate", dateRange.endDate.toISOString());
+  }
+  if (dateRange.startTime) {
+    params.set("clientStartTime", dateRange.startTime);
+  }
+  if (dateRange.endTime) {
+    params.set("clientEndTime", dateRange.endTime);
+  }
+
+  return params.toString();
+}
+
+export function deserializeClientFilterDateRange(searchParams: URLSearchParams): DateRange {
+  return {
+    startDate: searchParams.get("clientStartDate")
+      ? new Date(searchParams.get("clientStartDate")!)
+      : null,
+    endDate: searchParams.get("clientEndDate")
+      ? new Date(searchParams.get("clientEndDate")!)
+      : null,
+    startTime: searchParams.get("clientStartTime") || undefined,
+    endTime: searchParams.get("clientEndTime") || undefined,
+  };
+}

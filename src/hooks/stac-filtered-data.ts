@@ -13,24 +13,24 @@ function isDateRangeActive(dateRange: DateRange): boolean {
 }
 
 export function useFilteredSearchItems() {
-  const { searchItems, dateRange } = useStacMap();
+  const { searchItems, clientFilterDateRange } = useStacMap();
 
   return useMemo(() => {
-    if (!isDateRangeActive(dateRange)) {
+    if (!isDateRangeActive(clientFilterDateRange)) {
       return searchItems;
     }
 
     return searchItems.map((page) =>
-      page.filter((item) => isItemWithinDateRange(item, dateRange)),
+      page.filter((item) => isItemWithinDateRange(item, clientFilterDateRange)),
     );
-  }, [searchItems, dateRange]);
+  }, [searchItems, clientFilterDateRange]);
 }
 
 export function useFilteredCollections() {
-  const { collections, dateRange } = useStacMap();
+  const { collections, clientFilterDateRange } = useStacMap();
 
   return useMemo(() => {
-    if (!collections || !isDateRangeActive(dateRange)) {
+    if (!collections || !isDateRangeActive(clientFilterDateRange)) {
       return collections;
     }
 
@@ -39,14 +39,14 @@ export function useFilteredCollections() {
         const intervals = collection.extent.temporal.interval;
         return intervals.some((interval) => {
           const [start, end] = interval;
-          if (dateRange.startDate && end && new Date(end) < dateRange.startDate)
+          if (clientFilterDateRange.startDate && end && new Date(end) < clientFilterDateRange.startDate)
             return false;
-          if (dateRange.endDate && start && new Date(start) > dateRange.endDate)
+          if (clientFilterDateRange.endDate && start && new Date(start) > clientFilterDateRange.endDate)
             return false;
           return true;
         });
       }
       return true;
     });
-  }, [collections, dateRange]);
+  }, [collections, clientFilterDateRange]);
 }

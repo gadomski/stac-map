@@ -5,6 +5,7 @@ import {
   LuMousePointerClick,
   LuSearch,
   LuUpload,
+  LuFilter,
 } from "react-icons/lu";
 import type { StacLink } from "stac-ts";
 import useStacMap from "../hooks/stac-map";
@@ -13,6 +14,7 @@ import DateFilter from "./date-filter";
 import ItemSearch from "./search/item";
 import Upload from "./upload";
 import Value from "./value";
+import Filter from "./filter";
 
 export default function Panel() {
   const { value, picked } = useStacMap();
@@ -57,6 +59,9 @@ export default function Panel() {
         <Tabs.Trigger value="value" disabled={!value}>
           <LuInfo></LuInfo>
         </Tabs.Trigger>
+        <Tabs.Trigger value="filter">
+          <LuFilter></LuFilter>
+        </Tabs.Trigger>
         <Tabs.Trigger
           value="search"
           disabled={itemSearchLinks.length == 0 || value?.type !== "Collection"}
@@ -76,6 +81,9 @@ export default function Panel() {
             <SkeletonText noOfLines={3}></SkeletonText>
           )}
         </Tabs.Content>
+        <Tabs.Content value="filter">
+          <Filter />
+        </Tabs.Content>
         <Tabs.Content value="search">
           {value && itemSearchLinks.length > 0 && (
             <Accordion.Root
@@ -88,14 +96,17 @@ export default function Panel() {
                 <Accordion.ItemTrigger>
                   <HStack justify="space-between" width="100%">
                     <Text fontSize="sm" fontWeight="medium">
-                      Filter
+                      Search Filter
                     </Text>
                     <Accordion.ItemIndicator />
                   </HStack>
                 </Accordion.ItemTrigger>
                 <Accordion.ItemContent>
                   <Accordion.ItemBody>
-                    <DateFilter />
+                    <DateFilter
+                      title="Search Date Filter"
+                      description="Filter items at the server level when searching"
+                    />
                   </Accordion.ItemBody>
                 </Accordion.ItemContent>
               </Accordion.Item>

@@ -27,9 +27,15 @@ interface StacMapContextType {
   searchItems: StacItem[][];
   setSearchItems: Dispatch<SetStateAction<StacItem[][]>>;
 
-  // Date filtering properties
+  // Server-side search filtering properties
   dateRange: DateRange;
   setDateRange: (dateRange: DateRange) => void;
   clearDateRange: () => void;
   isDateFilterActive: boolean;
+
+  // Client-side filtering properties
+  clientFilterDateRange: DateRange;
+  setClientFilterDateRange: (dateRange: DateRange) => void;
+  clearClientFilterDateRange: () => void;
+  isClientFilterActive: boolean;
 }
