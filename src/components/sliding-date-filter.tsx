@@ -1,0 +1,329 @@
+import {
+  Box,
+  HStack,
+  Slider,
+  SliderTrack,
+  SliderRange,
+  SliderThumb,
+  Text,
+  VStack,
+  IconButton,
+  Tooltip,
+  Input,
+} from "@chakra-ui/react";
+import { useState, useEffect, useMemo } from "react";
+import { LuCalendar, LuX } from "react-icons/lu";
+
+import { extractTemporalExtent } from "../utils/date-filter";
+import useStacMap from "../hooks/stac-map";
+
+interface SlidingDateFilterProps {
+  title?: string;
+  description?: string;
+}
+
+export default function SlidingDateFilter({
+  title = "Temporal Scrubber",
+  description = "Scrub through the temporal range of loaded data"
+}: SlidingDateFilterProps) {
+  const { 
+    value,
+    clientFilterDateRange, 
+    setClientFilterDateRange, 
+    clearClientFilterDateRange, 
+    isClientFilterActive,
+    dateRange, // Server-side search filter
+    picked // Selected catalog/collection
+  } = useStacMap();
+
+  const sliderRange = useMemo(() => {
+    if (!value && !picked) {
+      return { min: 0, max: 100, step: 1, hasValidRange: false };
+    }
+
+    if (picked) {
+      const pickedTemporalExtent = extractTemporalExtent(picked);
+      if (pickedTemporalExtent) {
+        const totalDuration = pickedTemporalExtent.end.getTime() - pickedTemporalExtent.start.getTime();
+        const step = Math.max(1, Math.floor(totalDuration / 1000));
+        return {
+          min: pickedTemporalExtent.start.getTime(),
+          max: pickedTemporalExtent.end.getTime(),
+          step: step,
+          hasValidRange: true
+        };
+      }
+    }
+
+    if (dateRange.startDate && dateRange.endDate) {
+      const totalDuration = dateRange.endDate.getTime() - dateRange.startDate.getTime();
+      const step = Math.max(1, Math.floor(totalDuration / 1000));
+      return {
+        min: dateRange.startDate.getTime(),
+        max: dateRange.endDate.getTime(),
+        step: step,
+        hasValidRange: true
+      };
+    }
+
+    if (value) {
+      const temporalExtent = extractTemporalExtent(value);
+      if (temporalExtent) {
+        const totalDuration = temporalExtent.end.getTime() - temporalExtent.start.getTime();
+        const step = Math.max(1, Math.floor(totalDuration / 1000));
+        return {
+          min: temporalExtent.start.getTime(),
+          max: temporalExtent.end.getTime(),
+          step: step,
+          hasValidRange: true
+        };
+      }
+    }
+
+    return { min: 0, max: 100, step: 1, hasValidRange: false };
+  }, [value, picked, dateRange]);
+
+  const windowSize = useMemo(() => {
+    if (!sliderRange.hasValidRange) return 24 * 60 * 60 * 1000;
+    
+    const totalDuration = sliderRange.max - sliderRange.min;
+    return Math.max(60 * 60 * 1000, totalDuration / 20);
+  }, [sliderRange]);
+
+  // Current slider values based on filter (start and end)
+  const currentSliderValues = useMemo(() => {
+    if (!sliderRange.hasValidRange) {
+      // Default 24 hours
+      const defaultWindowSize = 24 * 60 * 60 * 1000; 
+      return [sliderRange.min, sliderRange.min + defaultWindowSize];
+    }
+    
+    const startValue = clientFilterDateRange.startDate?.getTime() || sliderRange.min;
+    const endValue = clientFilterDateRange.endDate?.getTime() || (startValue + windowSize);
+    
+    return [startValue, endValue];
+  }, [sliderRange, clientFilterDateRange.startDate, clientFilterDateRange.endDate, windowSize]);
+
+  const [windowStartDate, setWindowStartDate] = useState<string>("");
+  const [windowEndDate, setWindowEndDate] = useState<string>("");
+
+  useEffect(() => {
+    if (sliderRange.hasValidRange) {
+      setWindowStartDate(new Date(sliderRange.min).toISOString().split('T')[0]);
+      setWindowEndDate(new Date(sliderRange.max).toISOString().split('T')[0]);
+    }
+  }, [sliderRange]);
+
+  useEffect(() => {
+    if (clientFilterDateRange.startDate) {
+      setWindowStartDate(clientFilterDateRange.startDate.toISOString().split('T')[0]);
+    }
+    if (clientFilterDateRange.endDate) {
+      setWindowEndDate(clientFilterDateRange.endDate.toISOString().split('T')[0]);
+    }
+  }, [clientFilterDateRange]);
+
+  const handleSliderChange = (values: number[]) => {
+    if (!sliderRange.hasValidRange || values.length !== 2) return;
+    
+    const [startValue, endValue] = values;
+    const startDate = new Date(startValue);
+    const endDate = new Date(endValue);
+    
+    setClientFilterDateRange({
+      startDate,
+      endDate,
+      startTime: undefined,
+      endTime: undefined
+    });
+  };
+
+  const handleWindowStartDateChange = (dateString: string) => {
+    setWindowStartDate(dateString);
+    if (dateString && sliderRange.hasValidRange) {
+      const startDate = new Date(dateString);
+      const endDate = clientFilterDateRange.endDate || new Date(startDate.getTime() + windowSize);
+      
+      setClientFilterDateRange({
+        startDate,
+        endDate,
+        startTime: undefined,
+        endTime: undefined
+      });
+    }
+  };
+
+  const handleWindowEndDateChange = (dateString: string) => {
+    setWindowEndDate(dateString);
+    if (dateString && sliderRange.hasValidRange) {
+      const endDate = new Date(dateString);
+      const startDate = clientFilterDateRange.startDate || new Date(endDate.getTime() - windowSize);
+      
+      setClientFilterDateRange({
+        startDate,
+        endDate,
+        startTime: undefined,
+        endTime: undefined
+      });
+    }
+  };
+
+  const handleClear = () => {
+    clearClientFilterDateRange();
+  };
+
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const formatDuration = (ms: number) => {
+    const hours = Math.floor(ms / (1000 * 60 * 60));
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  };
+
+  const bgColor = 'white';
+  const borderColor = 'gray.200';
+
+  if (!sliderRange.hasValidRange) {
+    return (
+      <Box
+        p={4}
+        borderWidth={1}
+        borderRadius="md"
+        bg={bgColor}
+        borderColor={borderColor}
+        shadow="sm"
+      >
+        <Text fontSize="sm" color="gray.500">
+          No temporal data available
+        </Text>
+      </Box>
+    );
+  }
+
+  return (
+    <VStack
+      gap={3}
+      align="stretch"
+      p={4}
+      borderWidth={1}
+      borderRadius="md"
+      bg={bgColor}
+      borderColor={borderColor}
+      shadow="sm"
+    >
+      <HStack justify="space-between" align="center">
+        <HStack>
+          <LuCalendar />
+          <Text fontSize="sm" fontWeight="medium">
+            {title}
+          </Text>
+        </HStack>
+        {isClientFilterActive && (
+          <Tooltip.Root>
+            <Tooltip.Trigger>
+              <IconButton
+                size="sm"
+                variant="ghost"
+                colorScheme="red"
+                onClick={handleClear}
+                aria-label="Clear filter"
+              >
+                <LuX />
+              </IconButton>
+            </Tooltip.Trigger>
+            <Tooltip.Positioner>
+              <Tooltip.Content>
+                Clear filter
+              </Tooltip.Content>
+            </Tooltip.Positioner>
+          </Tooltip.Root>
+        )}
+      </HStack>
+
+      {description && (
+        <Text fontSize="xs" color="gray.600">
+          {description}
+        </Text>
+      )}
+
+      <VStack gap={2} align="stretch">
+        <Text fontSize="xs" fontWeight="medium">Window Range</Text>
+        <HStack gap={2}>
+          <VStack gap={1} align="stretch" flex={1}>
+            <Text fontSize="xs" color="gray.600">Start</Text>
+            <Input
+              type="date"
+              size="sm"
+              value={windowStartDate}
+              onChange={(e) => handleWindowStartDateChange(e.target.value)}
+              min={new Date(sliderRange.min).toISOString().split('T')[0]}
+              max={new Date(sliderRange.max).toISOString().split('T')[0]}
+            />
+          </VStack>
+          <VStack gap={1} align="stretch" flex={1}>
+            <Text fontSize="xs" color="gray.600">End</Text>
+            <Input
+              type="date"
+              size="sm"
+              value={windowEndDate}
+              onChange={(e) => handleWindowEndDateChange(e.target.value)}
+              min={new Date(sliderRange.min).toISOString().split('T')[0]}
+              max={new Date(sliderRange.max).toISOString().split('T')[0]}
+            />
+          </VStack>
+        </HStack>
+      </VStack>
+
+      <HStack justify="space-between" fontSize="xs" color="gray.600">
+        <Text>{formatDate(sliderRange.min)}</Text>
+        <Text>Range: {formatDuration(currentSliderValues[1] - currentSliderValues[0])}</Text>
+        <Text>{formatDate(sliderRange.max)}</Text>
+      </HStack>
+
+      <Box px={2}>
+        <Slider.Root
+          value={currentSliderValues}
+          min={sliderRange.min}
+          max={sliderRange.max}
+          step={sliderRange.step}
+          onValueChange={(details) => handleSliderChange(details.value)}
+        >
+          <Slider.Control>
+            <SliderTrack>
+              <SliderRange bg="blue.500" />
+            </SliderTrack>
+            <SliderThumb index={0} />
+            <SliderThumb index={1} />
+          </Slider.Control>
+        </Slider.Root>
+      </Box>
+
+      <HStack justify="space-between" fontSize="xs">
+        <Text color="gray.600">Current:</Text>
+        <Text fontWeight="medium">
+          {clientFilterDateRange.startDate && clientFilterDateRange.endDate
+            ? `${formatDate(clientFilterDateRange.startDate.getTime())} - ${formatDate(clientFilterDateRange.endDate.getTime())}`
+            : "No filter"
+          }
+        </Text>
+      </HStack>
+
+      {isClientFilterActive && (
+        <Text fontSize="xs" color="green.600" fontWeight="medium">
+          ✓ Temporal filter is active
+        </Text>
+      )}
+    </VStack>
+  );
+} 

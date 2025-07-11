@@ -1,22 +1,13 @@
-import DateFilter from "./date-filter";
-import useStacMap from "../hooks/stac-map";
+import SlidingDateFilter from "./sliding-date-filter";
 
 export default function Filter() {
-  const { 
-    clientFilterDateRange, 
-    setClientFilterDateRange, 
-    clearClientFilterDateRange, 
-    isClientFilterActive 
-  } = useStacMap();
 
   return (
-    <DateFilter
-      dateRange={clientFilterDateRange}
-      setDateRange={setClientFilterDateRange}
-      clearDateRange={clearClientFilterDateRange}
-      isDateFilterActive={isClientFilterActive}
-      title="Client Filter"
-      description="Filter items already loaded in the application"
-    />
+    <>
+      <SlidingDateFilter
+        title="Temporal Scrubber"
+        description="Scrub through the temporal range of loaded data"
+      />
+    </>
   );
 } 
