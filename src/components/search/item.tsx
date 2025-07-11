@@ -19,7 +19,7 @@ import type { StacCollection, StacLink } from "stac-ts";
 import useStacMap from "../../hooks/stac-map";
 import useStacSearch from "../../hooks/stac-search";
 import type { StacSearch, StacValue } from "../../types/stac";
-import DateFilter from "../date-filter";
+import DateFilter, { type DateRange } from "../date-filter";
 
 export default function ItemSearch({
   value,
@@ -33,9 +33,9 @@ export default function ItemSearch({
   value: StacValue;
   defaultLink: StacLink;
   links: StacLink[];
-  dateRange: any;
-  setDateRange: any;
-  clearDateRange: any;
+  dateRange: DateRange;
+  setDateRange: (d: DateRange) => void;
+  clearDateRange: () => void;
   isDateFilterActive: boolean;
 }) {
   const [search, setSearch] = useState<StacSearch>();
