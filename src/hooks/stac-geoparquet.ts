@@ -47,7 +47,7 @@ export default function useStacGeoparquet({
   const [connection, setConnection] = useState<AsyncDuckDBConnection>();
 
   const { data: table } = useQuery({
-    queryKey: ["stac-geoparquet-table", path, dateRange], // Include dateRange
+    queryKey: ["stac-geoparquet-table", path, dateRange],
     queryFn: async () => {
       if (path && connection) {
         return await getTable(path, connection, dateRange);
@@ -56,7 +56,7 @@ export default function useStacGeoparquet({
     enabled: !!(connection && path),
   });
   const { data: metadata } = useQuery({
-    queryKey: ["stac-geoparquet-metadata", path, dateRange], // Include dateRange
+    queryKey: ["stac-geoparquet-metadata", path, dateRange],
     queryFn: async () => {
       if (path && connection) {
         return await getMetadata(path, connection, dateRange);
@@ -65,7 +65,7 @@ export default function useStacGeoparquet({
     enabled: !!(connection && path),
   });
   const { data: item } = useQuery({
-    queryKey: ["stac-geoparquet-item", path, id, dateRange], // Include dateRange
+    queryKey: ["stac-geoparquet-item", path, id, dateRange],
     queryFn: async () => {
       if (path && connection && id) {
         return await getItem(path, connection, id, dateRange);
