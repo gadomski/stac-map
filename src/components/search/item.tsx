@@ -19,15 +19,24 @@ import type { StacCollection, StacLink } from "stac-ts";
 import useStacMap from "../../hooks/stac-map";
 import useStacSearch from "../../hooks/stac-search";
 import type { StacSearch, StacValue } from "../../types/stac";
+import DateFilter from "../date-filter";
 
 export default function ItemSearch({
   value,
   defaultLink,
   links,
+  dateRange,
+  setDateRange,
+  clearDateRange,
+  isDateFilterActive,
 }: {
   value: StacValue;
   defaultLink: StacLink;
   links: StacLink[];
+  dateRange: any;
+  setDateRange: any;
+  clearDateRange: any;
+  isDateFilterActive: boolean;
 }) {
   const [search, setSearch] = useState<StacSearch>();
   const [link, setLink] = useState(defaultLink);
@@ -60,6 +69,14 @@ export default function ItemSearch({
           <Heading fontSize={"larger"}>{value.title || value.id}</Heading>
         )}
       </Stack>
+      <DateFilter
+        dateRange={dateRange}
+        setDateRange={setDateRange}
+        clearDateRange={clearDateRange}
+        isDateFilterActive={isDateFilterActive}
+        title="Search Date Filter"
+        description="Filter items at the server level when searching"
+      />
       <Alert.Root status={"warning"}>
         <Alert.Indicator></Alert.Indicator>
         <Alert.Content>

@@ -10,14 +10,20 @@ import {
 import type { StacLink } from "stac-ts";
 import useStacMap from "../hooks/stac-map";
 import useStacValue from "../hooks/stac-value";
-import DateFilter from "./date-filter";
 import ItemSearch from "./search/item";
 import Upload from "./upload";
 import Value from "./value";
 import Filter from "./filter";
 
 export default function Panel() {
-  const { value, picked } = useStacMap();
+  const { 
+    value, 
+    picked, 
+    dateRange, 
+    setDateRange, 
+    clearDateRange, 
+    isDateFilterActive 
+  } = useStacMap();
   const [tab, setTab] = useState<string>("upload");
   const [itemSearchLinks, setItemSearchLinks] = useState<StacLink[]>([]);
   const { value: root } = useStacValue(
@@ -59,14 +65,14 @@ export default function Panel() {
         <Tabs.Trigger value="value" disabled={!value}>
           <LuInfo></LuInfo>
         </Tabs.Trigger>
-        <Tabs.Trigger value="filter">
-          <LuFilter></LuFilter>
-        </Tabs.Trigger>
         <Tabs.Trigger
           value="search"
           disabled={itemSearchLinks.length == 0 || value?.type !== "Collection"}
         >
           <LuSearch></LuSearch>
+        </Tabs.Trigger>
+        <Tabs.Trigger value="filter">
+          <LuFilter></LuFilter>
         </Tabs.Trigger>
         <Tabs.Trigger value="picked" disabled={!picked}>
           <LuMousePointerClick></LuMousePointerClick>
@@ -81,36 +87,14 @@ export default function Panel() {
             <SkeletonText noOfLines={3}></SkeletonText>
           )}
         </Tabs.Content>
-        <Tabs.Content value="filter">
-          <Filter />
-        </Tabs.Content>
         <Tabs.Content value="search">
           {value && itemSearchLinks.length > 0 && (
             <Accordion.Root
               variant="outline"
               size="sm"
               collapsible
-              defaultValue={["date-filter", "item-search"]}
+              defaultValue={["item-search"]}
             >
-              <Accordion.Item value="date-filter">
-                <Accordion.ItemTrigger>
-                  <HStack justify="space-between" width="100%">
-                    <Text fontSize="sm" fontWeight="medium">
-                      Search Filter
-                    </Text>
-                    <Accordion.ItemIndicator />
-                  </HStack>
-                </Accordion.ItemTrigger>
-                <Accordion.ItemContent>
-                  <Accordion.ItemBody>
-                    <DateFilter
-                      title="Search Date Filter"
-                      description="Filter items at the server level when searching"
-                    />
-                  </Accordion.ItemBody>
-                </Accordion.ItemContent>
-              </Accordion.Item>
-
               <Accordion.Item value="item-search">
                 <Accordion.ItemTrigger>
                   <HStack justify="space-between" width="100%">
@@ -126,12 +110,19 @@ export default function Panel() {
                       value={value}
                       links={itemSearchLinks}
                       defaultLink={itemSearchLinks[0]}
+                      dateRange={dateRange}
+                      setDateRange={setDateRange}
+                      clearDateRange={clearDateRange}
+                      isDateFilterActive={isDateFilterActive}
                     />
                   </Accordion.ItemBody>
                 </Accordion.ItemContent>
               </Accordion.Item>
             </Accordion.Root>
           )}
+        </Tabs.Content>
+        <Tabs.Content value="filter">
+          <Filter />
         </Tabs.Content>
         <Tabs.Content value="picked">
           {picked && <Value value={picked}></Value>}
