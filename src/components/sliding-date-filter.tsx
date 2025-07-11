@@ -50,14 +50,17 @@ export default function SlidingDateFilter({
     const createValidRange = (start: Date, end: Date) => {
       const min = start.getTime();
       const max = end.getTime();
-      
+
       if (min >= max) {
         return { min: 0, max: 100, step: 1, hasValidRange: false };
       }
-      
+
       const totalDuration = max - min;
-      const step = Math.max(1, Math.min(60 * 60 * 1000, Math.floor(totalDuration / 1000)));
-      
+      const step = Math.max(
+        1,
+        Math.min(60 * 60 * 1000, Math.floor(totalDuration / 1000)),
+      );
+
       return {
         min,
         max,
@@ -69,7 +72,10 @@ export default function SlidingDateFilter({
     if (picked) {
       const pickedTemporalExtent = extractTemporalExtent(picked);
       if (pickedTemporalExtent) {
-        return createValidRange(pickedTemporalExtent.start, pickedTemporalExtent.end);
+        return createValidRange(
+          pickedTemporalExtent.start,
+          pickedTemporalExtent.end,
+        );
       }
     }
 
@@ -105,7 +111,10 @@ export default function SlidingDateFilter({
     let endValue =
       clientFilterDateRange.endDate?.getTime() || startValue + windowSize;
 
-    startValue = Math.max(sliderRange.min, Math.min(sliderRange.max - 1, startValue));
+    startValue = Math.max(
+      sliderRange.min,
+      Math.min(sliderRange.max - 1, startValue),
+    );
     endValue = Math.max(startValue + 1, Math.min(sliderRange.max, endValue));
 
     return [startValue, endValue];
@@ -336,8 +345,16 @@ export default function SlidingDateFilter({
               size="sm"
               value={windowStartDate}
               onChange={(e) => handleWindowStartDateChange(e.target.value)}
-              min={sliderRange.hasValidRange ? new Date(sliderRange.min).toISOString().split("T")[0] : undefined}
-              max={sliderRange.hasValidRange ? new Date(sliderRange.max).toISOString().split("T")[0] : undefined}
+              min={
+                sliderRange.hasValidRange
+                  ? new Date(sliderRange.min).toISOString().split("T")[0]
+                  : undefined
+              }
+              max={
+                sliderRange.hasValidRange
+                  ? new Date(sliderRange.max).toISOString().split("T")[0]
+                  : undefined
+              }
               disabled={!sliderRange.hasValidRange}
             />
           </VStack>
@@ -350,8 +367,16 @@ export default function SlidingDateFilter({
               size="sm"
               value={windowEndDate}
               onChange={(e) => handleWindowEndDateChange(e.target.value)}
-              min={sliderRange.hasValidRange ? new Date(sliderRange.min).toISOString().split("T")[0] : undefined}
-              max={sliderRange.hasValidRange ? new Date(sliderRange.max).toISOString().split("T")[0] : undefined}
+              min={
+                sliderRange.hasValidRange
+                  ? new Date(sliderRange.min).toISOString().split("T")[0]
+                  : undefined
+              }
+              max={
+                sliderRange.hasValidRange
+                  ? new Date(sliderRange.max).toISOString().split("T")[0]
+                  : undefined
+              }
               disabled={!sliderRange.hasValidRange}
             />
           </VStack>
@@ -359,15 +384,18 @@ export default function SlidingDateFilter({
       </VStack>
 
       <HStack justify="space-between" fontSize="xs" color="gray.600">
-        <Text>{sliderRange.hasValidRange ? formatDate(sliderRange.min) : "Invalid"}</Text>
+        <Text>
+          {sliderRange.hasValidRange ? formatDate(sliderRange.min) : "Invalid"}
+        </Text>
         <Text>
           Range:{" "}
-          {sliderRange.hasValidRange && currentSliderValues.length === 2 
+          {sliderRange.hasValidRange && currentSliderValues.length === 2
             ? formatDuration(currentSliderValues[1] - currentSliderValues[0])
-            : "Invalid"
-          }
+            : "Invalid"}
         </Text>
-        <Text>{sliderRange.hasValidRange ? formatDate(sliderRange.max) : "Invalid"}</Text>
+        <Text>
+          {sliderRange.hasValidRange ? formatDate(sliderRange.max) : "Invalid"}
+        </Text>
       </HStack>
 
       <Box px={2}>
@@ -422,7 +450,8 @@ export default function SlidingDateFilter({
                   !sliderRange.hasValidRange ||
                   visibleMax === null ||
                   visibleMin === null ||
-                  (visibleMin === sliderRange.min && visibleMax === sliderRange.max)
+                  (visibleMin === sliderRange.min &&
+                    visibleMax === sliderRange.max)
                 }
               >
                 <LuRefreshCw />
@@ -433,11 +462,11 @@ export default function SlidingDateFilter({
             </Tooltip.Positioner>
           </Tooltip.Root>
         </HStack>
-        {sliderRange.hasValidRange && 
-         currentSliderValues.length === 2 && 
-         currentSliderValues[0] < currentSliderValues[1] && 
-         (visibleMin ?? sliderRange.min) < (visibleMax ?? sliderRange.max) && 
-         sliderRange.step > 0 ? (
+        {sliderRange.hasValidRange &&
+        currentSliderValues.length === 2 &&
+        currentSliderValues[0] < currentSliderValues[1] &&
+        (visibleMin ?? sliderRange.min) < (visibleMax ?? sliderRange.max) &&
+        sliderRange.step > 0 ? (
           <Slider.Root
             value={currentSliderValues}
             min={visibleMin ?? sliderRange.min}
@@ -454,12 +483,12 @@ export default function SlidingDateFilter({
             </Slider.Control>
           </Slider.Root>
         ) : (
-          <Box 
-            height="20px" 
-            bg="gray.100" 
-            borderRadius="md" 
-            display="flex" 
-            alignItems="center" 
+          <Box
+            height="20px"
+            bg="gray.100"
+            borderRadius="md"
+            display="flex"
+            alignItems="center"
             justifyContent="center"
           >
             <Text fontSize="xs" color="gray.500">
