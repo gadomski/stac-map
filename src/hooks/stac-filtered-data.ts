@@ -39,9 +39,17 @@ export function useFilteredCollections() {
         const intervals = collection.extent.temporal.interval;
         return intervals.some((interval) => {
           const [start, end] = interval;
-          if (clientFilterDateRange.startDate && end && new Date(end) < clientFilterDateRange.startDate)
+          if (
+            clientFilterDateRange.startDate &&
+            end &&
+            new Date(end) < clientFilterDateRange.startDate
+          )
             return false;
-          if (clientFilterDateRange.endDate && start && new Date(start) > clientFilterDateRange.endDate)
+          if (
+            clientFilterDateRange.endDate &&
+            start &&
+            new Date(start) > clientFilterDateRange.endDate
+          )
             return false;
           return true;
         });

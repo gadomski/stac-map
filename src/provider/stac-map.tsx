@@ -44,19 +44,23 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
     };
   });
 
-  const [clientFilterDateRange, setClientFilterDateRange] = useState<DateRange>(() => {
-    const params = new URLSearchParams(location.search);
-    const clientFilterParam = params.get("clientFilter");
-    if (clientFilterParam) {
-      return deserializeClientFilterDateRange(new URLSearchParams(clientFilterParam));
-    }
-    return {
-      startDate: null,
-      endDate: null,
-      startTime: undefined,
-      endTime: undefined,
-    };
-  });
+  const [clientFilterDateRange, setClientFilterDateRange] = useState<DateRange>(
+    () => {
+      const params = new URLSearchParams(location.search);
+      const clientFilterParam = params.get("clientFilter");
+      if (clientFilterParam) {
+        return deserializeClientFilterDateRange(
+          new URLSearchParams(clientFilterParam),
+        );
+      }
+      return {
+        startDate: null,
+        endDate: null,
+        startTime: undefined,
+        endTime: undefined,
+      };
+    },
+  );
 
   const {
     table: stacGeoparquetTable,
@@ -143,7 +147,9 @@ export function StacMapProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const clientFilterParam = serializeClientFilterDateRange(clientFilterDateRange);
+    const clientFilterParam = serializeClientFilterDateRange(
+      clientFilterDateRange,
+    );
 
     if (clientFilterParam) {
       params.set("clientFilter", clientFilterParam);

@@ -16,13 +16,13 @@ import Value from "./value";
 import Filter from "./filter";
 
 export default function Panel() {
-  const { 
-    value, 
-    picked, 
-    dateRange, 
-    setDateRange, 
-    clearDateRange, 
-    isDateFilterActive 
+  const {
+    value,
+    picked,
+    dateRange,
+    setDateRange,
+    clearDateRange,
+    isDateFilterActive,
   } = useStacMap();
   const [tab, setTab] = useState<string>("upload");
   const [itemSearchLinks, setItemSearchLinks] = useState<StacLink[]>([]);

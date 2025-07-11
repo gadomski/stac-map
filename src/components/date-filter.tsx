@@ -38,7 +38,7 @@ export default function DateFilter({
   clearDateRange,
   isDateFilterActive,
   title = "Date & Time Filter",
-  description
+  description,
 }: DateFilterProps) {
   const handlePresetSelect = (preset: (typeof DATE_FILTER_PRESETS)[0]) => {
     setDateRange(preset.getDateRange());

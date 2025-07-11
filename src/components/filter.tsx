@@ -1,7 +1,6 @@
 import SlidingDateFilter from "./sliding-date-filter";
 
 export default function Filter() {
-
   return (
     <>
       <SlidingDateFilter
@@ -10,4 +9,4 @@ export default function Filter() {
       />
     </>
   );
-} 
+}

@@ -27,7 +27,8 @@ export function isItemWithinDateRange(
 ): boolean {
   if (!dateRange.startDate && !dateRange.endDate) return true;
 
-  const itemStart = item.properties?.datetime || item.properties?.start_datetime;
+  const itemStart =
+    item.properties?.datetime || item.properties?.start_datetime;
   const itemEnd = item.properties?.datetime || item.properties?.end_datetime;
 
   if (!itemStart && !itemEnd) return false;
@@ -38,9 +39,10 @@ export function isItemWithinDateRange(
   const itemStartDate = itemStart ? new Date(itemStart) : null;
   const itemEndDate = itemEnd ? new Date(itemEnd) : null;
 
-  
-  if (effectiveStartDate && itemEndDate && itemEndDate < effectiveStartDate) return false;
-  if (effectiveEndDate && itemStartDate && itemStartDate > effectiveEndDate) return false;
+  if (effectiveStartDate && itemEndDate && itemEndDate < effectiveStartDate)
+    return false;
+  if (effectiveEndDate && itemStartDate && itemStartDate > effectiveEndDate)
+    return false;
 
   return true;
 }
@@ -114,7 +116,9 @@ export const DATE_FILTER_PRESETS: DateFilterPreset[] = [
     }),
   },
 ];
-export function extractTemporalExtent(value: StacValue): { start: Date; end: Date } | null {
+export function extractTemporalExtent(
+  value: StacValue,
+): { start: Date; end: Date } | null {
   if (!value) return null;
 
   switch (value.type) {
@@ -176,7 +180,9 @@ export function extractTemporalExtent(value: StacValue): { start: Date; end: Dat
   return null;
 }
 
-export function createDateRangeFromTemporalExtent(value: StacValue): DateRange | null {
+export function createDateRangeFromTemporalExtent(
+  value: StacValue,
+): DateRange | null {
   const temporalExtent = extractTemporalExtent(value);
   if (!temporalExtent) return null;
 

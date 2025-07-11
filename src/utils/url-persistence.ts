@@ -33,7 +33,9 @@ export function deserializeDateRange(searchParams: URLSearchParams): DateRange {
   };
 }
 
-export function serializeClientFilterDateRange(dateRange: DateRange): string | null {
+export function serializeClientFilterDateRange(
+  dateRange: DateRange,
+): string | null {
   if (!dateRange.startDate && !dateRange.endDate) return null;
 
   const params = new URLSearchParams();
@@ -53,7 +55,9 @@ export function serializeClientFilterDateRange(dateRange: DateRange): string | n
   return params.toString();
 }
 
-export function deserializeClientFilterDateRange(searchParams: URLSearchParams): DateRange {
+export function deserializeClientFilterDateRange(
+  searchParams: URLSearchParams,
+): DateRange {
   return {
     startDate: searchParams.get("clientStartDate")
       ? new Date(searchParams.get("clientStartDate")!)
