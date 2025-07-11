@@ -47,46 +47,40 @@ export default function SlidingDateFilter({
       return { min: 0, max: 100, step: 1, hasValidRange: false };
     }
 
+    const createValidRange = (start: Date, end: Date) => {
+      const min = start.getTime();
+      const max = end.getTime();
+      
+      if (min >= max) {
+        return { min: 0, max: 100, step: 1, hasValidRange: false };
+      }
+      
+      const totalDuration = max - min;
+      const step = Math.max(1, Math.min(60 * 60 * 1000, Math.floor(totalDuration / 1000)));
+      
+      return {
+        min,
+        max,
+        step,
+        hasValidRange: true,
+      };
+    };
+
     if (picked) {
       const pickedTemporalExtent = extractTemporalExtent(picked);
       if (pickedTemporalExtent) {
-        const totalDuration =
-          pickedTemporalExtent.end.getTime() -
-          pickedTemporalExtent.start.getTime();
-        const step = Math.max(1, Math.floor(totalDuration / 1000));
-        return {
-          min: pickedTemporalExtent.start.getTime(),
-          max: pickedTemporalExtent.end.getTime(),
-          step: step,
-          hasValidRange: true,
-        };
+        return createValidRange(pickedTemporalExtent.start, pickedTemporalExtent.end);
       }
     }
 
     if (dateRange.startDate && dateRange.endDate) {
-      const totalDuration =
-        dateRange.endDate.getTime() - dateRange.startDate.getTime();
-      const step = Math.max(1, Math.floor(totalDuration / 1000));
-      return {
-        min: dateRange.startDate.getTime(),
-        max: dateRange.endDate.getTime(),
-        step: step,
-        hasValidRange: true,
-      };
+      return createValidRange(dateRange.startDate, dateRange.endDate);
     }
 
     if (value) {
       const temporalExtent = extractTemporalExtent(value);
       if (temporalExtent) {
-        const totalDuration =
-          temporalExtent.end.getTime() - temporalExtent.start.getTime();
-        const step = Math.max(1, Math.floor(totalDuration / 1000));
-        return {
-          min: temporalExtent.start.getTime(),
-          max: temporalExtent.end.getTime(),
-          step: step,
-          hasValidRange: true,
-        };
+        return createValidRange(temporalExtent.start, temporalExtent.end);
       }
     }
 
@@ -106,10 +100,13 @@ export default function SlidingDateFilter({
       return [sliderRange.min, sliderRange.min + defaultWindowSize];
     }
 
-    const startValue =
+    let startValue =
       clientFilterDateRange.startDate?.getTime() || sliderRange.min;
-    const endValue =
+    let endValue =
       clientFilterDateRange.endDate?.getTime() || startValue + windowSize;
+
+    startValue = Math.max(sliderRange.min, Math.min(sliderRange.max - 1, startValue));
+    endValue = Math.max(startValue + 1, Math.min(sliderRange.max, endValue));
 
     return [startValue, endValue];
   }, [
@@ -339,8 +336,9 @@ export default function SlidingDateFilter({
               size="sm"
               value={windowStartDate}
               onChange={(e) => handleWindowStartDateChange(e.target.value)}
-              min={new Date(sliderRange.min).toISOString().split("T")[0]}
-              max={new Date(sliderRange.max).toISOString().split("T")[0]}
+              min={sliderRange.hasValidRange ? new Date(sliderRange.min).toISOString().split("T")[0] : undefined}
+              max={sliderRange.hasValidRange ? new Date(sliderRange.max).toISOString().split("T")[0] : undefined}
+              disabled={!sliderRange.hasValidRange}
             />
           </VStack>
           <VStack gap={1} align="stretch" flex={1}>
@@ -352,20 +350,24 @@ export default function SlidingDateFilter({
               size="sm"
               value={windowEndDate}
               onChange={(e) => handleWindowEndDateChange(e.target.value)}
-              min={new Date(sliderRange.min).toISOString().split("T")[0]}
-              max={new Date(sliderRange.max).toISOString().split("T")[0]}
+              min={sliderRange.hasValidRange ? new Date(sliderRange.min).toISOString().split("T")[0] : undefined}
+              max={sliderRange.hasValidRange ? new Date(sliderRange.max).toISOString().split("T")[0] : undefined}
+              disabled={!sliderRange.hasValidRange}
             />
           </VStack>
         </HStack>
       </VStack>
 
       <HStack justify="space-between" fontSize="xs" color="gray.600">
-        <Text>{formatDate(sliderRange.min)}</Text>
+        <Text>{sliderRange.hasValidRange ? formatDate(sliderRange.min) : "Invalid"}</Text>
         <Text>
           Range:{" "}
-          {formatDuration(currentSliderValues[1] - currentSliderValues[0])}
+          {sliderRange.hasValidRange && currentSliderValues.length === 2 
+            ? formatDuration(currentSliderValues[1] - currentSliderValues[0])
+            : "Invalid"
+          }
         </Text>
-        <Text>{formatDate(sliderRange.max)}</Text>
+        <Text>{sliderRange.hasValidRange ? formatDate(sliderRange.max) : "Invalid"}</Text>
       </HStack>
 
       <Box px={2}>
@@ -377,8 +379,9 @@ export default function SlidingDateFilter({
                 aria-label="Zoom in"
                 onClick={() => handleZoom("in")}
                 disabled={
-                  visibleMax !== null &&
-                  visibleMin !== null &&
+                  !sliderRange.hasValidRange ||
+                  visibleMax === null ||
+                  visibleMin === null ||
                   visibleMax - visibleMin <= 60 * 60 * 1000 + 1
                 }
               >
@@ -396,8 +399,9 @@ export default function SlidingDateFilter({
                 aria-label="Zoom out"
                 onClick={() => handleZoom("out")}
                 disabled={
-                  visibleMax !== null &&
-                  visibleMin !== null &&
+                  !sliderRange.hasValidRange ||
+                  visibleMax === null ||
+                  visibleMin === null ||
                   visibleMax - visibleMin >= sliderRange.max - sliderRange.min
                 }
               >
@@ -415,10 +419,10 @@ export default function SlidingDateFilter({
                 aria-label="Reset zoom"
                 onClick={handleResetZoom}
                 disabled={
-                  visibleMax !== null &&
-                  visibleMin !== null &&
-                  visibleMax === sliderRange.min &&
-                  visibleMax === sliderRange.max
+                  !sliderRange.hasValidRange ||
+                  visibleMax === null ||
+                  visibleMin === null ||
+                  (visibleMin === sliderRange.min && visibleMax === sliderRange.max)
                 }
               >
                 <LuRefreshCw />
@@ -429,21 +433,40 @@ export default function SlidingDateFilter({
             </Tooltip.Positioner>
           </Tooltip.Root>
         </HStack>
-        <Slider.Root
-          value={currentSliderValues}
-          min={visibleMin ?? sliderRange.min}
-          max={visibleMax ?? sliderRange.max}
-          step={sliderRange.step}
-          onValueChange={(details) => handleSliderChange(details.value)}
-        >
-          <Slider.Control>
-            <SliderTrack>
-              <SliderRange bg="blue.500" />
-            </SliderTrack>
-            <SliderThumb index={0} />
-            <SliderThumb index={1} />
-          </Slider.Control>
-        </Slider.Root>
+        {sliderRange.hasValidRange && 
+         currentSliderValues.length === 2 && 
+         currentSliderValues[0] < currentSliderValues[1] && 
+         (visibleMin ?? sliderRange.min) < (visibleMax ?? sliderRange.max) && 
+         sliderRange.step > 0 ? (
+          <Slider.Root
+            value={currentSliderValues}
+            min={visibleMin ?? sliderRange.min}
+            max={visibleMax ?? sliderRange.max}
+            step={sliderRange.step}
+            onValueChange={(details) => handleSliderChange(details.value)}
+          >
+            <Slider.Control>
+              <SliderTrack>
+                <SliderRange bg="blue.500" />
+              </SliderTrack>
+              <SliderThumb index={0} />
+              <SliderThumb index={1} />
+            </Slider.Control>
+          </Slider.Root>
+        ) : (
+          <Box 
+            height="20px" 
+            bg="gray.100" 
+            borderRadius="md" 
+            display="flex" 
+            alignItems="center" 
+            justifyContent="center"
+          >
+            <Text fontSize="xs" color="gray.500">
+              Invalid date range
+            </Text>
+          </Box>
+        )}
       </Box>
 
       <HStack justify="space-between" fontSize="xs">
